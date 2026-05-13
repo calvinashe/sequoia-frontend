@@ -3323,30 +3323,37 @@ window.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Signed in — load their data from Firestore first
+    // Signed in — show app immediately using cached localStorage data
     currentUser = user;
-    const userData = await loadUserData(user.uid);
-    updateNavAccount(user, userData?.tier || 'free');
-    loadNotifBadgeCount();
-    initPushBtn();
+    hideAuthScreen(); // don't wait for Firestore — show app right away
 
-    // Refresh UI with loaded data
+    // Load UI from localStorage instantly
     loadXPStreak(); updateDashTree(); syncTreeScreen();
     checkStreakRisk(); renderSessionLog();
+    updateNavAccount(user, 'free');
 
     const token = localStorage.getItem('sq_token');
     const url   = localStorage.getItem('sq_url');
 
     if (token) {
-      // Returning user with Canvas connected
       closeOnboard();
       setGreeting(localStorage.getItem('sq_name') || user.displayName || '');
       loadAssignments(token, url);
       loadCourses(token, url);
     }
-    // else: new user, onboarding stays open so they can connect Canvas
 
-    hideAuthScreen();
+    // Sync Firestore data in background — updates UI when ready
+    loadUserData(user.uid).then(userData => {
+      if (userData) {
+        updateNavAccount(user, userData.tier || 'free');
+        loadXPStreak(); updateDashTree(); syncTreeScreen();
+        const t = localStorage.getItem('sq_token');
+        const u = localStorage.getItem('sq_url');
+        if (t && !token) { closeOnboard(); setGreeting(localStorage.getItem('sq_name') || ''); loadAssignments(t, u); loadCourses(t, u); }
+      }
+    });
+    loadNotifBadgeCount();
+    initPushBtn();
   });
 
   // Global Escape key: close any open overlay
