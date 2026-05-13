@@ -322,26 +322,70 @@ body {
 .spin { display:inline-block; animation:spin 1.2s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
 
-/* Server warm-up notice (inside assign-list when cold start is slow) */
+/* Server warm-up notice — growing tree animation */
 .wake-notice {
-  display:flex; align-items:flex-start; gap:10px;
+  display:block; text-align:center;
   background:var(--g-pale); border:1px solid var(--border);
-  border-radius:12px; padding:12px 14px; margin-bottom:12px;
-  font-size:13px; color:var(--mid); line-height:1.5;
+  border-radius:16px; padding:22px 16px 18px; margin-bottom:12px;
 }
-.wake-notice .wn-icon { font-size:20px; flex-shrink:0; margin-top:1px; }
-.wake-notice strong { color:var(--g1); }
-.wake-notice .wn-demo {
-  display:inline-block; margin-top:6px;
-  font-size:12px; font-weight:700; color:var(--g2);
-  background:none; border:none; cursor:pointer; padding:0;
-  text-decoration:underline; font-family:'DM Sans',sans-serif;
+.wake-tree-outer {
+  position:relative; display:inline-block;
+  margin-bottom:14px;
 }
-@keyframes wn-pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
-.wake-notice .wn-dot {
+.wake-tree-svg { overflow:visible; display:block; }
+/* Trunk — grows from root upward */
+.wt-trunk {
+  transform-box:fill-box; transform-origin:50% 100%;
+  transform:scaleY(0);
+  animation:wtRise .55s cubic-bezier(.22,.84,.36,1) .1s forwards;
+}
+/* Each foliage tier — pops in from the bottom */
+.wt-tier {
+  transform-box:fill-box; transform-origin:50% 100%;
+  transform:scale(0);
+  animation:wtPop .45s cubic-bezier(.34,1.45,.64,1) var(--d,0s) forwards;
+}
+/* Whole tree sways once grown */
+.wt-body {
+  transform-box:fill-box; transform-origin:50% 100%;
+  animation:wtSway 5s ease-in-out 2.8s infinite;
+}
+@keyframes wtRise { to { transform:scaleY(1); } }
+@keyframes wtPop  { to { transform:scale(1); } }
+@keyframes wtSway {
+  0%,100% { transform:rotate(0deg); }
+  28%     { transform:rotate(1.6deg); }
+  72%     { transform:rotate(-1.4deg); }
+}
+/* Floating leaf particles */
+.wt-leaf {
+  position:absolute; pointer-events:none; font-size:10px;
+  opacity:0;
+  animation:wtLeaf var(--dur,3.2s) ease-in var(--del,2.6s) infinite;
+}
+@keyframes wtLeaf {
+  0%   { transform:translate(0,0) rotate(0deg); opacity:0; }
+  12%  { opacity:.85; }
+  88%  { opacity:.4; }
+  100% { transform:translate(var(--tx,0px),-62px) rotate(var(--rot,120deg)); opacity:0; }
+}
+.wake-server-label {
+  font-size:14px; font-weight:700; color:var(--g1); margin-bottom:4px;
+}
+.wake-server-sub {
+  font-size:12px; color:var(--mid); line-height:1.6; margin-bottom:14px;
+}
+@keyframes wn-pulse { 0%,100%{opacity:1} 50%{opacity:.55} }
+.wn-dot {
   display:inline-block; width:7px; height:7px; border-radius:50%;
   background:var(--g3); margin-right:5px; vertical-align:middle;
   animation:wn-pulse 1.4s ease-in-out infinite;
+}
+.wn-demo {
+  display:inline-block;
+  font-size:12px; font-weight:700; color:var(--g2);
+  background:none; border:none; cursor:pointer; padding:0;
+  text-decoration:underline; font-family:'DM Sans',sans-serif;
 }
 
 /* Skeleton loading rows */
@@ -2899,7 +2943,57 @@ async function loadAssignments(token, url) {
     if (!list.querySelector('.sk-row')) return; // already rendered
     const notice = document.createElement('div');
     notice.className = 'wake-notice'; notice.id = 'wake-notice';
-    notice.innerHTML = `<span class="wn-icon">🌲</span><div><strong>Waking up the server…</strong><br>Sequoia's free-tier backend sleeps after inactivity — it usually takes 20–40 sec to wake up. Hang tight!<br><button class="wn-demo" onclick="loadDemo()"><span class="wn-dot"></span>Try Demo Mode while you wait</button></div>`;
+    notice.innerHTML = `
+<div class="wake-tree-outer">
+  <svg class="wake-tree-svg" viewBox="0 0 100 128" width="88" xmlns="http://www.w3.org/2000/svg">
+    <!-- Ground shadow -->
+    <ellipse cx="50" cy="122" rx="36" ry="8" fill="#1A0A02" opacity="0.35"/>
+    <g class="wt-body">
+      <!-- Trunk -->
+      <rect class="wt-trunk" x="47" y="87" width="6" height="35" rx="2.5" fill="#5A2E0A"/>
+      <rect class="wt-trunk" x="48.5" y="90" width="2.5" height="29" rx="1" fill="#7B4A1E" opacity="0.45" style="animation-delay:.12s"/>
+      <!-- Tier 1 — widest, bottom -->
+      <g class="wt-tier" style="--d:.42s">
+        <polygon points="50,104 19,122 81,122" fill="#1A4010"/>
+        <polygon points="50,104 22,120 78,120" fill="#205018"/>
+      </g>
+      <!-- Tier 2 -->
+      <g class="wt-tier" style="--d:.66s">
+        <polygon points="50,89 25,107 75,107" fill="#205018"/>
+        <polygon points="50,89 27,105 73,105" fill="#286020"/>
+      </g>
+      <!-- Tier 3 -->
+      <g class="wt-tier" style="--d:.88s">
+        <polygon points="50,75 29,92 71,92" fill="#286020"/>
+        <polygon points="50,75 31,90 69,90" fill="#347028"/>
+      </g>
+      <!-- Tier 4 -->
+      <g class="wt-tier" style="--d:1.08s">
+        <polygon points="50,62 33,78 67,78" fill="#347028"/>
+        <polygon points="50,62 35,76 65,76" fill="#429030"/>
+      </g>
+      <!-- Tier 5 -->
+      <g class="wt-tier" style="--d:1.26s">
+        <polygon points="50,50 37,65 63,65" fill="#429030"/>
+        <polygon points="50,50 39,63 61,63" fill="#52A83A"/>
+      </g>
+      <!-- Tip -->
+      <g class="wt-tier" style="--d:1.42s">
+        <polygon points="50,39 40,53 60,53" fill="#52A83A"/>
+        <polygon points="50,27 43,41 57,41" fill="#62BC44"/>
+        <polygon points="50,17 46,28 54,28" fill="#72CC50"/>
+      </g>
+    </g>
+  </svg>
+  <!-- Floating leaves (appear after tree finishes growing) -->
+  <div class="wt-leaf" style="left:62%;top:28%;--dur:3.4s;--del:2.8s;--tx:-14px;--rot:115deg">🍃</div>
+  <div class="wt-leaf" style="left:24%;top:42%;--dur:2.9s;--del:3.8s;--tx:10px;--rot:-95deg">🍃</div>
+  <div class="wt-leaf" style="left:68%;top:52%;--dur:3.8s;--del:5.2s;--tx:-8px;--rot:145deg">🍃</div>
+  <div class="wt-leaf" style="left:18%;top:34%;--dur:3.1s;--del:7.0s;--tx:12px;--rot:-110deg">🍃</div>
+</div>
+<div class="wake-server-label">Growing your Sequoia…</div>
+<div class="wake-server-sub">The server is waking up from sleep<br>— usually takes 20–40 sec on first visit.</div>
+<button class="wn-demo" onclick="loadDemo()"><span class="wn-dot"></span>Try Demo Mode while you wait</button>`;
     list.insertBefore(notice, list.firstChild);
   }, 8000);
 
