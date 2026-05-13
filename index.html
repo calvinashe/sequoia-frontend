@@ -5628,7 +5628,7 @@ function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 // ── SERVICE WORKER ───────────────────────────────────────
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker.register('./sw.js')
       .then(reg => console.log('[Sequoia] SW registered:', reg.scope))
       .catch(err => console.warn('[Sequoia] SW registration failed:', err));
   });
