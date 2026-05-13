@@ -24,6 +24,10 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <style>
 /* ── TOKENS ──────────────────────────────────────────────── */
 :root {
@@ -58,6 +62,137 @@ body {
   min-height:100vh;
   overflow-x:hidden;
 }
+
+/* ── AUTH SCREEN ────────────────────────────────────────── */
+#auth-screen {
+  position:fixed; inset:0; z-index:10000;
+  background:var(--page);
+  display:flex; align-items:center; justify-content:center;
+  padding:20px 16px;
+}
+#auth-screen.gone { display:none; }
+.auth-card {
+  background:var(--card); border-radius:24px;
+  padding:36px 32px 28px; width:100%; max-width:400px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.3);
+}
+.auth-logo {
+  display:flex; align-items:center; justify-content:center;
+  gap:10px; margin-bottom:6px;
+}
+.auth-logo-icon {
+  width:36px; height:36px; border-radius:10px;
+  background:var(--g2); display:flex; align-items:center; justify-content:center;
+}
+.auth-logo-wordmark {
+  font-family:'Playfair Display',serif; font-size:22px;
+  font-weight:700; color:var(--g1);
+}
+.auth-tagline {
+  text-align:center; font-size:13px; color:var(--light);
+  margin-bottom:24px; line-height:1.5;
+}
+.auth-toggle {
+  display:flex; background:var(--card-2); border-radius:10px;
+  padding:3px; margin-bottom:20px;
+}
+.auth-toggle-btn {
+  flex:1; padding:8px; border:none; border-radius:8px;
+  font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600;
+  cursor:pointer; background:transparent; color:var(--mid);
+  transition:all .18s;
+}
+.auth-toggle-btn.active {
+  background:var(--g1); color:#fff;
+}
+.auth-input {
+  display:block; width:100%; padding:12px 14px;
+  border:2px solid var(--border); border-radius:11px;
+  font-family:'DM Sans',sans-serif; font-size:14px; color:var(--text);
+  background:#fff; outline:none; transition:border-color .2s;
+  margin-bottom:10px;
+}
+.auth-input:focus { border-color:var(--g3); }
+.auth-err {
+  font-size:12px; color:var(--red); margin-bottom:10px;
+  min-height:16px; line-height:1.4;
+}
+.auth-submit {
+  width:100%; padding:13px; border:none; border-radius:12px;
+  background:var(--g1); color:#fff;
+  font-family:'DM Sans',sans-serif; font-size:14px; font-weight:700;
+  cursor:pointer; transition:background .18s; margin-bottom:16px;
+}
+.auth-submit:hover { background:var(--g2); }
+.auth-submit:disabled { opacity:0.6; cursor:not-allowed; }
+.auth-divider {
+  display:flex; align-items:center; gap:10px;
+  font-size:11px; color:var(--light); margin-bottom:16px;
+}
+.auth-divider::before,.auth-divider::after {
+  content:''; flex:1; height:1px; background:var(--border);
+}
+.auth-google {
+  width:100%; padding:12px; border:2px solid var(--border);
+  border-radius:12px; background:#fff; cursor:pointer;
+  font-family:'DM Sans',sans-serif; font-size:14px; font-weight:600;
+  color:var(--text); display:flex; align-items:center; justify-content:center;
+  gap:10px; transition:border-color .18s, box-shadow .18s; margin-bottom:12px;
+}
+.auth-google:hover { border-color:var(--g3); box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+.auth-demo-link {
+  width:100%; padding:10px; border:none; background:none;
+  font-family:'DM Sans',sans-serif; font-size:13px; color:var(--light);
+  cursor:pointer; text-align:center;
+}
+.auth-demo-link:hover { color:var(--g2); }
+
+/* ── NAV ACCOUNT ─────────────────────────────────────────── */
+.nav-account { position:relative; }
+.nav-avatar {
+  width:30px; height:30px; border-radius:50%;
+  background:var(--g2); color:#fff;
+  font-size:13px; font-weight:700;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; border:2px solid rgba(255,255,255,0.15);
+  background-size:cover; background-position:center;
+  transition:border-color .18s;
+}
+.nav-avatar:hover { border-color:var(--g4); }
+.nav-tier-badge {
+  position:absolute; top:-5px; right:-6px;
+  font-size:9px; font-weight:800; padding:1px 5px;
+  border-radius:100px; background:var(--border); color:var(--mid);
+  pointer-events:none; white-space:nowrap;
+}
+.nav-tier-badge.pro {
+  background:linear-gradient(135deg,#D4882B,#E8A040); color:#fff;
+}
+.account-menu {
+  position:absolute; top:calc(100% + 10px); right:0;
+  background:var(--card); border:1px solid var(--border);
+  border-radius:14px; box-shadow:0 8px 30px rgba(0,0,0,0.15);
+  min-width:200px; overflow:hidden; z-index:500;
+  opacity:0; pointer-events:none; transform:translateY(-6px);
+  transition:opacity .18s, transform .18s;
+}
+.account-menu.open { opacity:1; pointer-events:auto; transform:translateY(0); }
+.am-header {
+  padding:14px 16px 10px;
+  border-bottom:1px solid var(--border);
+}
+.am-name  { font-size:13px; font-weight:700; color:var(--g1); }
+.am-email { font-size:11px; color:var(--light); margin-top:2px; }
+.am-tier  { display:inline-block; margin-top:6px; font-size:10px; font-weight:800;
+  padding:2px 8px; border-radius:100px; background:var(--g-pale); color:var(--g2); }
+.am-tier.pro { background:linear-gradient(135deg,#D4882B,#E8A040); color:#fff; }
+.am-btn {
+  display:block; width:100%; padding:11px 16px; text-align:left;
+  background:none; border:none; font-family:'DM Sans',sans-serif;
+  font-size:13px; color:var(--text); cursor:pointer; transition:background .15s;
+}
+.am-btn:hover { background:var(--g-pale); }
+.am-btn.danger { color:var(--red); }
 
 /* ── NAV ─────────────────────────────────────────────────── */
 .nav {
@@ -1784,6 +1919,53 @@ body {
 <!-- ════════════════════════════════════════════════════════
      ONBOARDING
 ════════════════════════════════════════════════════════ -->
+<!-- ════════════════════════════════════════════════════════
+     AUTH SCREEN
+════════════════════════════════════════════════════════ -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">
+        <svg viewBox="0 0 30 30" width="22" height="22" xmlns="http://www.w3.org/2000/svg">
+          <rect x="13" y="22" width="4" height="7" rx="1" fill="#7B4A1E"/>
+          <polygon points="15,4 8,14 22,14" fill="#3A7A1E"/>
+          <polygon points="15,9 7,19 23,19" fill="#4A9028"/>
+          <polygon points="15,14 6,23 24,23" fill="#5AAF35"/>
+        </svg>
+      </div>
+      <span class="auth-logo-wordmark">Sequoia</span>
+    </div>
+    <p class="auth-tagline">Grow through every semester.</p>
+
+    <div class="auth-toggle">
+      <button class="auth-toggle-btn active" id="auth-tab-signup" onclick="authShowTab('signup')">Sign Up</button>
+      <button class="auth-toggle-btn" id="auth-tab-login" onclick="authShowTab('login')">Log In</button>
+    </div>
+
+    <div class="auth-err" id="auth-err"></div>
+    <input class="auth-input" type="email" id="auth-email" placeholder="Email address" autocomplete="email">
+    <input class="auth-input" type="password" id="auth-password" placeholder="Password" autocomplete="new-password">
+    <div id="auth-confirm-wrap">
+      <input class="auth-input" type="password" id="auth-confirm" placeholder="Confirm password" autocomplete="new-password">
+    </div>
+    <button class="auth-submit" id="auth-submit" onclick="authSubmit()">Create Account →</button>
+
+    <div class="auth-divider"><span>or</span></div>
+
+    <button class="auth-google" onclick="signInWithGoogle()">
+      <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+        <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+        <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+        <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+        <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+      </svg>
+      Continue with Google
+    </button>
+
+    <button class="auth-demo-link" onclick="loadDemoFromAuth()">🌱 Try Demo Mode first — no account needed</button>
+  </div>
+</div>
+
 <div id="onboard">
 
   <!-- Step 1: Hero -->
@@ -1973,7 +2155,19 @@ body {
     <span class="nav-xp" id="nav-xp">0 XP</span>
     <span class="nav-streak" id="nav-streak">🔥 0</span>
     <button class="nav-bell" id="nav-bell" onclick="requestNotifPermission()" title="Enable reminders">🔔</button>
-    <button class="nav-settings" id="nav-settings" onclick="openSettings()" title="Settings">⚙︎</button>
+    <div class="nav-account" id="nav-account">
+      <div class="nav-avatar" id="nav-avatar" onclick="toggleAccountMenu()">?</div>
+      <span class="nav-tier-badge" id="nav-tier-badge">Free</span>
+      <div class="account-menu" id="account-menu">
+        <div class="am-header">
+          <div class="am-name" id="am-name">—</div>
+          <div class="am-email" id="am-email"></div>
+          <span class="am-tier" id="am-tier">Free</span>
+        </div>
+        <button class="am-btn" onclick="closeAccountMenu();openSettings()">⚙️ Settings</button>
+        <button class="am-btn danger" onclick="signOutUser()">Sign Out</button>
+      </div>
+    </div>
   </div>
 </nav>
 
@@ -2723,6 +2917,172 @@ body {
 <script>
 const API = 'https://sequoia-backend-szss.onrender.com';
 
+// ── FIREBASE ─────────────────────────────────────────────
+firebase.initializeApp({
+  apiKey:            "AIzaSyCKZa2AEso1J33om4LoxkJSb6WMm1vMyR0",
+  authDomain:        "sequoia-76f2d.firebaseapp.com",
+  projectId:         "sequoia-76f2d",
+  storageBucket:     "sequoia-76f2d.firebasestorage.app",
+  messagingSenderId: "294026545606",
+  appId:             "1:294026545606:web:dd10bbf10827119d8f8ac7"
+});
+const auth = firebase.auth();
+const db   = firebase.firestore();
+let currentUser = null;
+let _authTab = 'signup';
+
+// Pull Firestore → localStorage so the rest of the app works normally
+async function loadUserData(uid) {
+  try {
+    const doc = await db.collection('users').doc(uid).get();
+    if (!doc.exists) return null;
+    const d = doc.data();
+    if (d.xp               !== undefined) localStorage.setItem('sq_xp',            String(d.xp));
+    if (d.streak           !== undefined) localStorage.setItem('sq_streak',         String(d.streak));
+    if (d.last_study)                     localStorage.setItem('sq_last_study',     d.last_study);
+    if (d.done_ids)                       localStorage.setItem('sq_done',           JSON.stringify(d.done_ids));
+    if (d.canvas_token)                   localStorage.setItem('sq_token',          d.canvas_token);
+    if (d.canvas_url)                     localStorage.setItem('sq_url',            d.canvas_url);
+    if (d.name)                           localStorage.setItem('sq_name',           d.name);
+    if (d.pomo_sessions    !== undefined) localStorage.setItem('sq_pomo_sessions',  String(d.pomo_sessions));
+    if (d.manual_assignments)             localStorage.setItem('sq_manual',         JSON.stringify(d.manual_assignments));
+    return d;
+  } catch(e) { return null; }
+}
+
+// Fire-and-forget Firestore write (merges, never overwrites full doc)
+function saveUserData(updates) {
+  if (!currentUser || isDemo) return;
+  db.collection('users').doc(currentUser.uid).set(updates, { merge: true }).catch(() => {});
+}
+
+// Create initial Firestore doc for brand-new users (migrates any existing localStorage data)
+async function initNewUser(user, name) {
+  const snap = await db.collection('users').doc(user.uid).get().catch(() => ({ exists: false }));
+  if (snap.exists) return; // already exists, don't overwrite
+  await db.collection('users').doc(user.uid).set({
+    name:               name || user.displayName || '',
+    email:              user.email || '',
+    tier:               'free',
+    xp:                 parseInt(localStorage.getItem('sq_xp')            || '0'),
+    streak:             parseInt(localStorage.getItem('sq_streak')        || '0'),
+    last_study:         localStorage.getItem('sq_last_study')             || '',
+    done_ids:           JSON.parse(localStorage.getItem('sq_done')        || '[]'),
+    canvas_token:       localStorage.getItem('sq_token')                  || '',
+    canvas_url:         localStorage.getItem('sq_url')                    || '',
+    pomo_sessions:      parseInt(localStorage.getItem('sq_pomo_sessions') || '0'),
+    manual_assignments: JSON.parse(localStorage.getItem('sq_manual')      || '[]'),
+    created_at:         firebase.firestore.FieldValue.serverTimestamp(),
+  }).catch(() => {});
+}
+
+// Update nav avatar + account menu with user info
+function updateNavAccount(user, tier) {
+  const avatar = document.getElementById('nav-avatar');
+  const badge  = document.getElementById('nav-tier-badge');
+  const amName = document.getElementById('am-name');
+  const amEmail= document.getElementById('am-email');
+  const amTier = document.getElementById('am-tier');
+  if (!avatar) return;
+  const displayName = user.displayName || localStorage.getItem('sq_name') || user.email.split('@')[0];
+  const initial = displayName.slice(0, 1).toUpperCase();
+  if (user.photoURL) {
+    avatar.style.backgroundImage = `url(${user.photoURL})`;
+    avatar.style.backgroundSize  = 'cover';
+    avatar.textContent = '';
+  } else {
+    avatar.textContent = initial;
+    avatar.style.backgroundImage = '';
+  }
+  const isPro = tier === 'premium';
+  if (badge)  { badge.textContent  = isPro ? '✦ Pro' : 'Free'; badge.className = 'nav-tier-badge' + (isPro ? ' pro' : ''); }
+  if (amName) amName.textContent  = displayName;
+  if (amEmail)amEmail.textContent = user.email || '';
+  if (amTier) { amTier.textContent = isPro ? '✦ Pro' : 'Free Plan'; amTier.className = 'am-tier' + (isPro ? ' pro' : ''); }
+}
+
+// ── AUTH SCREEN LOGIC ──────────────────────────────────
+function authShowTab(tab) {
+  _authTab = tab;
+  document.getElementById('auth-tab-signup').classList.toggle('active', tab === 'signup');
+  document.getElementById('auth-tab-login').classList.toggle('active',  tab === 'login');
+  document.getElementById('auth-confirm-wrap').style.display = tab === 'signup' ? '' : 'none';
+  document.getElementById('auth-submit').textContent = tab === 'signup' ? 'Create Account →' : 'Log In →';
+  document.getElementById('auth-err').textContent = '';
+}
+function showAuthScreen() {
+  const s = document.getElementById('auth-screen'); if (s) s.classList.remove('gone');
+}
+function hideAuthScreen() {
+  const s = document.getElementById('auth-screen'); if (s) s.classList.add('gone');
+}
+
+async function authSubmit() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass  = document.getElementById('auth-password').value;
+  const conf  = document.getElementById('auth-confirm').value;
+  const err   = document.getElementById('auth-err');
+  const btn   = document.getElementById('auth-submit');
+  err.textContent = '';
+  if (!email || !pass) { err.textContent = 'Please enter your email and password.'; return; }
+  if (_authTab === 'signup' && pass !== conf) { err.textContent = "Passwords don't match."; return; }
+  if (_authTab === 'signup' && pass.length < 6) { err.textContent = 'Password must be at least 6 characters.'; return; }
+  btn.disabled = true; btn.textContent = 'Please wait…';
+  try {
+    if (_authTab === 'signup') {
+      const cred = await auth.createUserWithEmailAndPassword(email, pass);
+      await initNewUser(cred.user, '');
+    } else {
+      await auth.signInWithEmailAndPassword(email, pass);
+    }
+    // onAuthStateChanged will handle the rest
+  } catch(e) {
+    btn.disabled = false; btn.textContent = _authTab === 'signup' ? 'Create Account →' : 'Log In →';
+    const msgs = {
+      'auth/email-already-in-use': 'That email already has an account — try logging in.',
+      'auth/user-not-found':       'No account found with that email.',
+      'auth/wrong-password':       'Incorrect password.',
+      'auth/invalid-credential':   'Email or password is incorrect.',
+      'auth/invalid-email':        'Please enter a valid email address.',
+      'auth/too-many-requests':    'Too many attempts — try again in a moment.',
+    };
+    err.textContent = msgs[e.code] || e.message;
+  }
+}
+
+async function signInWithGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try {
+    const cred = await auth.signInWithPopup(provider);
+    if (cred.additionalUserInfo && cred.additionalUserInfo.isNewUser) {
+      await initNewUser(cred.user, cred.user.displayName || '');
+    }
+    // onAuthStateChanged handles the rest
+  } catch(e) {
+    if (e.code !== 'auth/popup-closed-by-user') {
+      document.getElementById('auth-err').textContent = e.message || 'Google sign-in failed.';
+    }
+  }
+}
+
+async function signOutUser() {
+  closeAccountMenu();
+  await auth.signOut();
+  ['sq_token','sq_url','sq_name','sq_xp','sq_streak','sq_last_study',
+   'sq_done','sq_sessions','sq_pomo_sessions','sq_manual'].forEach(k => localStorage.removeItem(k));
+  location.reload();
+}
+
+// Demo from auth screen — bypass login
+function loadDemoFromAuth() { hideAuthScreen(); loadDemo(); }
+
+// ── ACCOUNT MENU ───────────────────────────────────────
+function toggleAccountMenu() { document.getElementById('account-menu').classList.toggle('open'); }
+function closeAccountMenu()  { document.getElementById('account-menu').classList.remove('open'); }
+document.addEventListener('click', e => {
+  if (!e.target.closest('#nav-account')) closeAccountMenu();
+});
+
 // ── ONBOARDING ──────────────────────────────────────────
 let obCur = 0;
 function obGo(to) {
@@ -2769,6 +3129,7 @@ async function connectCanvas() {
     localStorage.setItem('sq_token', token); localStorage.setItem('sq_url', url);
     const name = nameInput || data.name || 'Student';
     localStorage.setItem('sq_name', name);
+    saveUserData({ canvas_token: token, canvas_url: url, name });
     setGreeting(name);
     closeOnboard(); loadAssignments(token, url); loadCourses(token, url);
   } catch (e) {
@@ -2846,27 +3207,45 @@ function saveSessionHistory(entries) {
 let sessionEntries = loadSessionHistory();
 
 window.addEventListener('DOMContentLoaded', () => {
-  // Pre-warm the Render backend immediately so it's ready when needed
   fetch(`${API}/health`, { signal: AbortSignal.timeout ? AbortSignal.timeout(90000) : undefined }).catch(() => {});
 
-  const token = localStorage.getItem('sq_token');
-  const url   = localStorage.getItem('sq_url');
-  loadXPStreak();
-  updateDashTree();
-  syncTreeScreen();
-  checkStreakRisk();
-  renderSessionLog();
-  if (token) {
-    closeOnboard();
-    setGreeting(localStorage.getItem('sq_name') || '');
-    loadAssignments(token, url);
-    loadCourses(token, url);
-  }
   document.getElementById('ob-token').addEventListener('keydown', e => { if (e.key === 'Enter') connectCanvas(); });
   if (Notification.permission === 'granted') document.getElementById('nav-bell').classList.add('enabled');
-
-  // Re-check streak risk every 15 min so the chip appears after noon even if app is already open
   setInterval(checkStreakRisk, 15 * 60 * 1000);
+
+  // Firebase auth state drives the whole startup flow
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+      // Not signed in — show auth screen, reset UI to defaults
+      showAuthScreen();
+      loadXPStreak(); updateDashTree(); syncTreeScreen();
+      checkStreakRisk(); renderSessionLog();
+      return;
+    }
+
+    // Signed in — load their data from Firestore first
+    currentUser = user;
+    const userData = await loadUserData(user.uid);
+    updateNavAccount(user, userData?.tier || 'free');
+
+    // Refresh UI with loaded data
+    loadXPStreak(); updateDashTree(); syncTreeScreen();
+    checkStreakRisk(); renderSessionLog();
+
+    const token = localStorage.getItem('sq_token');
+    const url   = localStorage.getItem('sq_url');
+
+    if (token) {
+      // Returning user with Canvas connected
+      closeOnboard();
+      setGreeting(localStorage.getItem('sq_name') || user.displayName || '');
+      loadAssignments(token, url);
+      loadCourses(token, url);
+    }
+    // else: new user, onboarding stays open so they can connect Canvas
+
+    hideAuthScreen();
+  });
 
   // Global Escape key: close any open overlay
   document.addEventListener('keydown', e => {
@@ -3409,6 +3788,7 @@ function toggleDone(id, el, title, weight) {
   if (completedIds.has(id)) return;
   completedIds.add(id);
   localStorage.setItem('sq_done', JSON.stringify([...completedIds]));
+  saveUserData({ done_ids: [...completedIds] });
   if (el) { el.classList.add('checked'); el.textContent = '✓'; }
   // XP: same formula as detail sheet preview — includes early bonus
   const a = allAssignments.find(x => x.id === id);
@@ -3513,6 +3893,7 @@ function addXP(amount) {
   const prevStage = getStageIndex(prevXP);
   const xp        = prevXP + amount;
   localStorage.setItem('sq_xp', xp);
+  saveUserData({ xp });
   document.getElementById('nav-xp').textContent     = xp.toLocaleString() + ' XP';
   document.getElementById('dash-xp-amt').textContent = xp.toLocaleString() + ' XP';
   const newStage = getStageIndex(xp);
@@ -3528,6 +3909,7 @@ function updateStreak() {
   else streak = 1;
   localStorage.setItem('sq_streak', streak);
   localStorage.setItem('sq_last_study', today);
+  saveUserData({ streak, last_study: today });
   document.getElementById('nav-streak').textContent     = '🔥 ' + streak;
   document.getElementById('hstat-streak').textContent   = streak;
 }
