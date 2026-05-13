@@ -24,7 +24,9 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Load fonts async so they never block first paint; text shows in system font first then swaps -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap"></noscript>
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -109,7 +111,7 @@ body {
 .auth-input {
   display:block; width:100%; padding:12px 14px;
   border:2px solid var(--border); border-radius:11px;
-  font-family:'DM Sans',sans-serif; font-size:14px; color:var(--text);
+  font-family:'DM Sans',sans-serif; font-size:16px; color:var(--text);
   background:#fff; outline:none; transition:border-color .2s;
   margin-bottom:10px;
 }
@@ -507,6 +509,11 @@ body {
   border:2px solid var(--border); background:#fff;
   flex-shrink:0; cursor:pointer; transition:all .2s;
   display:flex; align-items:center; justify-content:center; font-size:13px; color:transparent;
+  /* Larger tap target on mobile without changing visual size */
+  position:relative;
+}
+.a-check::after {
+  content:''; position:absolute; inset:-10px; border-radius:50%;
 }
 .a-check:hover { border-color:var(--g3); color:var(--g3); }
 .a-check.checked { background:var(--g3); border-color:var(--g3); color:#fff; }
@@ -673,7 +680,7 @@ body {
 .study-body { padding:28px; }
 .pomo-goal {
   width:100%; padding:11px 16px; border:2px solid var(--border); border-radius:12px;
-  font-family:'DM Sans',sans-serif; font-size:14px; color:var(--text);
+  font-family:'DM Sans',sans-serif; font-size:16px; color:var(--text);
   background:#fff; outline:none; transition:border-color .2s; text-align:center; margin-bottom:28px;
 }
 .pomo-goal:focus { border-color:var(--g3); }
@@ -803,14 +810,14 @@ body {
 .ws-chip button:hover { color:var(--red); }
 .ws-input-row { display:flex; gap:8px; margin-bottom:12px; }
 .ws-input {
-  flex:1; font-family:'DM Sans',sans-serif; font-size:13px;
+  flex:1; font-family:'DM Sans',sans-serif; font-size:16px;
   border:1px solid var(--border); border-radius:9px; padding:8px 12px;
   background:var(--card); color:var(--text); outline:none;
   transition:border-color .18s;
 }
 .ws-input:focus { border-color:var(--g3); }
 .ws-course-sel {
-  font-family:'DM Sans',sans-serif; font-size:12px; font-weight:600;
+  font-family:'DM Sans',sans-serif; font-size:16px; font-weight:600;
   border:1px solid var(--border); border-radius:9px; padding:8px 10px;
   background:var(--card); color:var(--text); cursor:pointer; outline:none;
   max-width:130px;
@@ -962,7 +969,7 @@ body {
 .ad-chip-val.accent { color:var(--g3); }
 .ad-divider { border:none; border-top:1px solid var(--border); margin:0 0 18px; }
 .ad-notes-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--light); margin-bottom:8px; display:block; }
-.ad-notes { width:100%; border:1.5px solid var(--border); border-radius:12px; padding:10px 12px; font-size:14px; color:var(--text); background:var(--bg); resize:none; outline:none; font-family:inherit; line-height:1.5; box-sizing:border-box; }
+.ad-notes { width:100%; border:1.5px solid var(--border); border-radius:12px; padding:10px 12px; font-size:16px; color:var(--text); background:var(--bg); resize:none; outline:none; font-family:inherit; line-height:1.5; box-sizing:border-box; }
 .ad-notes:focus { border-color:var(--g3); }
 .ad-notes-save { font-size:11px; color:var(--g3); font-weight:600; margin-top:6px; opacity:0; transition:opacity .3s; }
 .ad-notes-save.show { opacity:1; }
@@ -993,7 +1000,7 @@ body {
 .settings-field label { display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--light); margin-bottom:6px; }
 .settings-input {
   width:100%; padding:10px 13px; border:1.5px solid var(--border); border-radius:10px;
-  font-family:'DM Sans',sans-serif; font-size:13px; color:var(--text); background:var(--bg);
+  font-family:'DM Sans',sans-serif; font-size:16px; color:var(--text); background:var(--bg);
   outline:none; transition:border-color .18s; box-sizing:border-box;
 }
 .settings-input:focus { border-color:var(--g3); }
@@ -1536,7 +1543,7 @@ body {
 .ob-field label { font-size:10px; font-weight:700; color:var(--mid); text-transform:uppercase; letter-spacing:1.2px; display:block; margin-bottom:4px; }
 .ob-field input {
   width:100%; padding:12px 14px; border:2px solid var(--border); border-radius:11px;
-  font-family:'DM Sans',sans-serif; font-size:14px; color:var(--text);
+  font-family:'DM Sans',sans-serif; font-size:16px; color:var(--text);
   background:#fff; outline:none; transition:border-color .2s;
 }
 .ob-field input:focus { border-color:var(--g3); }
@@ -3137,6 +3144,8 @@ function authShowTab(tab) {
   document.getElementById('auth-confirm-wrap').style.display = tab === 'signup' ? '' : 'none';
   document.getElementById('auth-submit').textContent = tab === 'signup' ? 'Create Account →' : 'Log In →';
   document.getElementById('auth-err').textContent = '';
+  // Fix autocomplete so mobile password managers autofill correctly on login
+  document.getElementById('auth-password').autocomplete = tab === 'signup' ? 'new-password' : 'current-password';
 }
 function showAuthScreen() {
   const s = document.getElementById('auth-screen'); if (s) s.classList.remove('gone');
@@ -3180,12 +3189,19 @@ async function authSubmit() {
 
 async function signInWithGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
+  // iOS Safari and most mobile browsers block popups — use redirect instead
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
   try {
-    const cred = await auth.signInWithPopup(provider);
-    if (cred.additionalUserInfo && cred.additionalUserInfo.isNewUser) {
-      await initNewUser(cred.user, cred.user.displayName || '');
+    if (isMobile) {
+      // Redirect flow: page reloads after sign-in; onAuthStateChanged + getRedirectResult handle the rest
+      await auth.signInWithRedirect(provider);
+    } else {
+      const cred = await auth.signInWithPopup(provider);
+      if (cred.additionalUserInfo && cred.additionalUserInfo.isNewUser) {
+        await initNewUser(cred.user, cred.user.displayName || '');
+      }
+      // onAuthStateChanged handles the rest
     }
-    // onAuthStateChanged handles the rest
   } catch(e) {
     if (e.code !== 'auth/popup-closed-by-user') {
       document.getElementById('auth-err').textContent = e.message || 'Google sign-in failed.';
@@ -3337,8 +3353,15 @@ let sessionEntries = loadSessionHistory();
 window.addEventListener('DOMContentLoaded', () => {
   fetch(`${API}/health`, { signal: AbortSignal.timeout ? AbortSignal.timeout(90000) : undefined }).catch(() => {});
 
+  // Handle result from signInWithRedirect (mobile Google sign-in)
+  auth.getRedirectResult().then(result => {
+    if (result && result.user && result.additionalUserInfo && result.additionalUserInfo.isNewUser) {
+      initNewUser(result.user, result.user.displayName || '');
+    }
+  }).catch(() => {});
+
   document.getElementById('ob-token').addEventListener('keydown', e => { if (e.key === 'Enter') connectCanvas(); });
-  if (Notification.permission === 'granted') document.getElementById('nav-bell').classList.add('enabled');
+  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') document.getElementById('nav-bell').classList.add('enabled');
   setInterval(checkStreakRisk, 15 * 60 * 1000);
 
   // Firebase auth state drives the whole startup flow
@@ -3774,24 +3797,27 @@ function calHideTip() {
 }
 
 let _calPinKey = null;
+let _calDismiss = null; // track the active dismiss handler so we can remove it cleanly
 function calClickDay(e, dateKey) {
   const tip = document.getElementById('cal-tip');
-  // toggle off if clicking same day
+  // Remove any previous dismiss listener before adding a new one
+  if (_calDismiss) { document.removeEventListener('click', _calDismiss); _calDismiss = null; }
+  // Toggle off if clicking the same day twice
   if (_calPinKey === dateKey && tip._pinned) {
     tip._pinned = false; _calPinKey = null; tip.classList.remove('visible'); return;
   }
   calShowTip(e, dateKey);
-  tip._pinned  = true;
-  _calPinKey   = dateKey;
-  // dismiss on outside click
+  tip._pinned = true;
+  _calPinKey  = dateKey;
+  // Single dismiss listener — properly removed when tip is hidden
   setTimeout(() => {
-    function dismiss(ev) {
+    _calDismiss = (ev) => {
       if (!ev.target.classList.contains('cal-cell')) {
         tip._pinned = false; _calPinKey = null; tip.classList.remove('visible');
-        document.removeEventListener('click', dismiss);
+        document.removeEventListener('click', _calDismiss); _calDismiss = null;
       }
-    }
-    document.addEventListener('click', dismiss);
+    };
+    document.addEventListener('click', _calDismiss);
   }, 0);
 }
 
@@ -3836,7 +3862,7 @@ function renderFocusBanner() {
 }
 
 function refreshAssignments() {
-  if (isDemo) { renderAssignments(allAssignments); return; } // demo — re-render in place
+  if (isDemo) { renderAssignments(allAssignments, true); return; } // demo — re-render in place, calendar unchanged
   const token = localStorage.getItem('sq_token');
   const url   = localStorage.getItem('sq_url');
   if (token) { loadAssignments(token, url); loadCourses(token, url); }
@@ -3847,7 +3873,7 @@ function filterAssign(f, btn) {
   activeFilter = f;
   document.querySelectorAll('.ftab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  renderAssignments(allAssignments);
+  renderAssignments(allAssignments, true); // true = skip calendar rebuild (filter doesn't change data)
 }
 
 function filteredList() {
@@ -3879,7 +3905,7 @@ function rowIcon(w, i) {
   return SVGICONS[i % SVGICONS.length];
 }
 
-function renderAssignments(list) {
+function renderAssignments(list, _skipCal) {
   const el = document.getElementById('assign-list');
   const fl = filteredList();
   if (!fl.length) {
@@ -3922,7 +3948,7 @@ function renderAssignments(list) {
     </div>`;
   }).join('');
   renderFocusBanner();
-  renderCalendar(allAssignments);
+  if (!_skipCal) renderCalendar(allAssignments); // skip calendar rebuild on filter-only changes
 }
 
 function emptyState(icon, title, sub) {
@@ -4507,10 +4533,10 @@ function pomoTick() {
       pomoPhase='break'; pomoSecs=phaseDur(); pomoAt=Date.now();
       showWeakSpotPrompt();
       showSessionComplete(sessionXP);
-      if(Notification.permission==='granted') new Notification('Sequoia 🌱',{body:'Focus complete! Break time.'});
+      if(typeof Notification !== 'undefined' && Notification.permission==='granted') new Notification('Sequoia 🌱',{body:'Focus complete! Break time.'});
     } else {
       pomoPhase='focus'; pomoSecs=FOCUS_DUR; pomoAt=Date.now();
-      if(Notification.permission==='granted') new Notification('Sequoia 🌱',{body:'Break over — back to work!'});
+      if(typeof Notification !== 'undefined' && Notification.permission==='granted') new Notification('Sequoia 🌱',{body:'Break over — back to work!'});
     }
   }
   renderPomoUI();
@@ -5209,7 +5235,7 @@ function wsSave() {
 
 document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('pomo-btn').addEventListener('click',()=>{
-    if(Notification.permission==='default') Notification.requestPermission();
+    if(typeof Notification !== 'undefined' && Notification.permission==='default') Notification.requestPermission();
   },{once:true});
 });
 
