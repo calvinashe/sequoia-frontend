@@ -1694,7 +1694,7 @@ body {
   .ob1-hero { min-height:360px; }
   .ob1-hero-text h1 { font-size:28px; }
   .ob1-right { grid-template-rows:auto; grid-template-columns:1fr 1fr; gap:8px; }
-  .ob3-card { padding:28px 20px; border-radius:20px 20px 0 0; position:absolute; bottom:0; left:0; right:0; max-width:100%; }
+  .ob3-card { padding:28px 20px; border-radius:20px 20px 0 0; position:absolute; bottom:0; left:0; right:0; max-width:100%; max-height:90vh; overflow-y:auto; }
   #obs1 { align-items:flex-end; padding:0; }
 
   /* Settings panel — slides up from bottom on mobile */
@@ -2668,7 +2668,9 @@ function toggleTokenHelp(btn) {
 
 async function connectCanvas() {
   const token    = document.getElementById('ob-token').value.trim();
-  const url      = document.getElementById('ob-url').value.trim().replace(/\/$/, '');
+  const urlEl    = document.getElementById('ob-url');
+  let url        = urlEl.value.trim().replace(/\/$/, '');
+  if (url && !url.startsWith('http')) { url = 'https://' + url; urlEl.value = url; }
   const nameInput= document.getElementById('ob-name').value.trim();
   const err      = document.getElementById('ob-err');
   const btn      = document.getElementById('ob-connect-btn');
@@ -2783,6 +2785,9 @@ window.addEventListener('DOMContentLoaded', () => {
   }
   document.getElementById('ob-token').addEventListener('keydown', e => { if (e.key === 'Enter') connectCanvas(); });
   if (Notification.permission === 'granted') document.getElementById('nav-bell').classList.add('enabled');
+
+  // Re-check streak risk every 15 min so the chip appears after noon even if app is already open
+  setInterval(checkStreakRisk, 15 * 60 * 1000);
 
   // Global Escape key: close any open overlay
   document.addEventListener('keydown', e => {
@@ -3159,9 +3164,10 @@ function renderFocusBanner() {
 }
 
 function refreshAssignments() {
+  if (isDemo) { renderAssignments(allAssignments); return; } // demo — re-render in place
   const token = localStorage.getItem('sq_token');
   const url   = localStorage.getItem('sq_url');
-  if (token) loadAssignments(token, url);
+  if (token) { loadAssignments(token, url); loadCourses(token, url); }
 }
 
 let activeFilter = 'all';
@@ -3337,7 +3343,8 @@ function settingsOverlayClick(e) {
 
 function saveSettings() {
   const name  = document.getElementById('set-name').value.trim();
-  const url   = document.getElementById('set-url').value.trim().replace(/\/$/, '');
+  let url     = document.getElementById('set-url').value.trim().replace(/\/$/, '');
+  if (url && !url.startsWith('http')) url = 'https://' + url;
   const token = document.getElementById('set-token').value.trim();
   if (name)  { localStorage.setItem('sq_name', name);  setGreeting(name); const su = document.getElementById('stats-user'); if (su) su.textContent = name; }
   if (url)   { localStorage.setItem('sq_url', url); }
