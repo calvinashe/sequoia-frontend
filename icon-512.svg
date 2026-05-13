@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#1C3A1C"/>
+  <!-- Trunk -->
+  <rect x="238" y="336" width="36" height="96" rx="10" fill="#5A2E0A"/>
+  <!-- Tree layers bottom to top -->
+  <polygon points="256,340 154,340 256,266 358,340" fill="#204A14"/>
+  <polygon points="256,294 164,294 256,220 348,294" fill="#2E6020"/>
+  <polygon points="256,250 174,250 256,176 338,250" fill="#3D8B1E"/>
+  <polygon points="256,208 186,208 256,136 326,208" fill="#4CA130"/>
+  <polygon points="256,166 196,166 256,96  316,166" fill="#60BE40"/>
+  <polygon points="256,128 208,128 256,62  304,128" fill="#72CC50"/>
+</svg>

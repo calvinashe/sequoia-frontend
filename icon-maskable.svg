@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Full bleed background (safe zone = inner 80%) for maskable -->
+  <rect width="512" height="512" fill="#1C3A1C"/>
+  <!-- Trunk -->
+  <rect x="238" y="346" width="36" height="86" rx="10" fill="#5A2E0A"/>
+  <!-- Tree layers — slightly smaller to stay in safe zone -->
+  <polygon points="256,348 168,348 256,280 344,348" fill="#204A14"/>
+  <polygon points="256,306 178,306 256,238 334,306" fill="#2E6020"/>
+  <polygon points="256,266 188,266 256,198 324,266" fill="#3D8B1E"/>
+  <polygon points="256,228 198,228 256,162 314,228" fill="#4CA130"/>
+  <polygon points="256,192 208,192 256,130 304,192" fill="#60BE40"/>
+  <polygon points="256,158 218,158 256,102 294,158" fill="#72CC50"/>
+</svg>
