@@ -1,6 +1,13 @@
 // Sequoia Service Worker
-const CACHE = 'sequoia-v1';
-const SHELL = ['/', '/index.html', '/manifest.json', '/icon-192.svg', '/icon-512.svg'];
+const CACHE = 'sequoia-v2';
+const BASE  = '/sequoia-frontend';
+const SHELL = [
+  BASE + '/',
+  BASE + '/index.html',
+  BASE + '/manifest.json',
+  BASE + '/icon-192.svg',
+  BASE + '/icon-512.svg',
+];
 
 // ── Install: cache app shell ──────────────────────────────
 self.addEventListener('install', e => {
@@ -51,8 +58,8 @@ self.addEventListener('push', e => {
   e.waitUntil(
     self.registration.showNotification(data.title, {
       body:    data.body,
-      icon:    '/icon-192.svg',
-      badge:   '/icon-192.svg',
+      icon:    BASE + '/icon-192.svg',
+      badge:   BASE + '/icon-192.svg',
       tag:     data.tag || 'sequoia',
       data:    data,
       actions: data.actions || [],
@@ -64,7 +71,7 @@ self.addEventListener('push', e => {
 // ── Notification click: open app ─────────────────────────
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  const target = e.notification.data?.url || '/';
+  const target = e.notification.data?.url || BASE + '/';
   e.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
       for (const client of list) {
