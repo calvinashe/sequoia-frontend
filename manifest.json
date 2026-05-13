@@ -2,7 +2,7 @@
   "name": "Sequoia",
   "short_name": "Sequoia",
   "description": "The study app that grows as you do.",
-  "start_url": "/",
+  "start_url": "/sequoia-frontend/",
   "display": "standalone",
   "background_color": "#1C3A1C",
   "theme_color": "#1C3A1C",
@@ -33,14 +33,14 @@
       "name": "Study Now",
       "short_name": "Study",
       "description": "Start a focus session",
-      "url": "/?tab=study",
+      "url": "/sequoia-frontend/?tab=study",
       "icons": [{ "src": "icon-192.svg", "sizes": "192x192" }]
     },
     {
       "name": "My Assignments",
       "short_name": "Assignments",
       "description": "View priority assignments",
-      "url": "/?tab=home",
+      "url": "/sequoia-frontend/?tab=home",
       "icons": [{ "src": "icon-192.svg", "sizes": "192x192" }]
     }
   ]
