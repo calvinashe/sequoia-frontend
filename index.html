@@ -322,6 +322,28 @@ body {
 .spin { display:inline-block; animation:spin 1.2s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
 
+/* Server warm-up notice (inside assign-list when cold start is slow) */
+.wake-notice {
+  display:flex; align-items:flex-start; gap:10px;
+  background:var(--g-pale); border:1px solid var(--border);
+  border-radius:12px; padding:12px 14px; margin-bottom:12px;
+  font-size:13px; color:var(--mid); line-height:1.5;
+}
+.wake-notice .wn-icon { font-size:20px; flex-shrink:0; margin-top:1px; }
+.wake-notice strong { color:var(--g1); }
+.wake-notice .wn-demo {
+  display:inline-block; margin-top:6px;
+  font-size:12px; font-weight:700; color:var(--g2);
+  background:none; border:none; cursor:pointer; padding:0;
+  text-decoration:underline; font-family:'DM Sans',sans-serif;
+}
+@keyframes wn-pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+.wake-notice .wn-dot {
+  display:inline-block; width:7px; height:7px; border-radius:50%;
+  background:var(--g3); margin-right:5px; vertical-align:middle;
+  animation:wn-pulse 1.4s ease-in-out infinite;
+}
+
 /* Skeleton loading rows */
 @keyframes skshimmer { 0%,100%{opacity:1} 50%{opacity:.45} }
 .sk-row { display:flex; align-items:center; gap:12px; padding:14px 0; border-bottom:1px solid var(--border); animation:skshimmer 1.5s ease-in-out infinite; }
@@ -2690,7 +2712,10 @@ async function connectCanvas() {
   btn.textContent = 'Connecting…'; btn.disabled = true;
   const wt = setTimeout(() => { wake.style.display = 'block'; }, 3000);
   try {
-    const res  = await fetch(`${API}/verify`, { headers: { 'X-Canvas-Token': token, 'X-Canvas-URL': url } });
+    const ctrl = new AbortController();
+    const verifyTimeout = setTimeout(() => ctrl.abort(), 90000);
+    const res  = await fetch(`${API}/verify`, { headers: { 'X-Canvas-Token': token, 'X-Canvas-URL': url }, signal: ctrl.signal });
+    clearTimeout(verifyTimeout);
     const data = await res.json();
     clearTimeout(wt); wake.style.display = 'none';
     if (!data.ok || data.error) {
@@ -2777,6 +2802,9 @@ function saveSessionHistory(entries) {
 let sessionEntries = loadSessionHistory();
 
 window.addEventListener('DOMContentLoaded', () => {
+  // Pre-warm the Render backend immediately so it's ready when needed
+  fetch(`${API}/health`, { signal: AbortSignal.timeout ? AbortSignal.timeout(90000) : undefined }).catch(() => {});
+
   const token = localStorage.getItem('sq_token');
   const url   = localStorage.getItem('sq_url');
   loadXPStreak();
@@ -2865,8 +2893,22 @@ function skeletonRows() {
 async function loadAssignments(token, url) {
   const list = document.getElementById('assign-list');
   list.innerHTML = skeletonRows();
+
+  // After 8s still loading → show warm-up notice above the skeletons
+  const wakeTimer = setTimeout(() => {
+    if (!list.querySelector('.sk-row')) return; // already rendered
+    const notice = document.createElement('div');
+    notice.className = 'wake-notice'; notice.id = 'wake-notice';
+    notice.innerHTML = `<span class="wn-icon">🌲</span><div><strong>Waking up the server…</strong><br>Sequoia's free-tier backend sleeps after inactivity — it usually takes 20–40 sec to wake up. Hang tight!<br><button class="wn-demo" onclick="loadDemo()"><span class="wn-dot"></span>Try Demo Mode while you wait</button></div>`;
+    list.insertBefore(notice, list.firstChild);
+  }, 8000);
+
   try {
-    const res  = await fetch(`${API}/assignments`, { headers: { 'X-Canvas-Token': token, 'X-Canvas-URL': url } });
+    const ctrl = new AbortController();
+    const timeout = setTimeout(() => ctrl.abort(), 90000);
+    const res  = await fetch(`${API}/assignments`, { headers: { 'X-Canvas-Token': token, 'X-Canvas-URL': url }, signal: ctrl.signal });
+    clearTimeout(timeout);
+    clearTimeout(wakeTimer);
     const data = await res.json();
     if (!data.ok || data.error) {
       list.innerHTML = `<div class="empty-state"><div class="es-icon">🔑</div><h3>Canvas error</h3><p>${esc(data.error || 'Something went wrong')}</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:4px"><button class="es-retry" onclick="loadAssignments('${esc(token)}','${esc(url)}')">Try Again</button><button class="es-retry" style="background:var(--g-pale);color:var(--g2)" onclick="loadDemo()">Try Demo Mode →</button></div></div>`;
@@ -2891,7 +2933,8 @@ async function loadAssignments(token, url) {
     scheduleNotifications(allAssignments);
     buildQPick();
   } catch (e) {
-    list.innerHTML = `<div class="empty-state"><div class="es-icon">📡</div><h3>Can't reach the server</h3><p>The Sequoia server may be waking up — this can take up to 30 sec on first load.</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:4px"><button class="es-retry" onclick="loadAssignments('${esc(token)}','${esc(url)}')">Try Again</button><button class="es-retry" style="background:var(--g-pale);color:var(--g2)" onclick="loadDemo()">Try Demo Mode →</button></div></div>`;
+    clearTimeout(wakeTimer);
+    list.innerHTML = `<div class="empty-state"><div class="es-icon">📡</div><h3>Can't reach the server</h3><p>The Sequoia server may still be waking up — try again in a few seconds, or use Demo Mode to explore.</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:4px"><button class="es-retry" onclick="loadAssignments('${esc(token)}','${esc(url)}')">Try Again</button><button class="es-retry" style="background:var(--g-pale);color:var(--g2)" onclick="loadDemo()">Try Demo Mode →</button></div></div>`;
   }
 }
 
