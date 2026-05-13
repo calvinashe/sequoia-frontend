@@ -5551,15 +5551,19 @@ async function enablePushNotifs() {
   if (permission !== 'granted') return;
   try {
     const reg = await navigator.serviceWorker.ready;
+    // Always unsubscribe first so we get a fresh subscription with the current VAPID key
+    const existing = await reg.pushManager.getSubscription();
+    if (existing) await existing.unsubscribe();
     const sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
     });
-    saveUserData({ push_subscription: sub.toJSON() });
+    await saveUserData({ push_subscription: sub.toJSON() });
     updatePushBtn(true);
     addNotification('system', 'Push notifications enabled 🎉', 'You\'ll get streak reminders and due date alerts even when the app is closed.');
   } catch(e) {
     console.warn('Push subscribe failed:', e);
+    alert('Could not enable push notifications: ' + e.message);
   }
 }
 

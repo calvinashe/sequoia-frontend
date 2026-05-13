@@ -1,5 +1,5 @@
 // Sequoia Service Worker
-const CACHE = 'sequoia-v2';
+const CACHE = 'sequoia-v3';
 const BASE  = '/sequoia-frontend';
 const SHELL = [
   BASE + '/',
@@ -9,10 +9,12 @@ const SHELL = [
   BASE + '/icon-512.svg',
 ];
 
-// ── Install: cache app shell ──────────────────────────────
+// ── Install: cache app shell (fail-safe) ─────────────────
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())
+    caches.open(CACHE).then(c =>
+      Promise.allSettled(SHELL.map(url => c.add(url)))
+    ).then(() => self.skipWaiting())
   );
 });
 
@@ -25,11 +27,14 @@ self.addEventListener('activate', e => {
   );
 });
 
-// ── Fetch: cache-first for shell, network-first for API ──
+// ── Fetch: skip non-http requests, cache-first for shell ─
 self.addEventListener('fetch', e => {
+  // Skip non-http(s) requests (chrome-extension, etc.)
+  if (!e.request.url.startsWith('http')) return;
+
   const url = new URL(e.request.url);
 
-  // Always hit network for Canvas API calls
+  // Always hit network for API calls
   if (url.hostname.includes('instructure.com') || url.pathname.startsWith('/api')) {
     e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
     return;
@@ -45,7 +50,7 @@ self.addEventListener('fetch', e => {
           caches.open(CACHE).then(c => c.put(e.request, clone));
         }
         return res;
-      });
+      }).catch(() => caches.match(e.request));
     })
   );
 });
@@ -75,9 +80,7 @@ self.addEventListener('notificationclick', e => {
   e.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
       for (const client of list) {
-        if (client.url.includes(self.location.origin)) {
-          return client.focus();
-        }
+        if (client.url.includes(self.location.origin)) return client.focus();
       }
       return clients.openWindow(target);
     })
