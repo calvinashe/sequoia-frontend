@@ -313,6 +313,13 @@ body {
 }
 .notif-push-btn:hover { border-color:var(--g3); background:var(--g-pale); }
 .notif-push-btn.active { border-color:var(--g3); background:var(--g-pale); color:var(--g2); }
+.ios-notif-guide {
+  margin-top:10px; background:var(--g-pale); border:1px solid var(--border);
+  border-radius:12px; padding:12px 14px; animation:fadeUp .25s ease;
+}
+.ios-guide-title { font-size:13px; font-weight:700; color:var(--g1); margin-bottom:8px; }
+.ios-guide-steps { margin:0; padding-left:18px; display:flex; flex-direction:column; gap:5px; }
+.ios-guide-steps li { font-size:12px; color:var(--mid); line-height:1.4; }
 @media (max-width:640px) {
   .notif-panel { width:100vw; }
 }
@@ -5638,9 +5645,23 @@ function urlBase64ToUint8Array(b64) {
   return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
 }
 
+// Detect iOS (all browsers on iOS use WebKit — no Web Push support except Safari PWA)
+function _isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+function _isIOSStandalone() {
+  return _isIOS() && window.navigator.standalone === true;
+}
+
 async function togglePushNotifs() {
+  // iOS: Chrome, Firefox, etc. on iPhone don't support Web Push at all
+  if (_isIOS() && !('PushManager' in window)) {
+    _showIOSNotifGuide();
+    return;
+  }
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    alert('Push notifications are not supported on this browser. Try Chrome on desktop or Android.');
+    alert('Push notifications require Chrome on Android or a desktop browser.');
     return;
   }
   try {
@@ -5666,8 +5687,12 @@ async function togglePushNotifs() {
 }
 
 async function enablePushNotifs() {
+  if (_isIOS() && !('PushManager' in window)) {
+    _showIOSNotifGuide();
+    return;
+  }
   if (!('PushManager' in window)) {
-    alert('Push notifications are not supported in this browser. Try Chrome on desktop or Android.');
+    alert('Push notifications require Chrome on Android or a desktop browser.');
     return;
   }
   if (!currentUser) { alert('Sign in to enable push notifications.'); return; }
@@ -5692,6 +5717,28 @@ async function enablePushNotifs() {
     console.warn('Push subscribe failed:', e);
     alert('Could not enable push notifications: ' + e.message);
   }
+}
+
+function _showIOSNotifGuide() {
+  // Show a friendly in-panel guide instead of a generic alert
+  const footer = document.querySelector('.notif-footer');
+  if (!footer) return;
+  const existing = footer.querySelector('.ios-notif-guide');
+  if (existing) { existing.remove(); return; } // toggle off if already showing
+  const guide = document.createElement('div');
+  guide.className = 'ios-notif-guide';
+  guide.innerHTML = `
+    <div class="ios-guide-title">📲 Get notifications on iPhone</div>
+    <ol class="ios-guide-steps">
+      <li>Open this page in <strong>Safari</strong></li>
+      <li>Tap the <strong>Share</strong> button <span style="font-size:15px">⎋</span></li>
+      <li>Tap <strong>"Add to Home Screen"</strong></li>
+      <li>Open Sequoia from your Home Screen</li>
+      <li>Come back here and tap Enable</li>
+    </ol>
+    <div style="font-size:11px;color:var(--light);margin-top:8px">Requires iOS 16.4 or later in Safari.</div>
+  `;
+  footer.appendChild(guide);
 }
 
 async function testPush() {
@@ -5729,10 +5776,28 @@ async function updatePushBtn(enabled) {
 
 async function initPushBtn() {
   const btn = document.getElementById('notif-push-btn');
-  if (!('PushManager' in window) || !('serviceWorker' in navigator)) {
-    if (btn) { btn.textContent = '🔔 Notifications not supported on this browser'; btn.disabled = true; }
+  if (!btn) return;
+
+  // iPhone / iPad: only Safari PWA supports Web Push; Chrome, Firefox etc. on iOS cannot
+  if (_isIOS() && !('PushManager' in window)) {
+    if (_isIOSStandalone()) {
+      // Added to Home Screen in Safari but still no PushManager = iOS < 16.4
+      btn.textContent = '🔔 Requires iOS 16.4+ in Safari';
+      btn.disabled = true;
+    } else {
+      // In-browser on iOS — show actionable button that reveals the guide
+      btn.textContent = '📲 How to get notifications on iPhone →';
+      btn.disabled = false;
+    }
     return;
   }
+
+  if (!('PushManager' in window) || !('serviceWorker' in navigator)) {
+    btn.textContent = '🔔 Not supported — try Chrome on Android';
+    btn.disabled = true;
+    return;
+  }
+
   try {
     const reg = await navigator.serviceWorker.ready;
     const sub = await reg.pushManager.getSubscription();
