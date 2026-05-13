@@ -1943,17 +1943,13 @@ body {
 .btab-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
 
 @media (max-width:640px) {
-  /* Nav — hide top-bar buttons on mobile; they live in the bottom nav instead */
-  .nav { padding:0 12px; gap:6px; }
+  /* Nav — add top space so icons drop below the status bar into thumb reach */
+  .nav { padding:14px 12px 0; gap:6px; height:68px; }
   .nav-wordmark { display:none; }
   .nav-xp, .nav-streak { display:none; }
   .nav-tabs { display:none; }
-  .nav-bell, .nav-account { display:none; }
-
-  /* Shrink btabs slightly so 7 items fit comfortably */
-  .btab { padding:8px 2px 6px; }
-  .btab-icon { font-size:18px; }
-  .btab-label { font-size:8px; letter-spacing:0; }
+  /* Screens shift down to match taller nav */
+  .screen { padding-top:68px; }
 
   /* Bottom nav — hidden during onboarding */
   .bottom-nav {
@@ -5892,8 +5888,6 @@ if ('serviceWorker' in navigator) {
   <button class="btab" id="btab-2" onclick="showScreen(2)"><span class="btab-icon">⏱</span><span class="btab-label">Study</span></button>
   <button class="btab" id="btab-3" onclick="showScreen(3)"><span class="btab-icon">🌲</span><span class="btab-label">My Tree</span></button>
   <button class="btab" id="btab-4" onclick="showScreen(4)"><span class="btab-icon">✨</span><span class="btab-label">Wrap Up</span></button>
-  <button class="btab btab-bell" onclick="toggleNotifPanel()"><span class="btab-icon" style="position:relative">🔔<span class="notif-badge mobile-notif-badge" id="notif-badge-mob" style="display:none">0</span></span><span class="btab-label">Alerts</span></button>
-  <button class="btab btab-acct" onclick="toggleAccountMenu()"><span class="btab-icon" id="btab-avatar">👤</span><span class="btab-label">Account</span></button>
 </div>
 
 <!-- ── SETTINGS OVERLAY ── -->
