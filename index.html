@@ -229,9 +229,90 @@ body {
   font-size:12px; font-weight:700; color:rgba(255,255,255,0.7);
   background:rgba(255,255,255,0.07); padding:4px 10px; border-radius:100px;
 }
-.nav-bell { background:none; border:none; font-size:15px; cursor:pointer; opacity:0.45; transition:opacity .2s; padding:4px 6px; border-radius:6px; }
+.nav-bell {
+  background:none; border:none; font-size:15px; cursor:pointer;
+  opacity:0.55; transition:opacity .2s; padding:4px 6px; border-radius:6px;
+  position:relative;
+}
 .nav-bell:hover { opacity:1; }
 .nav-bell.enabled { opacity:1; }
+.notif-badge {
+  position:absolute; top:-2px; right:-3px;
+  background:var(--red); color:#fff;
+  font-size:9px; font-weight:800; min-width:16px; height:16px;
+  border-radius:100px; display:flex; align-items:center; justify-content:center;
+  padding:0 4px; pointer-events:none; border:2px solid var(--g1);
+}
+
+/* ── NOTIFICATION PANEL ─────────────────────────────────── */
+.notif-overlay {
+  position:fixed; inset:0; z-index:800;
+  background:rgba(0,0,0,0.35);
+  opacity:0; pointer-events:none; transition:opacity .22s;
+}
+.notif-overlay.open { opacity:1; pointer-events:auto; }
+.notif-panel {
+  position:fixed; top:0; right:0; bottom:0; z-index:801;
+  width:340px; max-width:100vw;
+  background:var(--card); box-shadow:-4px 0 32px rgba(0,0,0,0.18);
+  display:flex; flex-direction:column;
+  transform:translateX(100%); transition:transform .26s cubic-bezier(.32,.72,0,1);
+}
+.notif-panel.open { transform:translateX(0); }
+.notif-panel-header {
+  display:flex; align-items:center; gap:8px;
+  padding:16px 16px 12px; border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.notif-panel-title { font-size:15px; font-weight:700; color:var(--g1); flex:1; }
+.notif-mark-all {
+  font-size:11px; font-weight:600; color:var(--g2);
+  background:none; border:none; cursor:pointer; padding:4px 8px;
+  border-radius:6px; transition:background .15s;
+}
+.notif-mark-all:hover { background:var(--g-pale); }
+.notif-close-btn {
+  background:none; border:none; font-size:16px; cursor:pointer;
+  color:var(--light); padding:4px; border-radius:6px;
+  line-height:1; transition:color .15s;
+}
+.notif-close-btn:hover { color:var(--text); }
+.notif-list { flex:1; overflow-y:auto; padding:8px 0; }
+.notif-item {
+  display:flex; gap:12px; padding:12px 16px;
+  border-bottom:1px solid var(--border); cursor:default;
+  transition:background .15s; position:relative;
+}
+.notif-item:last-child { border-bottom:none; }
+.notif-item.unread { background:var(--g-pale); }
+.notif-item.unread::before {
+  content:''; position:absolute; left:6px; top:50%; transform:translateY(-50%);
+  width:5px; height:5px; border-radius:50%; background:var(--g3);
+}
+.notif-icon { font-size:22px; flex-shrink:0; margin-top:1px; }
+.notif-body { flex:1; min-width:0; }
+.notif-item-title { font-size:13px; font-weight:700; color:var(--g1); margin-bottom:2px; }
+.notif-item-body  { font-size:12px; color:var(--mid); line-height:1.45; }
+.notif-item-time  { font-size:10px; color:var(--light); margin-top:4px; }
+.notif-empty {
+  padding:60px 20px; text-align:center;
+  font-size:13px; color:var(--light); line-height:1.6;
+}
+.notif-empty-icon { font-size:36px; margin-bottom:10px; }
+.notif-footer {
+  padding:14px 16px; border-top:1px solid var(--border); flex-shrink:0;
+}
+.notif-push-btn {
+  width:100%; padding:11px; border-radius:12px;
+  border:2px solid var(--border); background:#fff;
+  font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600;
+  color:var(--g1); cursor:pointer; transition:border-color .18s, background .18s;
+}
+.notif-push-btn:hover { border-color:var(--g3); background:var(--g-pale); }
+.notif-push-btn.active { border-color:var(--g3); background:var(--g-pale); color:var(--g2); }
+@media (max-width:640px) {
+  .notif-panel { width:100vw; }
+}
 .nav-streak.at-risk {
   color:#E8773A !important;
   animation:streakPulse 2s ease-in-out infinite;
@@ -2129,6 +2210,24 @@ body {
 </div><!-- /onboard -->
 
 <!-- ════════════════════════════════════════════════════════
+     NOTIFICATION PANEL
+════════════════════════════════════════════════════════ -->
+<div class="notif-overlay" id="notif-overlay" onclick="closeNotifPanel()"></div>
+<div class="notif-panel" id="notif-panel">
+  <div class="notif-panel-header">
+    <span class="notif-panel-title">🔔 Notifications</span>
+    <button class="notif-mark-all" onclick="markAllNotifRead()">Mark all read</button>
+    <button class="notif-close-btn" onclick="closeNotifPanel()">✕</button>
+  </div>
+  <div class="notif-list" id="notif-list">
+    <div class="notif-empty"><div class="notif-empty-icon">🌲</div>All quiet in the forest.<br>Notifications will appear here.</div>
+  </div>
+  <div class="notif-footer">
+    <button class="notif-push-btn" id="notif-push-btn" onclick="enablePushNotifs()">🔔 Enable push notifications</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
      NAV
 ════════════════════════════════════════════════════════ -->
 <nav class="nav">
@@ -2154,7 +2253,7 @@ body {
   <div class="nav-right">
     <span class="nav-xp" id="nav-xp">0 XP</span>
     <span class="nav-streak" id="nav-streak">🔥 0</span>
-    <button class="nav-bell" id="nav-bell" onclick="requestNotifPermission()" title="Enable reminders">🔔</button>
+    <button class="nav-bell" id="nav-bell" onclick="toggleNotifPanel()" title="Notifications">🔔<span class="notif-badge" id="notif-badge" style="display:none">0</span></button>
     <div class="nav-account" id="nav-account">
       <div class="nav-avatar" id="nav-avatar" onclick="toggleAccountMenu()">?</div>
       <span class="nav-tier-badge" id="nav-tier-badge">Free</span>
@@ -3227,6 +3326,7 @@ window.addEventListener('DOMContentLoaded', () => {
     currentUser = user;
     const userData = await loadUserData(user.uid);
     updateNavAccount(user, userData?.tier || 'free');
+    loadNotifBadgeCount();
 
     // Refresh UI with loaded data
     loadXPStreak(); updateDashTree(); syncTreeScreen();
@@ -3897,7 +3997,14 @@ function addXP(amount) {
   document.getElementById('nav-xp').textContent     = xp.toLocaleString() + ' XP';
   document.getElementById('dash-xp-amt').textContent = xp.toLocaleString() + ' XP';
   const newStage = getStageIndex(xp);
-  if (newStage > prevStage) setTimeout(() => showLevelUp(newStage), 900);
+  if (newStage > prevStage) {
+    setTimeout(() => showLevelUp(newStage), 900);
+    const stageName = STAGES[newStage]?.name || 'new stage';
+    addNotification('new_stage', `Your tree reached ${stageName}! 🌲`, `Keep studying — your Sequoia is growing stronger every day.`);
+  }
+  // XP milestones
+  const milestones = [100,500,1000,2500,5000,10000];
+  milestones.forEach(m => { if (prevXP < m && xp >= m) addNotification('xp_milestone', `${m.toLocaleString()} XP reached! ⭐`, `You're on a roll. Every session adds up.`); });
 }
 
 function updateStreak() {
@@ -5326,39 +5433,171 @@ function downloadStatsCard() {
 }
 
 // ── NOTIFICATIONS ────────────────────────────────────────
-function requestNotifPermission() {
-  if (!('Notification' in window)) return;
-  Notification.requestPermission().then(p => {
-    const bell = document.getElementById('nav-bell');
-    if (p === 'granted') {
-      bell.classList.add('enabled');
-      bell.title = 'Reminders on';
-      scheduleNotifications(allAssignments);
+const VAPID_PUBLIC_KEY = 'BNAnSwaPrwmfwiBlcmp-7LzjimNmkeqUZpSD8f7wRLTJtW-LkJK0uOyZhdpTOpdMRLKUl7auncJKV32B-jM3owM';
+let _notifCache = [];
+
+// ── Panel open/close ──────────────────────────────────
+function toggleNotifPanel() {
+  const panel = document.getElementById('notif-panel');
+  if (panel.classList.contains('open')) closeNotifPanel();
+  else openNotifPanel();
+}
+function openNotifPanel() {
+  document.getElementById('notif-panel').classList.add('open');
+  document.getElementById('notif-overlay').classList.add('open');
+  loadNotifPanel();
+  updatePushBtn();
+}
+function closeNotifPanel() {
+  document.getElementById('notif-panel').classList.remove('open');
+  document.getElementById('notif-overlay').classList.remove('open');
+}
+
+// ── Load notifications from Firestore ─────────────────
+async function loadNotifPanel() {
+  if (!currentUser || isDemo) return;
+  try {
+    const snap = await db.collection('users').doc(currentUser.uid)
+      .collection('notifications').orderBy('created_at', 'desc').limit(30).get();
+    _notifCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderNotifList();
+    updateNotifBadge();
+  } catch(e) {}
+}
+
+function renderNotifList() {
+  const el = document.getElementById('notif-list');
+  if (!_notifCache.length) {
+    el.innerHTML = `<div class="notif-empty"><div class="notif-empty-icon">🌲</div>All quiet in the forest.<br>Notifications will appear here.</div>`;
+    return;
+  }
+  const icons = { streak_risk:'🔥', due_soon:'📅', xp_milestone:'⭐', new_stage:'🌲', weekly:'📊', system:'🌿' };
+  el.innerHTML = _notifCache.map(n => `
+    <div class="notif-item ${n.read ? '' : 'unread'}">
+      <div class="notif-icon">${icons[n.type] || '🔔'}</div>
+      <div class="notif-body">
+        <div class="notif-item-title">${esc(n.title)}</div>
+        <div class="notif-item-body">${esc(n.body)}</div>
+        <div class="notif-item-time">${timeAgo(n.created_at?.toDate?.() || new Date())}</div>
+      </div>
+    </div>`).join('');
+}
+
+function updateNotifBadge() {
+  const unread = _notifCache.filter(n => !n.read).length;
+  const badge = document.getElementById('notif-badge');
+  if (!badge) return;
+  badge.textContent = unread > 9 ? '9+' : unread;
+  badge.style.display = unread > 0 ? 'flex' : 'none';
+}
+
+// ── Add a notification ────────────────────────────────
+async function addNotification(type, title, body) {
+  if (!currentUser || isDemo) return;
+  try {
+    await db.collection('users').doc(currentUser.uid)
+      .collection('notifications').add({
+        type, title, body, read: false,
+        created_at: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    // Refresh badge
+    await loadNotifBadgeCount();
+  } catch(e) {}
+}
+
+async function loadNotifBadgeCount() {
+  if (!currentUser || isDemo) return;
+  try {
+    const snap = await db.collection('users').doc(currentUser.uid)
+      .collection('notifications').where('read', '==', false).get();
+    const badge = document.getElementById('notif-badge');
+    if (!badge) return;
+    const count = snap.size;
+    badge.textContent = count > 9 ? '9+' : count;
+    badge.style.display = count > 0 ? 'flex' : 'none';
+  } catch(e) {}
+}
+
+// ── Mark all read ─────────────────────────────────────
+async function markAllNotifRead() {
+  if (!currentUser || isDemo) return;
+  try {
+    const snap = await db.collection('users').doc(currentUser.uid)
+      .collection('notifications').where('read', '==', false).get();
+    const batch = db.batch();
+    snap.docs.forEach(d => batch.update(d.ref, { read: true }));
+    await batch.commit();
+    _notifCache = _notifCache.map(n => ({ ...n, read: true }));
+    renderNotifList();
+    updateNotifBadge();
+  } catch(e) {}
+}
+
+// ── Push notifications ────────────────────────────────
+function urlBase64ToUint8Array(b64) {
+  const pad = '='.repeat((4 - b64.length % 4) % 4);
+  const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+
+async function enablePushNotifs() {
+  if (!('PushManager' in window)) {
+    alert('Push notifications are not supported in this browser. Try Chrome on desktop or Android.');
+    return;
+  }
+  if (!currentUser) { alert('Sign in to enable push notifications.'); return; }
+  const permission = await Notification.requestPermission();
+  if (permission !== 'granted') return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+    });
+    saveUserData({ push_subscription: sub.toJSON() });
+    updatePushBtn(true);
+    addNotification('system', 'Push notifications enabled 🎉', 'You\'ll get streak reminders and due date alerts even when the app is closed.');
+  } catch(e) {
+    console.warn('Push subscribe failed:', e);
+  }
+}
+
+async function updatePushBtn(forceEnabled) {
+  const btn = document.getElementById('notif-push-btn');
+  if (!btn) return;
+  if (forceEnabled || Notification.permission === 'granted') {
+    btn.textContent = '✅ Push notifications enabled';
+    btn.classList.add('active');
+  } else {
+    btn.textContent = '🔔 Enable push notifications';
+    btn.classList.remove('active');
+  }
+}
+
+// ── Schedule in-app notifs from assignments ───────────
+function scheduleNotifications(assignments) {
+  const notified = new Set(JSON.parse(sessionStorage.getItem('sq_notified') || '[]'));
+  const now = Date.now();
+  assignments.forEach(a => {
+    if (completedIds.has(a.id) || notified.has(a.id) || !a.due_at) return;
+    const msUntil = new Date(a.due_at) - now;
+    if (msUntil > 0 && msUntil < 25 * 60 * 60 * 1000) { // due within 25h
+      notified.add(a.id);
+      sessionStorage.setItem('sq_notified', JSON.stringify([...notified]));
+      addNotification('due_soon', 'Due soon 📅',
+        `${a.title} (${a.course}) is due ${msUntil < 3600000 ? 'in under an hour' : 'tomorrow'}.`);
     }
   });
 }
 
-function scheduleNotifications(assignments) {
-  if (Notification.permission !== 'granted') return;
-  const notified = new Set(JSON.parse(sessionStorage.getItem('sq_notified') || '[]'));
-  assignments.forEach(a => {
-    if (completedIds.has(a.id) || notified.has(a.id) || !a.due_at) return;
-    const msUntil = new Date(a.due_at) - Date.now();
-    if (msUntil > 0 && msUntil < 24 * 60 * 60 * 1000) {
-      const fireAt = Math.max(msUntil - 60 * 60 * 1000, 2000); // 1h before due, min 2s
-      setTimeout(() => {
-        new Notification('Sequoia — Due Soon', {
-          body: `${a.title} (${a.course}) is due in under an hour.`,
-          icon: '/favicon.ico',
-        });
-        notified.add(a.id);
-        sessionStorage.setItem('sq_notified', JSON.stringify([...notified]));
-      }, fireAt);
-    }
-  });
-  // Update bell state
-  const bell = document.getElementById('nav-bell');
-  if (bell) bell.classList.add('enabled');
+// ── Utility: relative time ────────────────────────────
+function timeAgo(date) {
+  if (!date) return '';
+  const s = Math.floor((Date.now() - date) / 1000);
+  if (s < 60)  return 'just now';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  if (s < 86400) return Math.floor(s/3600) + 'h ago';
+  return Math.floor(s/86400) + 'd ago';
 }
 
 // ── UTILS ────────────────────────────────────────────────
