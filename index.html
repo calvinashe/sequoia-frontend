@@ -930,13 +930,13 @@ body {
 /* ══════════════════════════════════════════════════════════
    SCREEN 4 — WRAP UP
 ══════════════════════════════════════════════════════════ */
-.wu-wrap { max-width:900px; margin:0 auto; padding:24px 20px 48px; }
+.wu-wrap { max-width:900px; margin:0 auto; padding:12px 20px 48px; }
 
 /* Forest scene */
 .wu-scene {
-  position:relative; width:100%; height:420px; border-radius:24px; overflow:hidden;
+  position:relative; width:100%; height:360px; border-radius:24px; overflow:hidden;
   background:linear-gradient(180deg,#060F06 0%,#0E1E0E 50%,#162A10 100%);
-  box-shadow:0 8px 48px rgba(0,0,0,0.4); margin-bottom:20px;
+  box-shadow:0 8px 48px rgba(0,0,0,0.4); margin-bottom:16px;
   /* clip-path is more reliable than overflow+border-radius on mobile */
   clip-path:inset(0 round 24px);
 }
@@ -949,7 +949,7 @@ body {
 }
 .wu-tree-wrap {
   position:absolute; bottom:34px; left:50%;
-  transition:opacity 3s ease, transform 3s ease;
+  transition:opacity 4s ease, filter 1.5s ease;
   animation:wuTreeSway 5s ease-in-out infinite;
   transform-origin:50% 100%; z-index:2;
 }
@@ -957,7 +957,8 @@ body {
   0%,100% { transform:translateX(-50%) rotate(-1.2deg); }
   50%     { transform:translateX(-50%) rotate(1.2deg); }
 }
-.wu-tree-wrap.fading { opacity:0; transform:translateX(-50%) translateY(-200px) scale(0.4); animation:none; }
+/* Tree just fades in place — no flying away */
+.wu-tree-wrap.fading { opacity:0; animation:none; }
 .wu-stump-wrap {
   position:absolute; bottom:34px; left:50%; transform:translateX(-50%);
   z-index:2; opacity:0; transition:opacity 2.2s ease;
@@ -1023,7 +1024,7 @@ body {
 .wu-done-msg.show { opacity:1; transform:translateY(0); }
 
 /* Post-release stats card */
-.wu-post { display:none; opacity:0; transform:translateY(28px); transition:opacity .9s ease, transform .9s ease; pointer-events:none; margin-top:28px; }
+.wu-post { display:none; opacity:0; transform:translateY(28px); transition:opacity .9s ease, transform .9s ease; pointer-events:none; margin-top:16px; }
 .wu-post.show { display:block; opacity:1; transform:translateY(0); pointer-events:auto; }
 /* ── STATS CARD (shareable) ──────────────────────────── */
 .stats-card {
@@ -1683,8 +1684,8 @@ body {
   .stage-card { padding:16px 12px; }
 
   /* Wrap Up */
-  .regrow-wrap { padding:28px 16px; }
-  .wu-scene { height:340px; }
+  .regrow-wrap { padding:16px; }
+  .wu-scene { height:280px; }
   .wu-stats-row { grid-template-columns:repeat(2,1fr); }
   .wu-sv { font-size:20px; }
   .wu-sl { font-size:10px; }
@@ -4698,41 +4699,42 @@ function startRegrow() {
     }
   }, 2000);
 
-  // ── Phase 2 (2.4s): Tree begins ascending into the sky ──
+  // ── Phase 2 (2.4s): Tree brightens before fade ──
   setTimeout(() => {
     treeWrap.style.filter = 'drop-shadow(0 0 28px rgba(120,220,70,0.9)) brightness(1.3)';
   }, 2400);
+
+  // ── Phase 2 (2.8s): Tree fades in place ──
   setTimeout(() => {
-    treeWrap.style.transition = 'opacity 8s cubic-bezier(0.15,0,0.4,1), transform 8s cubic-bezier(0.15,0,0.25,1), filter 2s ease';
     treeWrap.style.filter = 'drop-shadow(0 0 4px rgba(100,200,60,0.2)) brightness(1)';
     treeWrap.classList.add('fading');
   }, 2800);
 
-  // ── Phase 3 (8s): Pre-section fades ──
+  // ── Phase 3 (5.5s): Pre-section fades ──
   setTimeout(() => {
     const pre = document.getElementById('wu-pre');
     pre.style.transition = 'opacity 1.4s ease';
     pre.style.opacity = '0';
     pre.style.pointerEvents = 'none';
-  }, 8000);
+  }, 5500);
 
-  // ── Phase 3 (9s): Green orb pulses where tree stood ──
+  // ── Phase 3 (6.2s): Green orb pulses where tree stood ──
   setTimeout(() => {
     document.getElementById('wu-seedling').classList.add('show');
-  }, 9000);
+  }, 6200);
 
-  // ── Phase 3 (9.5s): Done message ──
+  // ── Phase 3 (6.8s): Done message ──
   setTimeout(() => {
     document.getElementById('wu-done-msg').classList.add('show');
-  }, 9500);
+  }, 6800);
 
-  // ── Phase 4 (11s): Stats card slides up ──
+  // ── Phase 4 (8s): Stats card slides up ──
   setTimeout(() => {
     syncWrapUp();
     const post = document.getElementById('wu-post');
     post.style.display = 'block';
     requestAnimationFrame(() => requestAnimationFrame(() => post.classList.add('show')));
-  }, 11000);
+  }, 8000);
 }
 
 function newSemester() {
