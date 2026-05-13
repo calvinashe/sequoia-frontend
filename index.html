@@ -1618,16 +1618,18 @@ body {
   .nav-xp, .nav-streak { display:none; }
   .nav-tabs { display:none; }
 
-  /* Bottom nav */
+  /* Bottom nav — hidden during onboarding */
   .bottom-nav {
     display:flex; position:fixed; bottom:0; left:0; right:0;
     background:#0F2010; border-top:1px solid rgba(255,255,255,0.1);
     z-index:600; padding-bottom:env(safe-area-inset-bottom,0px);
   }
+  #onboard:not(.gone) ~ .bottom-nav { display:none; }
 
   /* All screens get bottom clearance — add safe area for iPhone notch/home indicator */
   .screen { padding-bottom:calc(80px + env(safe-area-inset-bottom, 0px)); }
-  #onboard { padding-bottom:calc(80px + env(safe-area-inset-bottom, 0px)); }
+  /* Onboard has no bottom nav, so just needs safe area clearance */
+  #onboard { padding-bottom:calc(24px + env(safe-area-inset-bottom, 0px)); }
 
   /* Dashboard */
   .dash-grid { grid-template-columns:1fr; padding:12px; gap:12px; }
