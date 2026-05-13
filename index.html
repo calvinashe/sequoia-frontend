@@ -22,8 +22,9 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231C3A1C'/><polygon points='50,12 20,50 35,50 22,72 50,72 50,72 78,72 65,50 80,50' fill='%234CA130'/><rect x='45' y='72' width='10' height='14' rx='3' fill='%235A2E0A'/></svg>">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231C3A1C'/><polygon points='50,12 20,50 35,50 22,72 50,72 50,72 78,72 65,50 80,50' fill='%234CA130'/><rect x='45' y='72' width='10' height='14' rx='3' fill='%235A2E0A'/></svg>">
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -321,6 +322,14 @@ body {
   0%,100% { opacity:1; }
   50%     { opacity:0.5; }
 }
+/* Respect user's OS motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 /* streak-risk chip on dashboard */
 .streak-risk-chip {
   display:none; align-items:center; gap:10px;
@@ -415,6 +424,7 @@ body {
   0%,100% { transform:translateX(-50%) rotate(-1.5deg); }
   50%     { transform:translateX(-50%) rotate(1.5deg); }
 }
+#dash-hero-tree { will-change: transform; }
 #dash-hero-glow {
   position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
   width:100px; height:24px; border-radius:50%; z-index:2; pointer-events:none;
@@ -3031,10 +3041,22 @@ const db   = firebase.firestore();
 let currentUser = null;
 let _authTab = 'signup';
 
-// Pull Firestore → localStorage so the rest of the app works normally
+// Pull Firestore → localStorage so the rest of the app works normally.
+// Also fetches unread notification count in parallel (one round-trip instead of two).
 async function loadUserData(uid) {
   try {
-    const doc = await db.collection('users').doc(uid).get();
+    const userRef  = db.collection('users').doc(uid);
+    const [doc, badgeSnap] = await Promise.all([
+      userRef.get(),
+      userRef.collection('notifications').where('read', '==', false).get(),
+    ]);
+    // Update badge count from the parallel query
+    const badge = document.getElementById('notif-badge');
+    if (badge) {
+      const count = badgeSnap.size;
+      badge.textContent    = count > 9 ? '9+' : count;
+      badge.style.display  = count > 0 ? 'flex' : 'none';
+    }
     if (!doc.exists) return null;
     const d = doc.data();
     if (d.xp               !== undefined) localStorage.setItem('sq_xp',            String(d.xp));
@@ -3050,10 +3072,16 @@ async function loadUserData(uid) {
   } catch(e) { return null; }
 }
 
-// Fire-and-forget Firestore write (merges, never overwrites full doc)
+// Debounced Firestore write — batches rapid saves (XP, streak, done) into one round-trip
+let _saveTimer = null, _pendingSave = {};
 function saveUserData(updates) {
   if (!currentUser || isDemo) return;
-  db.collection('users').doc(currentUser.uid).set(updates, { merge: true }).catch(() => {});
+  Object.assign(_pendingSave, updates);
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => {
+    const payload = _pendingSave; _pendingSave = {};
+    db.collection('users').doc(currentUser.uid).set(payload, { merge: true }).catch(() => {});
+  }, 400);
 }
 
 // Create initial Firestore doc for brand-new users (migrates any existing localStorage data)
@@ -3352,8 +3380,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (t && !token) { closeOnboard(); setGreeting(localStorage.getItem('sq_name') || ''); loadAssignments(t, u); loadCourses(t, u); }
       }
     });
-    loadNotifBadgeCount();
-    initPushBtn();
+    initPushBtn(); // badge count is now fetched inside loadUserData (parallel query)
   });
 
   // Global Escape key: close any open overlay
@@ -3374,19 +3401,28 @@ function setGreeting(name) {
 }
 
 // ── SCREEN NAV ──────────────────────────────────────────
+// Cached refs — querySelectorAll is called once after DOM ready, not on every tab switch
+let _navScreens = null, _navTabBtns = null, _navBtabs = null;
+function _ensureNavCache() {
+  if (_navScreens) return;
+  _navScreens  = [...document.querySelectorAll('.screen')];
+  _navTabBtns  = [...document.querySelectorAll('.nav-tab')];
+  _navBtabs    = [...document.querySelectorAll('.btab')];
+}
 function showScreen(i) {
-  document.querySelectorAll('.screen').forEach((s, j) => {
+  _ensureNavCache();
+  _navScreens.forEach((s, j) => {
     const entering = !s.classList.contains('active') && j === i;
     s.classList.toggle('active', j === i);
     if (entering) {
       s.classList.remove('entering');
-      void s.offsetWidth; // force reflow
+      void s.offsetWidth; // force reflow to restart CSS animation
       s.classList.add('entering');
       s.addEventListener('animationend', () => s.classList.remove('entering'), { once: true });
     }
   });
-  document.querySelectorAll('.nav-tab').forEach((b, j) => b.classList.toggle('active', j === i));
-  document.querySelectorAll('.btab').forEach((b, j) => b.classList.toggle('active', j === i));
+  _navTabBtns.forEach((b, j) => b.classList.toggle('active', j === i));
+  _navBtabs.forEach((b, j)   => b.classList.toggle('active', j === i));
   window.scrollTo(0, 0);
   if (i === 3) syncTreeScreen();
   if (i === 4) syncWrapUp();
@@ -4640,15 +4676,15 @@ function renderStreakCal(streak) {
   sub.textContent = streak + ' day streak' + (streak >= 7 ? ' 🔥' : '');
   const today = new Date(); today.setHours(0,0,0,0);
   const days  = 70; // 10 weeks
+  // Read localStorage once outside the loop (was being called 70× per render)
+  const lastStudy = localStorage.getItem('sq_last_study');
+  const lastDate  = lastStudy ? new Date(lastStudy) : null;
+  if (lastDate) lastDate.setHours(0,0,0,0);
   let html = '';
   for (let i = days - 1; i >= 0; i--) {
     const d = new Date(today); d.setDate(d.getDate() - i);
     const key = d.toISOString().slice(0,10);
     const isToday = i === 0;
-    // determine if this day was studied based on streak + last study date
-    const lastStudy = localStorage.getItem('sq_last_study');
-    const lastDate  = lastStudy ? new Date(lastStudy) : null;
-    if (lastDate) lastDate.setHours(0,0,0,0);
     const daysAgo = lastDate ? Math.round((today - d) / 86400000) : 999;
     let lvClass = '';
     // days within streak window get a level; simulated from streak count
@@ -4732,48 +4768,63 @@ function studyFocusAssignment() {
     });
   }
 }
+// Cached Pomo UI refs — getElementById once, reuse every 500 ms tick
+let _pr = null;
+function _getPomoRefs() {
+  if (_pr) return _pr;
+  return (_pr = {
+    time:     document.getElementById('pomo-time'),
+    ring:     document.getElementById('pomo-ring'),
+    phaseLbl: document.getElementById('pomo-phase-lbl'),
+    meta:     document.getElementById('pomo-meta'),
+    xpBadge:  document.getElementById('pomo-xp-badge'),
+    multChip: document.getElementById('streak-mult-chip'),
+    btn:      document.getElementById('pomo-btn'),
+    endBtn:   document.getElementById('btn-end-early'),
+    goalIn:   document.getElementById('pomo-goal'),
+    goalDisp: document.getElementById('pomo-goal-display'),
+    dots:     [0,1,2,3].map(i => document.getElementById('pd'+i)),
+  });
+}
+
 function renderPomoUI() {
+  const p = _getPomoRefs();
   const r=rem(), tot=phaseDur(), pct=r/tot;
   const m=Math.floor(r/60), s=r%60;
-  document.getElementById('pomo-time').textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-  document.getElementById('pomo-ring').style.strokeDashoffset=(RING_C*(1-pct)).toFixed(1);
-  document.getElementById('pomo-ring').style.stroke=pomoPhase==='focus'?'var(--g2)':'var(--orange)';
-  document.getElementById('pomo-phase-lbl').textContent=pomoPhase==='focus'?'Focus':(pomoCycle===0?'Long Break':'Short Break');
+  p.time.textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  p.ring.style.strokeDashoffset=(RING_C*(1-pct)).toFixed(1);
+  p.ring.style.stroke=pomoPhase==='focus'?'var(--g2)':'var(--orange)';
+  p.phaseLbl.textContent=pomoPhase==='focus'?'Focus':(pomoCycle===0?'Long Break':'Short Break');
+  const pos=pomoCount%4;
   for(let i=0;i<4;i++){
-    const dot=document.getElementById('pd'+i), pos=pomoCount%4;
-    dot.className='p-dot'+(i<pos?' done':i===pos&&pomoPhase==='focus'?' active':'');
+    p.dots[i].className='p-dot'+(i<pos?' done':i===pos&&pomoPhase==='focus'?' active':'');
   }
-  document.getElementById('pomo-meta').textContent=`Session ${Math.min((pomoCount%4)+(pomoPhase==='focus'?1:0),4)} of 4`;
+  p.meta.textContent=`Session ${Math.min((pomoCount%4)+(pomoPhase==='focus'?1:0),4)} of 4`;
   const mult = getStreakMultiplier();
   const baseSessionXP = Math.round(50 * mult);
   const liveXP = (pomoRunning && pomoPhase==='focus') ? Math.round((1-pct)*baseSessionXP) : 0;
   const totalDisplayXP = pomoXP + liveXP;
   const notYetStarted  = !pomoRunning && pomoCount === 0 && pomoPhase === 'focus' && pomoSecs === FOCUS_DUR;
   const streak = getStreak();
-  document.getElementById('pomo-xp-badge').textContent = notYetStarted ? `+${baseSessionXP} XP per session` : `+${totalDisplayXP} XP this session`;
-  const multChip = document.getElementById('streak-mult-chip');
-  if (multChip) {
+  p.xpBadge.textContent = notYetStarted ? `+${baseSessionXP} XP per session` : `+${totalDisplayXP} XP this session`;
+  if (p.multChip) {
     if (mult > 1.0) {
       const label = streak >= 14 ? `🔥 ${streak}d · 1.4×` : streak >= 7 ? `🔥 ${streak}d · 1.25×` : `🔥 ${streak}d · 1.1×`;
-      multChip.textContent = label;
-      multChip.style.display = 'inline-block';
+      p.multChip.textContent = label;
+      p.multChip.style.display = 'inline-block';
     } else {
-      multChip.style.display = 'none';
+      p.multChip.style.display = 'none';
     }
   }
-  document.getElementById('pomo-btn').textContent=pomoRunning?'Pause':(pomoCount===0&&pomoPhase==='focus'&&pomoSecs===FOCUS_DUR?'Start Focus':'Resume');
-  const endBtn=document.getElementById('btn-end-early');
-  if(endBtn) endBtn.style.display=(pomoRunning&&pomoPhase==='focus')?'inline-block':'none';
-  const goalInput = document.getElementById('pomo-goal');
-  const goalDisplay = document.getElementById('pomo-goal-display');
+  p.btn.textContent=pomoRunning?'Pause':(pomoCount===0&&pomoPhase==='focus'&&pomoSecs===FOCUS_DUR?'Start Focus':'Resume');
+  if(p.endBtn) p.endBtn.style.display=(pomoRunning&&pomoPhase==='focus')?'inline-block':'none';
   if (pomoRunning) {
-    goalInput.style.display = 'none';
-    const g = goalInput.value.trim();
-    goalDisplay.textContent = g || (pomoPhase === 'focus' ? 'Focus session' : 'Taking a break');
-    goalDisplay.style.display = 'block';
+    p.goalIn.style.display = 'none';
+    p.goalDisp.textContent = p.goalIn.value.trim() || (pomoPhase === 'focus' ? 'Focus session' : 'Taking a break');
+    p.goalDisp.style.display = 'block';
   } else {
-    goalInput.style.display = '';
-    goalDisplay.style.display = 'none';
+    p.goalIn.style.display = '';
+    p.goalDisp.style.display = 'none';
   }
 }
 function logSession(label, xp) {
@@ -5410,35 +5461,46 @@ function newSemester() {
 }
 
 function downloadStatsCard() {
-  const card = document.getElementById('stats-card');
+  const card     = document.getElementById('stats-card');
   const shareBtn = document.querySelector('.share-btn');
-  const orig = shareBtn.textContent;
+  const orig     = shareBtn.textContent;
   shareBtn.textContent = '⏳ Saving…';
   shareBtn.disabled    = true;
 
-  setTimeout(() => {
-    html2canvas(card, {
-      backgroundColor: '#0D2410',   // matches card gradient start
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      width:  card.offsetWidth,
-      height: card.offsetHeight,
-    }).then(canvas => {
-      shareBtn.textContent = '✓ Saved to Camera Roll!';
-      shareBtn.disabled    = false;
-      const sem = document.getElementById('stats-sem')?.textContent || 'semester';
-      const a = document.createElement('a');
-      a.download = 'sequoia-' + sem.replace(/\s/g,'-').toLowerCase() + '.png';
-      a.href = canvas.toDataURL('image/png');
-      a.click();
-      setTimeout(() => { shareBtn.textContent = orig; }, 2400);
-    }).catch(err => {
-      console.warn('Stats card capture failed:', err);
-      shareBtn.textContent = orig;
-      shareBtn.disabled    = false;
-    });
-  }, 80);
+  const doCapture = () => {
+    setTimeout(() => {
+      html2canvas(card, {
+        backgroundColor: '#0D2410',
+        scale: 2, useCORS: true, logging: false,
+        width: card.offsetWidth, height: card.offsetHeight,
+      }).then(canvas => {
+        shareBtn.textContent = '✓ Saved to Camera Roll!';
+        shareBtn.disabled    = false;
+        const sem = document.getElementById('stats-sem')?.textContent || 'semester';
+        const a   = document.createElement('a');
+        a.download = 'sequoia-' + sem.replace(/\s/g,'-').toLowerCase() + '.png';
+        a.href = canvas.toDataURL('image/png');
+        a.click();
+        setTimeout(() => { shareBtn.textContent = orig; }, 2400);
+      }).catch(err => {
+        console.warn('Stats card capture failed:', err);
+        shareBtn.textContent = orig;
+        shareBtn.disabled    = false;
+      });
+    }, 80);
+  };
+
+  // Lazy-load html2canvas only when the user actually clicks Download
+  // (saves ~830 KB from the initial page load)
+  if (typeof html2canvas === 'undefined') {
+    const s   = document.createElement('script');
+    s.src     = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    s.onload  = doCapture;
+    s.onerror = () => { shareBtn.textContent = orig; shareBtn.disabled = false; };
+    document.head.appendChild(s);
+  } else {
+    doCapture();
+  }
 }
 
 // ── NOTIFICATIONS ────────────────────────────────────────
