@@ -302,9 +302,9 @@ body {
   font-size:13px; color:var(--light); line-height:1.6;
 }
 .notif-empty-icon { font-size:36px; margin-bottom:10px; }
-.notif-footer {
-  padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));
-  border-top:1px solid var(--border); flex-shrink:0;
+.notif-push-section {
+  padding:12px 16px;
+  border-bottom:1px solid var(--border); flex-shrink:0;
 }
 .notif-push-btn {
   width:100%; padding:13px; border-radius:12px;
@@ -2267,12 +2267,12 @@ body {
     <button class="notif-mark-all" onclick="markAllNotifRead()">Mark all read</button>
     <button class="notif-close-btn" onclick="closeNotifPanel()">✕</button>
   </div>
-  <div class="notif-list" id="notif-list">
-    <div class="notif-empty"><div class="notif-empty-icon">🌲</div>All quiet in the forest.<br>Notifications will appear here.</div>
-  </div>
-  <div class="notif-footer">
+  <div class="notif-push-section">
     <button class="notif-push-btn" id="notif-push-btn" onclick="togglePushNotifs()">🔔 Enable push notifications</button>
     <button class="notif-push-btn" id="notif-test-btn" onclick="testPush()" style="margin-top:6px;font-size:11px;opacity:0.7">Send test push</button>
+  </div>
+  <div class="notif-list" id="notif-list">
+    <div class="notif-empty"><div class="notif-empty-icon">🌲</div>All quiet in the forest.<br>Notifications will appear here.</div>
   </div>
 </div>
 
@@ -5745,7 +5745,7 @@ async function enablePushNotifs() {
 
 function _showIOSNotifGuide() {
   // Show a friendly in-panel guide instead of a generic alert
-  const footer = document.querySelector('.notif-footer');
+  const footer = document.querySelector('.notif-push-section');
   if (!footer) return;
   const existing = footer.querySelector('.ios-notif-guide');
   if (existing) { existing.remove(); return; } // toggle off if already showing
