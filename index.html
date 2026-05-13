@@ -4707,7 +4707,9 @@ function startRegrow() {
   // ── Phase 2 (2.8s): Tree fades in place ──
   setTimeout(() => {
     treeWrap.style.filter = 'drop-shadow(0 0 4px rgba(100,200,60,0.2)) brightness(1)';
-    treeWrap.classList.add('fading');
+    // Reset inline transition so the CSS opacity:4s kicks in (phase 1 had overridden it to filter-only)
+    treeWrap.style.transition = 'opacity 4s ease, filter 2s ease';
+    requestAnimationFrame(() => requestAnimationFrame(() => treeWrap.classList.add('fading')));
   }, 2800);
 
   // ── Phase 3 (5.5s): Pre-section fades ──
