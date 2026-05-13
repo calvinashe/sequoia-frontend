@@ -934,9 +934,9 @@ body {
 
 /* Forest scene */
 .wu-scene {
-  position:relative; width:100%; height:360px; border-radius:24px; overflow:hidden;
+  position:relative; width:100%; height:300px; border-radius:24px; overflow:hidden;
   background:linear-gradient(180deg,#060F06 0%,#0E1E0E 50%,#162A10 100%);
-  box-shadow:0 8px 48px rgba(0,0,0,0.4); margin-bottom:16px;
+  box-shadow:0 8px 48px rgba(0,0,0,0.4); margin-bottom:12px;
   /* clip-path is more reliable than overflow+border-radius on mobile */
   clip-path:inset(0 round 24px);
 }
@@ -957,8 +957,8 @@ body {
   0%,100% { transform:translateX(-50%) rotate(-1.2deg); }
   50%     { transform:translateX(-50%) rotate(1.2deg); }
 }
-/* Tree just fades in place — no flying away */
-.wu-tree-wrap.fading { opacity:0; animation:none; }
+/* Tree fades in place — keep translateX(-50%) so it stays centered when sway animation stops */
+.wu-tree-wrap.fading { opacity:0; animation:none; transform:translateX(-50%); }
 .wu-stump-wrap {
   position:absolute; bottom:34px; left:50%; transform:translateX(-50%);
   z-index:2; opacity:0; transition:opacity 2.2s ease;
@@ -4712,12 +4712,13 @@ function startRegrow() {
     requestAnimationFrame(() => requestAnimationFrame(() => treeWrap.classList.add('fading')));
   }, 2800);
 
-  // ── Phase 3 (5.5s): Pre-section fades ──
+  // ── Phase 3 (5.5s): Pre-section fades then collapses so stats card sits higher ──
   setTimeout(() => {
     const pre = document.getElementById('wu-pre');
     pre.style.transition = 'opacity 1.4s ease';
     pre.style.opacity = '0';
     pre.style.pointerEvents = 'none';
+    setTimeout(() => { pre.style.display = 'none'; }, 1500);
   }, 5500);
 
   // ── Phase 3 (6.2s): Green orb pulses where tree stood ──
@@ -4762,9 +4763,9 @@ function newSemester() {
   stump.style.animation = ''; stump.style.filter = '';
   document.getElementById('wu-release-btn').style.opacity = '1';
   document.getElementById('wu-release-btn').style.display = '';
-  // Restore wu-pre visibility
+  // Restore wu-pre visibility and layout
   const pre = document.getElementById('wu-pre');
-  pre.style.opacity = '1'; pre.style.pointerEvents = '';
+  pre.style.display = ''; pre.style.opacity = '1'; pre.style.pointerEvents = '';
   syncWrapUp();
   showScreen(0);
 }
