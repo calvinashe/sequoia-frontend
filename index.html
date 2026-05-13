@@ -2224,6 +2224,7 @@ body {
   </div>
   <div class="notif-footer">
     <button class="notif-push-btn" id="notif-push-btn" onclick="enablePushNotifs()">🔔 Enable push notifications</button>
+    <button class="notif-push-btn" id="notif-test-btn" onclick="testPush()" style="margin-top:6px;font-size:11px;opacity:0.7">Send test push</button>
   </div>
 </div>
 
@@ -5559,6 +5560,27 @@ async function enablePushNotifs() {
     addNotification('system', 'Push notifications enabled 🎉', 'You\'ll get streak reminders and due date alerts even when the app is closed.');
   } catch(e) {
     console.warn('Push subscribe failed:', e);
+  }
+}
+
+async function testPush() {
+  if (!currentUser) { alert('Sign in first.'); return; }
+  if (Notification.permission !== 'granted') { alert('Enable push notifications first.'); return; }
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    if (!sub) { alert('No subscription found — click Enable push notifications first.'); return; }
+    const btn = document.getElementById('notif-test-btn');
+    if (btn) { btn.textContent = 'Sending…'; btn.disabled = true; }
+    const res = await fetch(API + '/test-push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subscription: sub.toJSON(), secret: 'sequoia-cron-2026' }),
+    });
+    const data = await res.json();
+    if (btn) { btn.textContent = data.ok ? '✅ Sent!' : '❌ Failed'; btn.disabled = false; setTimeout(() => { btn.textContent = 'Send test push'; }, 3000); }
+  } catch(e) {
+    console.warn('Test push failed:', e);
   }
 }
 
