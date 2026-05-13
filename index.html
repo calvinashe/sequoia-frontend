@@ -3288,8 +3288,8 @@ function loadDemo() {
   scheduleNotifications(allAssignments);
   buildQPick();
   // show demo banner
-  const db = document.getElementById('demo-banner');
-  if (db) db.style.display = 'flex';
+  const demoBanner = document.getElementById('demo-banner');
+  if (demoBanner) demoBanner.style.display = 'flex';
 }
 
 // ── INIT ────────────────────────────────────────────────
@@ -5469,6 +5469,7 @@ async function loadNotifPanel() {
 
 function renderNotifList() {
   const el = document.getElementById('notif-list');
+  if (!el) return;
   if (!_notifCache.length) {
     el.innerHTML = `<div class="notif-empty"><div class="notif-empty-icon">🌲</div>All quiet in the forest.<br>Notifications will appear here.</div>`;
     return;
@@ -5543,22 +5544,29 @@ function urlBase64ToUint8Array(b64) {
 }
 
 async function togglePushNotifs() {
-  const reg = await navigator.serviceWorker.ready;
-  const existing = await reg.pushManager.getSubscription();
-  if (existing) {
-    // Currently enabled — disable it
-    await existing.unsubscribe();
-    // Remove this device's subscription from Firestore
-    if (currentUser) {
-      const key = btoa(existing.toJSON().endpoint).slice(-20);
-      const snap = await db.collection('users').doc(currentUser.uid).get();
-      const subs = (snap.exists && snap.data().push_subscriptions) || {};
-      delete subs[key];
-      await saveUserData({ push_subscriptions: subs });
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    alert('Push notifications are not supported on this browser. Try Chrome on desktop or Android.');
+    return;
+  }
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const existing = await reg.pushManager.getSubscription();
+    if (existing) {
+      // Currently enabled — disable it
+      await existing.unsubscribe();
+      if (currentUser) {
+        const key = btoa(existing.toJSON().endpoint).slice(-20);
+        const snap = await db.collection('users').doc(currentUser.uid).get().catch(() => null);
+        const subs = (snap && snap.exists && snap.data()?.push_subscriptions) || {};
+        delete subs[key];
+        await saveUserData({ push_subscriptions: subs });
+      }
+      updatePushBtn(false);
+    } else {
+      await enablePushNotifs();
     }
-    updatePushBtn(false);
-  } else {
-    await enablePushNotifs();
+  } catch(e) {
+    console.warn('togglePushNotifs error:', e);
   }
 }
 
@@ -5625,10 +5633,18 @@ async function updatePushBtn(enabled) {
 }
 
 async function initPushBtn() {
-  if (!('PushManager' in window)) return;
-  const reg = await navigator.serviceWorker.ready;
-  const sub = await reg.pushManager.getSubscription();
-  updatePushBtn(!!sub);
+  const btn = document.getElementById('notif-push-btn');
+  if (!('PushManager' in window) || !('serviceWorker' in navigator)) {
+    if (btn) { btn.textContent = '🔔 Notifications not supported on this browser'; btn.disabled = true; }
+    return;
+  }
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    updatePushBtn(!!sub);
+  } catch(e) {
+    console.warn('initPushBtn error:', e);
+  }
 }
 
 // ── Schedule in-app notifs from assignments ───────────
