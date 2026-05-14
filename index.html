@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
 <title>Sequoia — Grow Through Every Semester</title>
 
 <!-- PWA / Home Screen -->
@@ -1943,13 +1945,13 @@ body {
 .btab-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
 
 @media (max-width:640px) {
-  /* Nav — add top space so icons drop below the status bar into thumb reach */
-  .nav { padding:14px 12px 0; gap:6px; height:68px; }
+  /* Nav — tall bar, items pinned to bottom so bell/account sit lower on screen */
+  .nav { padding:0 12px 10px; gap:6px; height:90px; align-items:flex-end; }
   .nav-wordmark { display:none; }
   .nav-xp, .nav-streak { display:none; }
   .nav-tabs { display:none; }
   /* Screens shift down to match taller nav */
-  .screen { padding-top:68px; }
+  .screen { padding-top:90px; }
 
   /* Bottom nav — hidden during onboarding */
   .bottom-nav {
