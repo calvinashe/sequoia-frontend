@@ -1615,8 +1615,26 @@ body {
 .ob-token-step:last-child { margin-bottom:0; }
 .ob-token-step-num { width:20px; height:20px; border-radius:50%; background:var(--g2); color:#fff; font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
 .ob-hint { font-size:11px; color:var(--light); margin-top:5px; line-height:1.5; }
-.ob-wake { font-size:12px; color:var(--mid); background:var(--g-pale); border-radius:8px; padding:8px 12px; margin-bottom:10px; display:none; line-height:1.5; }
-.ob-err { font-size:13px; color:var(--red); margin-bottom:10px; display:none; }
+.ob-field-hint { font-size:10px; color:var(--light); font-weight:400; text-transform:none; letter-spacing:0; margin-left:4px; }
+.ob-url-hint { font-size:11px; margin-top:4px; min-height:14px; transition:opacity .2s; }
+.ob-url-hint.good { color:var(--g2); } .ob-url-hint.bad { color:var(--red); }
+.ob-token-row { position:relative; display:flex; align-items:center; }
+.ob-token-row input { flex:1; padding-right:42px; }
+.ob-show-token { position:absolute; right:10px; background:none; border:none; cursor:pointer; font-size:16px; padding:4px; opacity:0.5; transition:opacity .2s; line-height:1; }
+.ob-show-token:hover { opacity:1; }
+.ob-token-validity { font-size:11px; margin-top:4px; min-height:14px; transition:opacity .2s; }
+.ob-token-validity.good { color:var(--g2); } .ob-token-validity.bad { color:var(--red); }
+.ob-token-tip { margin-top:10px; font-size:11px; color:var(--red); font-weight:600; background:#FFF0EE; border-radius:6px; padding:6px 10px; }
+.ob-wake { font-size:12px; color:var(--mid); background:var(--g-pale); border-radius:10px; padding:10px 14px; margin-bottom:12px; line-height:1.5; display:flex; gap:10px; align-items:flex-start;
+  max-height:0; overflow:hidden; opacity:0; transition:max-height .35s ease, opacity .3s ease, padding .35s ease, margin .35s ease;
+}
+.ob-wake.show { max-height:80px; opacity:1; padding:10px 14px; margin-bottom:12px; }
+.ob-err { font-size:13px; color:var(--red); margin-bottom:10px; border-radius:8px; padding:0 12px; line-height:1.5; font-weight:600;
+  max-height:0; overflow:hidden; opacity:0; transition:max-height .3s ease, opacity .25s ease, padding .3s ease;
+  background:#FFF0EE;
+}
+.ob-err.show { max-height:80px; opacity:1; padding:10px 12px; }
+.ob-btn-success { background:var(--g3) !important; }
 .ob-btn {
   width:100%; padding:13px; background:var(--g1); color:#fff;
   border:none; border-radius:12px; font-family:'DM Sans',sans-serif;
@@ -2251,33 +2269,70 @@ body {
     <div class="ob3-card">
       <div class="ob-dots" style="margin-bottom:20px;display:flex;justify-content:center;gap:6px"><div class="ob-dot"></div><div class="ob-dot active"></div></div>
       <h2>Connect your Canvas</h2>
-      <p class="sub">Your token goes directly to Canvas — Sequoia never stores your credentials.</p>
+      <p class="sub">Takes about 60 seconds. Your token is sent directly to Canvas — we never store your password.</p>
+
       <div class="ob-fields">
+        <!-- Name -->
         <div class="ob-field">
           <label>Your first name</label>
           <input type="text" id="ob-name" placeholder="e.g. Alex" autocomplete="given-name">
         </div>
+
+        <!-- Canvas URL with validation -->
         <div class="ob-field">
-          <label>Canvas URL</label>
-          <input type="url" id="ob-url" placeholder="https://your-school.instructure.com">
+          <label>Canvas URL <span class="ob-field-hint">your school's Canvas address</span></label>
+          <input type="url" id="ob-url" placeholder="yourschool.instructure.com"
+            autocomplete="url" oninput="obUrlHint()" onblur="obUrlFix()">
+          <div class="ob-url-hint" id="ob-url-hint"></div>
         </div>
+
+        <!-- Token with show/hide -->
         <div class="ob-field">
-          <label>Access Token</label>
-          <input type="password" id="ob-token" placeholder="Paste your Canvas token here">
-          <div class="ob-token-help">
-            <button class="ob-token-toggle" onclick="toggleTokenHelp(this)">▸ Where do I find this?</button>
-            <div class="ob-token-steps" id="ob-token-steps">
-              <div class="ob-token-step"><div class="ob-token-step-num">1</div><span>Open Canvas and click your <strong>Account</strong> icon (top-left)</span></div>
-              <div class="ob-token-step"><div class="ob-token-step-num">2</div><span>Go to <strong>Settings</strong></span></div>
-              <div class="ob-token-step"><div class="ob-token-step-num">3</div><span>Scroll to <strong>Approved Integrations</strong></span></div>
-              <div class="ob-token-step"><div class="ob-token-step-num">4</div><span>Click <strong>+ New Access Token</strong>, name it "Sequoia", then copy it here</span></div>
+          <label>Access Token <span class="ob-field-hint">from Canvas Settings</span></label>
+          <div class="ob-token-row">
+            <input type="password" id="ob-token" placeholder="Paste your token here" autocomplete="off" oninput="obTokenValidate()">
+            <button class="ob-show-token" type="button" onclick="obToggleToken(this)" title="Show/hide token">👁</button>
+          </div>
+          <div class="ob-token-validity" id="ob-token-validity"></div>
+
+          <!-- How to find token -->
+          <button class="ob-token-toggle" onclick="toggleTokenHelp(this)">▸ How to get your token</button>
+          <div class="ob-token-steps" id="ob-token-steps">
+            <div class="ob-token-step">
+              <div class="ob-token-step-num">1</div>
+              <span>Open Canvas → click <strong>Account</strong> (your photo, top-left)</span>
             </div>
+            <div class="ob-token-step">
+              <div class="ob-token-step-num">2</div>
+              <span>Click <strong>Settings</strong></span>
+            </div>
+            <div class="ob-token-step">
+              <div class="ob-token-step-num">3</div>
+              <span>Scroll down to <strong>Approved Integrations</strong> → click <strong>+ New Access Token</strong></span>
+            </div>
+            <div class="ob-token-step">
+              <div class="ob-token-step-num">4</div>
+              <span>Name it <em>"Sequoia"</em>, leave expiry blank, click <strong>Generate Token</strong> and copy it</span>
+            </div>
+            <div class="ob-token-tip">⚠ Copy it now — Canvas only shows it once.</div>
           </div>
         </div>
       </div>
-      <div class="ob-wake" id="ob-wake">⏳ Waking up the Sequoia server — first connect can take ~30 sec. Hang tight!</div>
+
+      <!-- Server wake notice -->
+      <div class="ob-wake" id="ob-wake">
+        <span>⏳</span>
+        <div>
+          <strong>Waking up the server…</strong><br>
+          First load can take up to 30 sec — we're on a free host. Hang tight!
+        </div>
+      </div>
+
+      <!-- Error message -->
       <div class="ob-err" id="ob-err"></div>
+
       <button class="ob-btn" id="ob-connect-btn" onclick="connectCanvas()">Connect & Enter →</button>
+
       <div class="ob-divider"><span>or</span></div>
       <button class="ob-demo-btn" onclick="loadDemo()">🌱 Try the demo first</button>
       <button class="ob-link" onclick="obGo(0)" style="margin-top:6px">← Back</button>
@@ -3297,46 +3352,138 @@ function closeOnboard() { document.getElementById('onboard').classList.add('gone
 function toggleTokenHelp(btn) {
   const steps = document.getElementById('ob-token-steps');
   const open  = steps.classList.toggle('open');
-  btn.textContent = (open ? '▾' : '▸') + ' Where do I find this?';
+  btn.textContent = (open ? '▾' : '▸') + ' How to get your token';
+}
+function obToggleToken(btn) {
+  const inp = document.getElementById('ob-token');
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  btn.title = show ? 'Hide token' : 'Show token';
+  btn.style.opacity = show ? '1' : '0.5';
+}
+function obUrlFix() {
+  const el = document.getElementById('ob-url');
+  let v = el.value.trim().replace(/\/$/, '');
+  if (!v) return;
+  if (!v.startsWith('http')) v = 'https://' + v;
+  el.value = v;
+  obUrlHint();
+}
+function obUrlHint() {
+  const v = document.getElementById('ob-url').value.trim();
+  const hint = document.getElementById('ob-url-hint');
+  if (!v) { hint.textContent = ''; return; }
+  const hasProto = v.startsWith('http://') || v.startsWith('https://');
+  const looksLike = hasProto ? v : 'https://' + v;
+  try {
+    const u = new URL(looksLike);
+    if (u.hostname.includes('.')) {
+      hint.textContent = '✓ ' + u.hostname;
+      hint.className = 'ob-url-hint good';
+    } else {
+      hint.textContent = 'Looks incomplete — try yourschool.instructure.com';
+      hint.className = 'ob-url-hint bad';
+    }
+  } catch(_) {
+    hint.textContent = 'Enter a valid URL like canvas.asu.edu';
+    hint.className = 'ob-url-hint bad';
+  }
+}
+function obTokenValidate() {
+  const v = document.getElementById('ob-token').value.trim();
+  const el = document.getElementById('ob-token-validity');
+  if (!v) { el.textContent = ''; return; }
+  if (v.length < 40) {
+    el.textContent = 'Token looks too short — Canvas tokens are usually 70+ characters';
+    el.className = 'ob-token-validity bad';
+  } else {
+    el.textContent = '✓ Token length looks right';
+    el.className = 'ob-token-validity good';
+  }
+}
+function obSetErr(msg) {
+  const el = document.getElementById('ob-err');
+  el.textContent = msg;
+  if (msg) { el.classList.add('show'); } else { el.classList.remove('show'); }
+}
+function obSetWake(show) {
+  document.getElementById('ob-wake').classList.toggle('show', show);
 }
 
 async function connectCanvas() {
-  const token    = document.getElementById('ob-token').value.trim();
+  const tokenEl  = document.getElementById('ob-token');
   const urlEl    = document.getElementById('ob-url');
+  const token    = tokenEl.value.trim();
   let url        = urlEl.value.trim().replace(/\/$/, '');
   if (url && !url.startsWith('http')) { url = 'https://' + url; urlEl.value = url; }
   const nameInput= document.getElementById('ob-name').value.trim();
-  const err      = document.getElementById('ob-err');
   const btn      = document.getElementById('ob-connect-btn');
-  const wake     = document.getElementById('ob-wake');
-  err.style.display = 'none';
-  if (!token || !url) {
-    err.textContent = 'Please fill in your Canvas URL and access token.';
-    err.style.display = 'block'; return;
+
+  obSetErr('');
+  obSetWake(false);
+
+  // Client-side validation before hitting network
+  if (!url) {
+    obSetErr('Please enter your Canvas URL — e.g. yourschool.instructure.com'); return;
   }
+  try { new URL(url); } catch(_) {
+    obSetErr('That URL doesn\'t look right. Try: https://yourschool.instructure.com'); return;
+  }
+  if (!token) {
+    obSetErr('Please paste your Canvas access token.'); return;
+  }
+  if (token.length < 40) {
+    obSetErr('That token looks too short. Canvas tokens are usually 70+ characters — make sure you copied the full thing.'); return;
+  }
+
   btn.textContent = 'Connecting…'; btn.disabled = true;
-  const wt = setTimeout(() => { wake.style.display = 'block'; }, 3000);
+  const wt = setTimeout(() => obSetWake(true), 3500);
+
   try {
     const ctrl = new AbortController();
     const verifyTimeout = setTimeout(() => ctrl.abort(), 90000);
-    const res  = await fetch(`${API}/verify`, { headers: { 'X-Canvas-Token': token, 'X-Canvas-URL': url }, signal: ctrl.signal });
+    const res  = await fetch(`${API}/verify`, {
+      headers: { 'X-Canvas-Token': token, 'X-Canvas-URL': url },
+      signal: ctrl.signal
+    });
     clearTimeout(verifyTimeout);
     const data = await res.json();
-    clearTimeout(wt); wake.style.display = 'none';
-    if (!data.ok || data.error) {
-      err.textContent = data.error || 'Invalid token — double-check your Canvas URL and access token.';
-      err.style.display = 'block'; btn.textContent = 'Connect & Enter →'; btn.disabled = false; return;
+    clearTimeout(wt); obSetWake(false);
+
+    if (!data.ok) {
+      // Map backend errors to helpful messages
+      const code = res.status;
+      let msg = data.error || 'Something went wrong — please try again.';
+      if (code === 401) msg = 'Token not recognized — double-check you copied the full token from Canvas.';
+      if (code === 404) msg = 'Canvas URL not found — check your school\'s Canvas address and try again.';
+      obSetErr(msg);
+      btn.textContent = 'Connect & Enter →'; btn.disabled = false; return;
     }
-    localStorage.setItem('sq_token', token); localStorage.setItem('sq_url', url);
-    const name = nameInput || data.name || 'Student';
+
+    // Success!
+    const name = nameInput || data.short_name || data.name || 'Student';
+    localStorage.setItem('sq_token', token);
+    localStorage.setItem('sq_url', url);
     localStorage.setItem('sq_name', name);
     saveUserData({ canvas_token: token, canvas_url: url, name });
     setGreeting(name);
-    closeOnboard(); loadAssignments(token, url); loadCourses(token, url);
+
+    // Brief success moment before entering
+    btn.textContent = '🌱 You\'re in! Loading your courses…';
+    btn.classList.add('ob-btn-success');
+    setTimeout(() => {
+      closeOnboard();
+      loadAssignments(token, url);
+      loadCourses(token, url);
+    }, 900);
+
   } catch (e) {
-    clearTimeout(wt); wake.style.display = 'none';
-    err.textContent = 'Could not reach the Sequoia server. Check your connection and try again.';
-    err.style.display = 'block'; btn.textContent = 'Connect & Enter →'; btn.disabled = false;
+    clearTimeout(wt); obSetWake(false);
+    const msg = e.name === 'AbortError'
+      ? 'Connection timed out — the server may be waking up. Try again in 30 seconds.'
+      : 'Could not reach the Sequoia server. Check your internet connection and try again.';
+    obSetErr(msg);
+    btn.textContent = 'Connect & Enter →'; btn.disabled = false;
   }
 }
 
