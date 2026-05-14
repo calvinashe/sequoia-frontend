@@ -3159,17 +3159,6 @@ function updateNavAccount(user, tier) {
     avatar.textContent = initial;
     avatar.style.backgroundImage = '';
   }
-  // Mirror initial/photo in the mobile bottom nav account button
-  const mobAvatar = document.getElementById('btab-avatar');
-  if (mobAvatar) {
-    if (user.photoURL) {
-      mobAvatar.style.cssText = `background-image:url(${user.photoURL});background-size:cover;width:22px;height:22px;border-radius:50%;display:inline-block;vertical-align:middle;`;
-      mobAvatar.textContent = '';
-    } else {
-      mobAvatar.style.cssText = '';
-      mobAvatar.textContent = initial;
-    }
-  }
   const isPro = tier === 'premium';
   if (badge)  { badge.textContent  = isPro ? '✦ Pro' : 'Free'; badge.className = 'nav-tier-badge' + (isPro ? ' pro' : ''); }
   if (amName) amName.textContent  = displayName;
@@ -3488,6 +3477,7 @@ function showScreen(i) {
   _navTabBtns.forEach((b, j) => b.classList.toggle('active', j === i));
   _navBtabs.forEach((b, j)   => b.classList.toggle('active', j === i));
   window.scrollTo(0, 0);
+  if (i === 1 && allAssignments.length) renderCalendar(allAssignments);
   if (i === 3) syncTreeScreen();
   if (i === 4) syncWrapUp();
 }
@@ -4089,6 +4079,12 @@ function saveSettings() {
   if (name)  { localStorage.setItem('sq_name', name);  setGreeting(name); const su = document.getElementById('stats-user'); if (su) su.textContent = name; }
   if (url)   { localStorage.setItem('sq_url', url); }
   if (token) { localStorage.setItem('sq_token', token); }
+  // Persist to Firestore so changes survive logout/login
+  const fsUpdate = {};
+  if (name)  fsUpdate.name         = name;
+  if (url)   fsUpdate.canvas_url   = url;
+  if (token) fsUpdate.canvas_token = token;
+  if (Object.keys(fsUpdate).length) saveUserData(fsUpdate);
   // Reload assignments if token or url changed
   if (token || url) {
     const t = token || localStorage.getItem('sq_token');
@@ -4131,6 +4127,7 @@ function updateStreak() {
   saveUserData({ streak, last_study: today });
   document.getElementById('nav-streak').textContent     = '🔥 ' + streak;
   document.getElementById('hstat-streak').textContent   = streak;
+  checkStreakRisk(); // immediately hide at-risk chip now that user has studied
 }
 
 function prevDay() {
@@ -5178,6 +5175,7 @@ function undoComplete() {
   // Reverse the XP
   const newXP = Math.max(0, getXP() - _undoXP);
   localStorage.setItem('sq_xp', newXP);
+  saveUserData({ xp: newXP, done_ids: [...completedIds] });
   document.getElementById('nav-xp').textContent     = newXP.toLocaleString() + ' XP';
   document.getElementById('dash-xp-amt').textContent = newXP.toLocaleString() + ' XP';
   renderAssignments(allAssignments);
@@ -5504,6 +5502,7 @@ function newSemester() {
   localStorage.removeItem('sq_sessions');
   sessionEntries = []; renderSessionLog();
   completedIds = new Set(); totalCompleted = 0; treeFaded = false;
+  saveUserData({ xp: 0, streak: 0, pomo_sessions: 0, done_ids: [], last_study: '' });
   loadXPStreak(); updateDashTree(); syncTreeScreen();
   document.getElementById('wu-tree').innerHTML = '';
   document.getElementById('wu-stump').classList.remove('show');
@@ -5625,7 +5624,7 @@ function renderNotifList() {
 function _setBadge(count) {
   const label = count > 9 ? '9+' : count;
   const show  = count > 0 ? 'flex' : 'none';
-  ['notif-badge','notif-badge-mob'].forEach(id => {
+  ['notif-badge'].forEach(id => {
     const el = document.getElementById(id);
     if (el) { el.textContent = label; el.style.display = show; }
   });
@@ -5777,17 +5776,18 @@ function _showIOSNotifGuide() {
 
 async function testPush() {
   if (!currentUser) { alert('Sign in first.'); return; }
-  if (Notification.permission !== 'granted') { alert('Enable push notifications first.'); return; }
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') { alert('Enable push notifications first.'); return; }
   try {
     const reg = await navigator.serviceWorker.ready;
     const sub = await reg.pushManager.getSubscription();
     if (!sub) { alert('No subscription found — click Enable push notifications first.'); return; }
     const btn = document.getElementById('notif-test-btn');
     if (btn) { btn.textContent = 'Sending…'; btn.disabled = true; }
+    const idToken = await currentUser.getIdToken();
     const res = await fetch(API + '/test-push', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ subscription: sub.toJSON(), secret: 'sequoia-cron-2026' }),
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+      body: JSON.stringify({ subscription: sub.toJSON() }),
     });
     const data = await res.json();
     if (btn) { btn.textContent = data.ok ? '✅ Sent!' : '❌ Failed'; btn.disabled = false; setTimeout(() => { btn.textContent = 'Send test push'; }, 3000); }
@@ -5843,18 +5843,23 @@ async function initPushBtn() {
 
 // ── Schedule in-app notifs from assignments ───────────
 function scheduleNotifications(assignments) {
-  const notified = new Set(JSON.parse(sessionStorage.getItem('sq_notified') || '[]'));
+  // Key by today's date so the set resets each day automatically
+  const today = new Date().toISOString().slice(0, 10);
+  const lsKey = 'sq_notified_' + today;
+  const notified = new Set(JSON.parse(localStorage.getItem(lsKey) || '[]'));
   const now = Date.now();
   assignments.forEach(a => {
     if (completedIds.has(a.id) || notified.has(a.id) || !a.due_at) return;
     const msUntil = new Date(a.due_at) - now;
     if (msUntil > 0 && msUntil < 25 * 60 * 60 * 1000) { // due within 25h
       notified.add(a.id);
-      sessionStorage.setItem('sq_notified', JSON.stringify([...notified]));
+      localStorage.setItem(lsKey, JSON.stringify([...notified]));
       addNotification('due_soon', 'Due soon 📅',
         `${a.title} (${a.course}) is due ${msUntil < 3600000 ? 'in under an hour' : 'tomorrow'}.`);
     }
   });
+  // Clean up old day keys to avoid localStorage bloat
+  Object.keys(localStorage).filter(k => k.startsWith('sq_notified_') && k !== lsKey).forEach(k => localStorage.removeItem(k));
 }
 
 // ── Utility: relative time ────────────────────────────
