@@ -1080,6 +1080,93 @@ body {
 .amb-vol-row label { font-size:11px; font-weight:600; color:rgba(255,255,255,0.3); }
 .amb-vol { width:110px; accent-color:var(--g3); cursor:pointer; }
 
+/* ── GAME LOOP TOUR ───────────────────────────────────────── */
+#tour-overlay {
+  position:fixed; inset:0; z-index:9100;
+  background:rgba(0,0,0,0); pointer-events:none;
+  display:flex; align-items:flex-end; justify-content:center;
+  transition:background .35s ease;
+}
+#tour-overlay.show { background:rgba(0,0,0,0.52); pointer-events:auto; }
+#tour-card {
+  width:100%; max-width:480px;
+  background:#162816; border-radius:28px 28px 0 0;
+  padding:28px 28px 0; padding-bottom:calc(32px + env(safe-area-inset-bottom,0px));
+  transform:translateY(100%);
+  transition:transform .44s cubic-bezier(0.32,0.72,0,1);
+  position:relative; overflow:hidden;
+}
+[data-theme="light"] #tour-card { background:#FFFEF8; border-top:1px solid rgba(30,61,30,0.08); }
+#tour-card::before {
+  content:''; position:absolute; top:0; left:0; right:0;
+  height:3px;
+  background:linear-gradient(90deg,var(--g2),var(--g3));
+}
+#tour-overlay.show #tour-card { transform:translateY(0); }
+
+.tour-dots {
+  display:flex; justify-content:center; gap:6px; margin-bottom:24px;
+}
+.tour-dot {
+  height:5px; width:5px; border-radius:3px;
+  background:rgba(255,255,255,0.18);
+  transition:all .3s ease;
+}
+.tour-dot.active { width:20px; background:var(--g3); }
+[data-theme="light"] .tour-dot { background:rgba(30,61,30,0.15); }
+[data-theme="light"] .tour-dot.active { background:var(--g2); }
+
+.tour-step {
+  display:none; flex-direction:column; align-items:center;
+  text-align:center; padding-bottom:8px;
+}
+.tour-step.active { display:flex; }
+
+.tour-icon {
+  font-size:52px; margin-bottom:16px; line-height:1;
+  filter:drop-shadow(0 4px 16px rgba(76,161,48,0.3));
+}
+.tour-title {
+  font-family:'Playfair Display',serif;
+  font-size:22px; font-weight:800; color:#FFFEF8;
+  margin-bottom:10px; letter-spacing:-.3px; line-height:1.2;
+}
+[data-theme="light"] .tour-title { color:var(--g1); }
+.tour-body {
+  font-size:14px; color:rgba(255,255,255,0.55);
+  line-height:1.65; max-width:300px; margin-bottom:28px;
+}
+[data-theme="light"] .tour-body { color:var(--mid); }
+
+.tour-highlight {
+  display:inline-flex; align-items:center; gap:6px;
+  background:rgba(76,161,48,0.15); border:1px solid rgba(76,161,48,0.25);
+  border-radius:100px; padding:5px 14px;
+  font-size:12px; font-weight:700; color:var(--g3);
+  margin-bottom:20px;
+}
+[data-theme="light"] .tour-highlight { background:var(--g-pale); color:var(--g2); border-color:rgba(76,161,48,0.2); }
+
+.tour-next-btn {
+  width:100%; padding:16px; border-radius:14px; border:none; cursor:pointer;
+  font-family:'Playfair Display',serif; font-size:16px; font-weight:700;
+  color:#fff; letter-spacing:.2px;
+  background:linear-gradient(135deg,var(--g1),var(--g2),var(--g3));
+  box-shadow:0 6px 20px rgba(30,61,30,0.35);
+  transition:transform .15s, box-shadow .15s;
+  margin-bottom:12px;
+}
+.tour-next-btn:hover { transform:translateY(-1px); box-shadow:0 8px 24px rgba(30,61,30,0.4); }
+.tour-skip-btn {
+  background:none; border:none; cursor:pointer;
+  font-size:12px; color:rgba(255,255,255,0.28);
+  padding:8px; width:100%; text-align:center; margin-bottom:4px;
+  transition:color .2s;
+}
+.tour-skip-btn:hover { color:rgba(255,255,255,0.5); }
+[data-theme="light"] .tour-skip-btn { color:rgba(30,61,30,0.3); }
+[data-theme="light"] .tour-skip-btn:hover { color:var(--mid); }
+
 /* ── XP BURST ─────────────────────────────────────────────── */
 .xp-burst { position:fixed; font-family:'Playfair Display',serif; font-size:26px; font-weight:700; color:#4CA130; pointer-events:none; z-index:9999; text-shadow:0 2px 10px rgba(0,0,0,0.25); animation:xpBurstAnim 1.6s ease-out forwards; }
 @keyframes xpBurstAnim {
@@ -4432,6 +4519,7 @@ async function connectCanvas() {
       closeOnboard();
       loadAssignments(token, url);
       loadCourses(token, url);
+      setTimeout(tourShow, 1800); // let assignments render first
     }, 900);
 
   } catch (e) {
@@ -4495,6 +4583,8 @@ function loadDemo() {
   // show demo banner
   const demoBanner = document.getElementById('demo-banner');
   if (demoBanner) demoBanner.style.display = 'flex';
+  // show game loop tour for first-timers
+  setTimeout(tourShow, 1200);
 }
 
 // ── INIT ────────────────────────────────────────────────
@@ -7057,6 +7147,45 @@ function timeAgo(date) {
   return Math.floor(s/86400) + 'd ago';
 }
 
+// ── GAME LOOP TOUR ──────────────────────────────────────
+let _tourStep = 0;
+const _tourSteps = 3;
+const _tourCTAs  = ['Next →', 'Next →', 'Start Growing 🌱'];
+
+function tourShow() {
+  if (localStorage.getItem('sq_seen_tour')) return; // already seen
+  _tourStep = 0;
+  _tourRender();
+  const el = document.getElementById('tour-overlay');
+  el.classList.add('show');
+}
+
+function tourDismiss() {
+  const el = document.getElementById('tour-overlay');
+  el.classList.remove('show');
+  localStorage.setItem('sq_seen_tour', '1');
+}
+
+function tourNext() {
+  if (_tourStep < _tourSteps - 1) {
+    _tourStep++;
+    _tourRender();
+  } else {
+    tourDismiss();
+  }
+}
+
+function _tourRender() {
+  for (let i = 0; i < _tourSteps; i++) {
+    const step = document.getElementById('tstep' + i);
+    const dot  = document.getElementById('tdot'  + i);
+    if (step) step.classList.toggle('active', i === _tourStep);
+    if (dot)  dot.classList.toggle('active',  i === _tourStep);
+  }
+  const btn = document.getElementById('tour-next-btn');
+  if (btn) btn.textContent = _tourCTAs[_tourStep];
+}
+
 // ── UTILS ────────────────────────────────────────────────
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -7223,6 +7352,45 @@ if ('serviceWorker' in navigator) {
     <div class="lu-xp-pill" id="lu-xp-pill">1,200 XP reached</div>
     <p class="lu-sub" id="lu-sub">Your roots are deepening. Keep going.</p>
     <button class="lu-btn" onclick="closeLevelUp()">Keep Growing →</button>
+  </div>
+</div>
+
+<!-- ══ GAME LOOP TOUR ══════════════════════════════════════ -->
+<div id="tour-overlay">
+  <div id="tour-card">
+    <!-- Progress dots -->
+    <div class="tour-dots">
+      <div class="tour-dot active" id="tdot0"></div>
+      <div class="tour-dot"        id="tdot1"></div>
+      <div class="tour-dot"        id="tdot2"></div>
+    </div>
+
+    <!-- Step 1: Priority sorting -->
+    <div class="tour-step active" id="tstep0">
+      <div class="tour-icon">🎯</div>
+      <div class="tour-title">Your assignments,<br>ranked by what matters</div>
+      <div class="tour-highlight">Grade weight × urgency = priority</div>
+      <p class="tour-body">That 30% midterm due in 2 days outranks a 5% quiz due tomorrow. Sequoia always shows you your highest-leverage move first.</p>
+    </div>
+
+    <!-- Step 2: Tree & XP -->
+    <div class="tour-step" id="tstep1">
+      <div class="tour-icon">🌲</div>
+      <div class="tour-title">Finish work.<br>Grow your tree.</div>
+      <div class="tour-highlight">Every assignment = XP = growth</div>
+      <p class="tour-body">Complete assignments and study sessions to earn XP. Your Sequoia grows from a Seedling all the way to an Ancient Sequoia — one semester at a time.</p>
+    </div>
+
+    <!-- Step 3: Streaks -->
+    <div class="tour-step" id="tstep2">
+      <div class="tour-icon">🔥</div>
+      <div class="tour-title">Study daily.<br>Stack your streak.</div>
+      <div class="tour-highlight">Streaks multiply your XP up to 1.5×</div>
+      <p class="tour-body">Hit the Pomodoro timer every day to keep your streak alive. The longer your streak, the more XP you earn per session. Miss a day and it resets — but the tree never shrinks.</p>
+    </div>
+
+    <button class="tour-next-btn" id="tour-next-btn" onclick="tourNext()">Next →</button>
+    <button class="tour-skip-btn" onclick="tourDismiss()">Skip intro</button>
   </div>
 </div>
 
