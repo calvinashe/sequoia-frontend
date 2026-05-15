@@ -1715,117 +1715,148 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 .wu-post.show { display:block; opacity:1; transform:translateY(0); pointer-events:auto; }
 
 /* ── STATS CARD (shareable — the Wrapped moment) ──────── */
+/* ══ STATS CARD — shareable wrap-up card ════════════════ */
 .stats-card {
   position:relative; overflow:hidden;
   width:420px; max-width:100%; margin:0 auto;
-  background:linear-gradient(168deg, #0A1E0C 0%, #0F2A12 30%, #0A1C0D 60%, #060F07 100%);
-  border-radius:32px; padding:36px 28px 32px;
-  box-shadow:0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(76,161,48,0.22),
-             0 0 60px rgba(76,161,48,0.06);
+  background:linear-gradient(185deg, #04090A 0%, #071510 25%, #0A1C0E 55%, #050C06 100%);
+  border-radius:32px; padding:32px 26px 28px;
+  box-shadow:0 40px 100px rgba(0,0,0,0.8), 0 0 0 1px rgba(76,161,48,0.18),
+             0 0 80px rgba(76,161,48,0.05);
   font-family:'DM Sans',sans-serif;
 }
 /* Prismatic top shine */
 .stats-card::before {
   content:''; position:absolute; top:0; left:0; right:0; height:1px;
-  background:linear-gradient(90deg, transparent, rgba(76,161,48,0.6), rgba(130,204,85,0.8), rgba(76,161,48,0.6), transparent);
-  z-index:2;
+  background:linear-gradient(90deg,transparent,rgba(76,161,48,0.5),rgba(160,230,100,0.9),rgba(76,161,48,0.5),transparent);
+  z-index:3;
 }
-/* star-field layer */
+/* Star field */
 .sc-stars { position:absolute; inset:0; pointer-events:none; z-index:0; }
-.sc-star { position:absolute; border-radius:50%; background:#fff; }
-/* card glow blob behind tree */
-.sc-glow {
-  position:absolute; top:60px; left:50%; transform:translateX(-50%);
-  width:280px; height:280px; border-radius:50%;
-  background:radial-gradient(circle, rgba(76,161,48,0.28) 0%, rgba(76,161,48,0.06) 50%, transparent 70%);
-  pointer-events:none; z-index:0;
-}
-/* all card children above star layer */
-.stats-card > *:not(.sc-stars):not(.sc-glow) { position:relative; z-index:1; }
+.sc-star   { position:absolute; border-radius:50%; background:#fff; }
 
-/* brand header */
+/* Aurora horizon glow — the big visual upgrade */
+.sc-aurora {
+  position:absolute; bottom:0; left:0; right:0;
+  height:340px; pointer-events:none; z-index:0;
+}
+.sc-aurora-inner {
+  position:absolute; bottom:80px; left:50%; transform:translateX(-50%);
+  width:340px; height:220px; border-radius:50%;
+  background:radial-gradient(ellipse at 50% 100%,
+    rgba(76,161,48,0.38) 0%,
+    rgba(48,120,32,0.22) 35%,
+    rgba(20,80,20,0.08) 65%,
+    transparent 80%);
+  filter:blur(28px);
+}
+.sc-aurora-wide {
+  position:absolute; bottom:20px; left:50%; transform:translateX(-50%);
+  width:500px; height:160px; border-radius:50%;
+  background:radial-gradient(ellipse at 50% 100%,
+    rgba(40,140,40,0.18) 0%,
+    rgba(20,80,20,0.08) 55%,
+    transparent 75%);
+  filter:blur(40px);
+}
+/* Ground shimmer */
+.sc-ground {
+  position:absolute; bottom:0; left:0; right:0; height:80px; z-index:0; pointer-events:none;
+  background:linear-gradient(0deg, rgba(14,40,10,0.85) 0%, transparent 100%);
+}
+
+/* All card content above decorative layers */
+.stats-card > *:not(.sc-stars):not(.sc-aurora):not(.sc-ground) { position:relative; z-index:1; }
+
+/* ── Brand header ─────────────────────────────────────── */
 .sc-brand {
-  display:flex; align-items:center; justify-content:space-between; margin-bottom:28px;
+  display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;
 }
 .sc-brand-name {
-  font-family:'Playfair Display',serif; font-size:20px; font-weight:800;
-  color:#fff; letter-spacing:.3px;
+  font-family:'Playfair Display',serif; font-size:18px; font-weight:800;
+  color:#fff; letter-spacing:.2px;
 }
-.sc-brand-name span { color:#4CA130; }
+.sc-brand-name span { color:#5CC83A; }
 .sc-sem-pill {
-  font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:2px;
-  color:rgba(255,255,255,0.5); background:rgba(76,161,48,0.1);
-  border-radius:100px; padding:5px 12px; border:1px solid rgba(76,161,48,0.2);
+  font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:1.8px;
+  color:rgba(255,255,255,0.45); background:rgba(76,161,48,0.1);
+  border-radius:100px; padding:5px 11px; border:1px solid rgba(76,161,48,0.18);
 }
 
-/* tree area */
+/* ── Name banner ─────────────────────────────────────── */
+.sc-name-banner {
+  text-align:center; margin-bottom:4px;
+  font-size:13px; font-weight:700; color:rgba(255,255,255,0.48);
+  letter-spacing:.04em;
+}
+
+/* ── Tree area — much taller, dramatic ───────────────── */
 .stats-card-tree {
   display:flex; justify-content:center; align-items:flex-end;
-  min-height:120px; margin-bottom:12px;
+  min-height:200px; margin-bottom:0; position:relative; z-index:2;
 }
-/* stage badge */
+/* Stage badge */
 .sc-stage {
-  text-align:center; font-size:10px; font-weight:800; text-transform:uppercase;
-  letter-spacing:2.5px; color:#6DC94B; margin-bottom:18px;
-  background:rgba(76,161,48,0.1); border:1px solid rgba(76,161,48,0.22);
-  border-radius:100px; padding:5px 16px; display:inline-block;
-  width:auto; position:relative; left:50%; transform:translateX(-50%);
+  text-align:center; font-size:9px; font-weight:800; text-transform:uppercase;
+  letter-spacing:2.5px; color:#82D84C; margin:10px auto 16px;
+  background:rgba(76,161,48,0.12); border:1px solid rgba(76,161,48,0.28);
+  border-radius:100px; padding:5px 18px; display:block;
+  width:fit-content;
 }
 
-/* XP hero — the big number */
+/* ── XP hero ─────────────────────────────────────────── */
 .stats-xp-hero {
-  font-size:80px; font-weight:800; color:#fff; text-align:center;
+  font-size:76px; font-weight:800; color:#fff; text-align:center;
   line-height:1; letter-spacing:-3px;
-  text-shadow:0 0 60px rgba(76,161,48,0.6), 0 0 120px rgba(76,161,48,0.2);
+  text-shadow:0 2px 40px rgba(76,161,48,0.55), 0 0 100px rgba(76,161,48,0.18);
+  font-family:'Playfair Display',serif;
 }
 .stats-xp-label {
-  font-size:9px; color:rgba(255,255,255,0.38); text-align:center;
-  letter-spacing:2px; text-transform:uppercase; margin:10px 0 24px;
+  font-size:9px; color:rgba(255,255,255,0.32); text-align:center;
+  letter-spacing:2.2px; text-transform:uppercase; margin:8px 0 20px;
 }
-
-/* Divider */
 .stats-xp-label::after {
-  content:''; display:block; width:48px; height:1px; margin:12px auto 0;
-  background:linear-gradient(90deg,transparent,rgba(76,161,48,0.4),transparent);
+  content:''; display:block; width:40px; height:1px; margin:10px auto 0;
+  background:linear-gradient(90deg,transparent,rgba(76,161,48,0.5),transparent);
 }
 
-/* stat grid */
+/* ── Stat grid ───────────────────────────────────────── */
 .stats-grid {
-  display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:18px;
+  display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;
 }
 .sbox {
-  background:rgba(255,255,255,0.05); border-radius:18px;
-  padding:18px 12px 16px; text-align:center;
-  border:1px solid rgba(255,255,255,0.08);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
+  background:rgba(255,255,255,0.04); border-radius:16px;
+  padding:14px 10px 12px; text-align:center;
+  border:1px solid rgba(255,255,255,0.07);
 }
-.sbox .si { font-size:22px; margin-bottom:8px; display:block; }
-.sbox .sn { font-size:34px; font-weight:800; color:#fff; line-height:1; letter-spacing:-1px; }
-.sbox .sl { font-size:9px; color:rgba(255,255,255,0.38); text-transform:uppercase; letter-spacing:1.2px; margin-top:5px; font-weight:700; }
+.sbox .si { font-size:20px; margin-bottom:6px; display:block; }
+.sbox .sn { font-size:28px; font-weight:800; color:#fff; line-height:1; letter-spacing:-0.5px; font-family:'Playfair Display',serif; }
+.sbox .sl { font-size:9px; color:rgba(255,255,255,0.32); text-transform:uppercase; letter-spacing:1.2px; margin-top:4px; font-weight:700; }
 
-/* badges */
+/* ── Badges ──────────────────────────────────────────── */
 .stats-earned-badges {
-  display:flex; justify-content:center; gap:6px; flex-wrap:wrap; margin-bottom:20px;
+  display:flex; justify-content:center; gap:5px; flex-wrap:wrap; margin-bottom:16px;
 }
 .seb {
-  background:rgba(76,161,48,0.12); border-radius:100px;
-  padding:5px 12px; font-size:10px; font-weight:800;
-  color:#7DD855; border:1px solid rgba(76,161,48,0.28); letter-spacing:.3px;
+  background:rgba(76,161,48,0.1); border-radius:100px;
+  padding:4px 10px; font-size:9px; font-weight:800;
+  color:#82D84C; border:1px solid rgba(76,161,48,0.24); letter-spacing:.3px;
 }
 
-/* footer */
+/* ── Footer ──────────────────────────────────────────── */
 .sc-footer {
-  text-align:center; font-size:10px; font-weight:600;
-  color:rgba(255,255,255,0.18); letter-spacing:.8px;
-  margin-top:4px;
+  text-align:center; font-size:9px; font-weight:600;
+  color:rgba(255,255,255,0.15); letter-spacing:1px; margin-top:4px;
 }
-.sc-footer span { color:rgba(76,161,48,0.55); }
+.sc-footer span { color:rgba(76,161,48,0.5); }
 
-/* ── Share button — the CTA ──────────────────────────── */
+/* ── Share row ───────────────────────────────────────── */
+.share-row {
+  display:flex; gap:10px; max-width:420px; margin:16px auto 0;
+}
 .share-btn {
-  display:block; margin-top:20px; width:100%; padding:16px; border-radius:16px;
-  border:none;
-  background:linear-gradient(135deg,#2E6020,#4CA130,#64C840);
+  flex:1; padding:16px 12px; border-radius:16px; border:none;
+  background:linear-gradient(135deg,#266018,#4CA130,#5EC03C);
   color:#fff; font-family:'DM Sans',sans-serif; font-size:15px; font-weight:800;
   cursor:pointer; transition:all .25s cubic-bezier(.2,.8,.2,1);
   box-shadow:0 8px 32px rgba(76,161,48,0.45);
@@ -1833,7 +1864,7 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 }
 .share-btn::after {
   content:''; position:absolute; top:0; left:-100%; width:50%; height:100%;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.22),transparent);
   animation:shareBtnShine 3s ease-in-out infinite;
 }
 @keyframes shareBtnShine {
@@ -1841,6 +1872,13 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
   75% { left:160%; }
 }
 .share-btn:hover { transform:scale(1.03) translateY(-1px); box-shadow:0 12px 40px rgba(76,161,48,0.6); }
+.share-dl-btn {
+  padding:16px 18px; border-radius:16px; border:1px solid rgba(130,204,85,0.25);
+  background:rgba(76,161,48,0.08);
+  color:rgba(130,204,85,0.9); font-family:'DM Sans',sans-serif; font-size:20px;
+  cursor:pointer; transition:all .22s; flex-shrink:0;
+}
+.share-dl-btn:hover { background:rgba(76,161,48,0.16); border-color:rgba(130,204,85,0.4); transform:scale(1.05); }
 .wu-new-semester {
   margin-top:12px; width:100%; padding:13px; border-radius:14px;
   border:1px solid rgba(255,255,255,0.12); background:transparent;
@@ -4222,8 +4260,13 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
       <div class="stats-card" id="stats-card">
         <!-- star field (injected by JS) -->
         <div class="sc-stars" id="sc-stars"></div>
-        <!-- tree glow blob -->
-        <div class="sc-glow"></div>
+        <!-- aurora glow behind tree -->
+        <div class="sc-aurora">
+          <div class="sc-aurora-wide"></div>
+          <div class="sc-aurora-inner"></div>
+        </div>
+        <!-- ground fade -->
+        <div class="sc-ground"></div>
 
         <!-- brand header -->
         <div class="sc-brand">
@@ -4231,9 +4274,12 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
           <div class="sc-sem-pill" id="stats-sem">Spring 2026</div>
         </div>
 
-        <!-- tree illustration -->
+        <!-- name banner -->
+        <div class="sc-name-banner" id="sc-name-banner">A semester well grown.</div>
+
+        <!-- tree illustration — taller, centrepiece -->
         <div class="stats-card-tree" id="stats-card-tree"></div>
-        <!-- stage name -->
+        <!-- stage badge -->
         <div class="sc-stage" id="stat-badge-stage-val">Seedling</div>
 
         <!-- XP hero -->
@@ -4255,8 +4301,11 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
         <div class="sc-footer">grown with <span>sequoia.app</span></div>
       </div>
 
-      <!-- action buttons (outside card, not captured) -->
-      <button class="share-btn" onclick="downloadStatsCard()" style="max-width:420px;display:block;margin:14px auto 0">📸 Save Stats Card</button>
+      <!-- share row (outside card, not captured in screenshot) -->
+      <div class="share-row">
+        <button class="share-btn" id="share-main-btn" onclick="shareStatsCard()">📤 Share My Stats</button>
+        <button class="share-dl-btn" id="share-dl-btn" onclick="downloadStatsCard()" title="Save image">⬇️</button>
+      </div>
       <button class="wu-new-semester" onclick="newSemester()">🌱 Start a New Semester →</button>
       <button class="wu-archive-link" onclick="alert('Semester archive coming soon — your stump will live here forever. 🌳')">View Archive ↗</button>
     </div>
@@ -6806,30 +6855,40 @@ function syncWrapUp() {
   document.getElementById('stat-sessions').textContent    = sessions;
   document.getElementById('stat-badge-stage-val').textContent = st.name;
 
-  // Tree illustration in card (larger for dark card)
+  // Name banner — personalised if we know the user's name
+  const rawName = (localStorage.getItem('sq_name') || '').trim();
+  const nameBanner = document.getElementById('sc-name-banner');
+  if (nameBanner) {
+    nameBanner.textContent = rawName
+      ? rawName.split(' ')[0] + "'s Semester 🌲"
+      : 'A semester well grown. 🌲';
+  }
+
+  // Tree illustration in card — much bigger, centrepiece
   const cardTree = document.getElementById('stats-card-tree');
   if (cardTree && srcSvg) {
     const clone2 = srcSvg.cloneNode(true);
-    const sz = [80, 96, 112, 128][idx];
+    const sz = [130, 148, 164, 180][idx];  // was [80,96,112,128]
     clone2.setAttribute('width',  sz);
-    clone2.setAttribute('height', Math.round(sz * 1.4));
+    clone2.setAttribute('height', Math.round(sz * 1.45));
     cardTree.innerHTML = '';
     cardTree.appendChild(clone2);
   }
 
-  // Inject star field
+  // Inject star field (reset each sync so it looks fresh)
   const starsEl = document.getElementById('sc-stars');
-  if (starsEl && !starsEl.children.length) {
-    const cardW = 420, cardH = 560;
-    for (let i = 0; i < 48; i++) {
+  if (starsEl) {
+    starsEl.innerHTML = '';
+    for (let i = 0; i < 55; i++) {
       const s = document.createElement('div');
       s.className = 'sc-star';
-      const size = Math.random() < 0.15 ? (1.5 + Math.random()) : (0.5 + Math.random() * 1);
+      const big  = Math.random() < 0.12;
+      const size = big ? (1.8 + Math.random() * 1.2) : (0.5 + Math.random() * 1.2);
       s.style.cssText = [
         `width:${size}px`, `height:${size}px`,
         `left:${Math.random() * 100}%`,
-        `top:${Math.random() * 55}%`,
-        `opacity:${0.2 + Math.random() * 0.5}`,
+        `top:${Math.random() * 50}%`,
+        `opacity:${big ? 0.6 + Math.random() * 0.35 : 0.15 + Math.random() * 0.45}`,
       ].join(';');
       starsEl.appendChild(s);
     }
@@ -7012,46 +7071,105 @@ function newSemester() {
   showScreen(0);
 }
 
-function downloadStatsCard() {
-  const card     = document.getElementById('stats-card');
-  const shareBtn = document.querySelector('.share-btn');
-  const orig     = shareBtn.textContent;
-  shareBtn.textContent = '⏳ Saving…';
-  shareBtn.disabled    = true;
+// ── Capture the stats card to a canvas (shared by share + download) ──
+function _captureStatsCard() {
+  const card = document.getElementById('stats-card');
+  return new Promise((resolve, reject) => {
+    const doCapture = () => {
+      setTimeout(() => {
+        html2canvas(card, {
+          backgroundColor: '#04090A',
+          scale: 3,
+          useCORS: true,
+          logging: false,
+          width: card.offsetWidth,
+          height: card.offsetHeight,
+        }).then(resolve).catch(reject);
+      }, 80);
+    };
+    if (typeof html2canvas === 'undefined') {
+      const s = document.createElement('script');
+      s.src   = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      s.onload  = doCapture;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    } else {
+      doCapture();
+    }
+  });
+}
 
-  const doCapture = () => {
-    setTimeout(() => {
-      html2canvas(card, {
-        backgroundColor: '#0D2410',
-        scale: 2, useCORS: true, logging: false,
-        width: card.offsetWidth, height: card.offsetHeight,
-      }).then(canvas => {
-        shareBtn.textContent = '✓ Saved to Camera Roll!';
-        shareBtn.disabled    = false;
-        const sem = document.getElementById('stats-sem')?.textContent || 'semester';
-        const a   = document.createElement('a');
-        a.download = 'sequoia-' + sem.replace(/\s/g,'-').toLowerCase() + '.png';
-        a.href = canvas.toDataURL('image/png');
-        a.click();
-        setTimeout(() => { shareBtn.textContent = orig; }, 2400);
-      }).catch(err => {
-        console.warn('Stats card capture failed:', err);
-        shareBtn.textContent = orig;
-        shareBtn.disabled    = false;
-      });
-    }, 80);
-  };
+// ── Share via Web Share API (native sheet) → fallback download ──
+async function shareStatsCard() {
+  const btn  = document.getElementById('share-main-btn');
+  const orig = btn.textContent;
+  btn.textContent = '⏳ Preparing…';
+  btn.disabled    = true;
 
-  // Lazy-load html2canvas only when the user actually clicks Download
-  // (saves ~830 KB from the initial page load)
-  if (typeof html2canvas === 'undefined') {
-    const s   = document.createElement('script');
-    s.src     = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-    s.onload  = doCapture;
-    s.onerror = () => { shareBtn.textContent = orig; shareBtn.disabled = false; };
-    document.head.appendChild(s);
-  } else {
-    doCapture();
+  try {
+    const canvas = await _captureStatsCard();
+    const sem    = document.getElementById('stats-sem')?.textContent || 'semester';
+    const fileName = 'sequoia-' + sem.replace(/\s/g,'-').toLowerCase() + '.png';
+
+    // Try native share with file (iOS 15+, Android, desktop Chrome/Edge)
+    if (navigator.canShare) {
+      canvas.toBlob(async blob => {
+        const file = new File([blob], fileName, { type: 'image/png' });
+        if (navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: 'My Sequoia Semester',
+              text: 'A whole semester of growth — ranked by what matters. 🌲',
+            });
+            btn.textContent = '✓ Shared!';
+          } catch (shareErr) {
+            // User cancelled — not an error, just restore
+            btn.textContent = orig;
+          }
+          btn.disabled = false;
+          setTimeout(() => { if (btn.textContent !== orig) btn.textContent = orig; }, 2200);
+          return;
+        }
+        // canShare returned false — fall through to download
+        _triggerDownload(canvas, fileName, btn, orig);
+      }, 'image/png');
+    } else {
+      // No Web Share API — download instead
+      _triggerDownload(canvas, fileName, btn, orig);
+    }
+  } catch (err) {
+    console.warn('Share card error:', err);
+    btn.textContent = orig;
+    btn.disabled    = false;
+  }
+}
+
+function _triggerDownload(canvas, fileName, btn, orig) {
+  const a   = document.createElement('a');
+  a.download = fileName;
+  a.href     = canvas.toDataURL('image/png');
+  a.click();
+  btn.textContent = '✓ Saved!';
+  btn.disabled    = false;
+  setTimeout(() => { btn.textContent = orig; }, 2400);
+}
+
+// ── Direct download (the ⬇️ icon button) ──
+async function downloadStatsCard() {
+  const btn  = document.getElementById('share-dl-btn');
+  const orig = btn.textContent;
+  btn.textContent = '⏳';
+  btn.disabled    = true;
+
+  try {
+    const canvas   = await _captureStatsCard();
+    const sem      = document.getElementById('stats-sem')?.textContent || 'semester';
+    const fileName = 'sequoia-' + sem.replace(/\s/g,'-').toLowerCase() + '.png';
+    _triggerDownload(canvas, fileName, btn, orig);
+  } catch (err) {
+    btn.textContent = orig;
+    btn.disabled    = false;
   }
 }
 
