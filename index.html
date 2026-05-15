@@ -2472,13 +2472,13 @@ body {
 [data-theme="light"] .hero-body    { border-top-color:var(--border); }
 [data-theme="light"] .xp-stage     { color:var(--g1); }
 [data-theme="light"] .xp-stage-dot { box-shadow:none; }
-[data-theme="light"] .xp-amount    { color:var(--light); }
+[data-theme="light"] .xp-amount    { color:var(--mid); }
 [data-theme="light"] .xp-bar-track { background:var(--g-pale); }
 [data-theme="light"] .xp-bar-fill  { box-shadow:none; }
 [data-theme="light"] .xp-sub       { color:var(--light); }
 [data-theme="light"] .hero-stat    { background:var(--g-pale); border:none; }
 [data-theme="light"] .hero-stat .sv { color:var(--g1); text-shadow:none; }
-[data-theme="light"] .hero-stat .sl { color:var(--light); }
+[data-theme="light"] .hero-stat .sl { color:var(--mid); }
 [data-theme="light"] .assign-card {
   background:var(--card);
   box-shadow:var(--shadow);
@@ -2548,7 +2548,7 @@ body {
 [data-theme="light"] .pomo-goal::placeholder { color:var(--light); }
 [data-theme="light"] .pomo-goal:focus { border-color:var(--g3); background:#fff; }
 [data-theme="light"] .pomo-time { color:var(--g1); text-shadow:none; }
-[data-theme="light"] .pomo-phase-lbl { color:var(--light); }
+[data-theme="light"] .pomo-phase-lbl { color:var(--mid); }
 [data-theme="light"] .ring-wrap::before { background:radial-gradient(ellipse,rgba(76,161,48,0.08),transparent 68%); }
 [data-theme="light"] .qpick-chip {
   border-color:var(--border); background:var(--bg); color:var(--text);
@@ -2556,13 +2556,13 @@ body {
 [data-theme="light"] .qpick-chip:hover { border-color:var(--g3); color:var(--g1); background:var(--g-pale); }
 [data-theme="light"] .qpick-chip.selected { border-color:var(--g1); background:var(--g-pale); color:var(--g1); box-shadow:none; }
 [data-theme="light"] .ambience-section { border-top-color:var(--border); }
-[data-theme="light"] .ambience-title { color:var(--light); }
+[data-theme="light"] .ambience-title { color:var(--mid); }
 [data-theme="light"] .amb-btn { border-color:var(--border); background:var(--bg); color:var(--light); }
 [data-theme="light"] .amb-btn:hover { border-color:var(--g3); color:var(--g1); background:var(--g-pale); }
 [data-theme="light"] .amb-btn.active { border-color:var(--g2); background:var(--g-pale); color:var(--g1); box-shadow:none; }
 [data-theme="light"] .amb-vol-row label { color:var(--light); }
 [data-theme="light"] .session-log { border-top-color:var(--border); }
-[data-theme="light"] .slog-title { color:var(--light); }
+[data-theme="light"] .slog-title { color:var(--mid); }
 [data-theme="light"] .slog-day-label { color:var(--light); }
 [data-theme="light"] .s-entry { background:var(--g-pale); border-color:var(--border); }
 [data-theme="light"] .s-entry-label { color:var(--text); }
@@ -2641,6 +2641,37 @@ body {
 [data-theme="light"] .streak-cal-title { color:var(--g1); }
 [data-theme="light"] .streak-cal-legend { color:var(--mid); }
 [data-theme="light"] .scd-cell { background:var(--border); }
+
+/* ── LIGHT THEME: missed / insufficient overrides ─────── */
+/* Wrap Up pre-release text */
+[data-theme="light"] .wu-heading  { color:var(--g1); text-shadow:none; }
+[data-theme="light"] .wu-sub      { color:var(--mid); }
+[data-theme="light"] .wu-done-msg { color:var(--g1); }
+
+/* Wrap Up stat boxes */
+[data-theme="light"] .sbox .sn { color:var(--g1); }
+[data-theme="light"] .sbox .sl { color:var(--mid); }
+
+/* Assignment rows */
+[data-theme="light"] .a-name.struck { color:var(--light); }
+
+/* Calendar */
+[data-theme="light"] .cal-day-lbl       { color:var(--mid); }
+[data-theme="light"] .cal-legend        { color:var(--mid); }
+[data-theme="light"] .cal-month-lbl     { color:var(--mid); }
+[data-theme="light"] .cal-upcoming-title { color:var(--g1); }
+[data-theme="light"] .cal-upcoming-count { color:var(--mid); }
+[data-theme="light"] .cal-upcoming-row  { background:var(--card); }
+[data-theme="light"] .cal-upcoming-row:hover { background:var(--g-pale); }
+[data-theme="light"] .cal-up-month      { color:var(--mid); }
+
+/* Study screen labels */
+[data-theme="light"] .qpick-label       { color:var(--mid); }
+[data-theme="light"] .pomo-meta         { color:var(--mid); }
+[data-theme="light"] .pomo-goal-display { background:var(--g-pale); color:var(--g1); }
+
+/* My Tree / Wrap Up stat box */
+[data-theme="light"] .tsc-lbl           { color:var(--mid); }
 
 </style>
 <!-- Apply theme before first paint to prevent flash -->
