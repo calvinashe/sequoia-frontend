@@ -4918,6 +4918,8 @@ window.addEventListener('DOMContentLoaded', () => {
         if (t && !token) { closeOnboard(); setGreeting(localStorage.getItem('sq_name') || ''); loadAssignments(t, u); loadCourses(t, u); }
       }
     });
+    // Keep timezone offset fresh on every login (user may travel or change device)
+    saveUserData({ tz_offset: -new Date().getTimezoneOffset() });
     initPushBtn(); // badge count is now fetched inside loadUserData (parallel query)
   });
 
@@ -7410,7 +7412,9 @@ async function enablePushNotifs() {
     const existing_subs = (snap.exists && snap.data().push_subscriptions) || {};
     const key = btoa(subJson.endpoint).slice(-20);
     existing_subs[key] = subJson;
-    await saveUserData({ push_subscriptions: existing_subs });
+    // Save timezone offset so backend can calculate user's local hour
+    const tzOffset = -new Date().getTimezoneOffset(); // minutes east of UTC
+    await saveUserData({ push_subscriptions: existing_subs, tz_offset: tzOffset });
     updatePushBtn(true);
     addNotification('system', 'Push notifications enabled 🎉', 'You\'ll get streak reminders and due date alerts even when the app is closed.');
   } catch(e) {
