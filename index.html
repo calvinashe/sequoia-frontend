@@ -2266,6 +2266,51 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 .streak-cal-legend { display:flex; align-items:center; gap:6px; margin-top:10px; font-size:11px; color:rgba(255,255,255,0.4); }
 .scl-dot           { width:12px; height:12px; border-radius:3px; }
 
+/* ── END OF SEMESTER ENTRY ──────────────────────────────── */
+.wu-entry-wrap {
+  padding:0 clamp(12px,4vw,24px) 32px;
+}
+.wu-entry-card {
+  display:flex; align-items:center; justify-content:space-between; gap:14px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:18px; padding:18px 20px;
+  cursor:pointer; transition:all .22s;
+  position:relative; overflow:hidden;
+}
+.wu-entry-card::before {
+  content:''; position:absolute; inset:0; border-radius:17px;
+  background:linear-gradient(135deg, rgba(76,161,48,0.06), transparent 55%);
+  pointer-events:none;
+}
+.wu-entry-card:hover {
+  background:rgba(76,161,48,0.08);
+  border-color:rgba(76,161,48,0.3);
+  transform:translateY(-1px);
+  box-shadow:0 8px 28px rgba(0,0,0,0.25);
+}
+.wu-entry-left { display:flex; align-items:center; gap:14px; }
+.wu-entry-icon { font-size:28px; flex-shrink:0; }
+.wu-entry-title {
+  font-family:'Playfair Display',serif; font-size:15px; font-weight:700;
+  color:#fff; margin-bottom:3px;
+}
+.wu-entry-sub {
+  font-size:11px; color:rgba(255,255,255,0.38); line-height:1.45;
+}
+.wu-entry-arrow {
+  font-size:18px; color:rgba(255,255,255,0.25); flex-shrink:0;
+  transition:transform .2s, color .2s;
+}
+.wu-entry-card:hover .wu-entry-arrow { transform:translateX(3px); color:rgba(130,204,85,0.7); }
+[data-theme="light"] .wu-entry-card {
+  background:var(--card); border-color:var(--border);
+}
+[data-theme="light"] .wu-entry-card:hover { background:var(--g-pale); border-color:var(--g3); }
+[data-theme="light"] .wu-entry-title { color:var(--g1); }
+[data-theme="light"] .wu-entry-sub   { color:var(--mid); }
+[data-theme="light"] .wu-entry-arrow { color:var(--light); }
+
 /* ── DECORATIONS ─────────────────────────────────────────── */
 .deco-wrap {
   margin:24px clamp(12px,4vw,24px) 8px;
@@ -3338,7 +3383,6 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
     <button class="nav-tab" onclick="showScreen(1)">Calendar</button>
     <button class="nav-tab" onclick="showScreen(2)">Study</button>
     <button class="nav-tab" onclick="showScreen(3)">My Tree</button>
-    <button class="nav-tab" onclick="showScreen(4)">Wrap Up</button>
   </div>
   <div class="nav-right">
     <span class="nav-xp" id="nav-xp">0 XP</span>
@@ -4156,6 +4200,20 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
         <div class="scl-dot" style="background:#4CA130"></div>
         <div class="scl-dot" style="background:#2E6020"></div>
         <span>More</span>
+      </div>
+    </div>
+
+    <!-- END OF SEMESTER ENTRY POINT -->
+    <div class="wu-entry-wrap">
+      <div class="wu-entry-card" onclick="showScreen(4)">
+        <div class="wu-entry-left">
+          <div class="wu-entry-icon">✨</div>
+          <div>
+            <div class="wu-entry-title">End of Semester</div>
+            <div class="wu-entry-sub">Release your tree to the ancient forest and get your stats card</div>
+          </div>
+        </div>
+        <div class="wu-entry-arrow">→</div>
       </div>
     </div>
 
@@ -7542,7 +7600,6 @@ if ('serviceWorker' in navigator) {
   <button class="btab" id="btab-1" onclick="showScreen(1)"><span class="btab-icon">📅</span><span class="btab-label">Calendar</span></button>
   <button class="btab" id="btab-2" onclick="showScreen(2)"><span class="btab-icon">⏱</span><span class="btab-label">Study</span></button>
   <button class="btab" id="btab-3" onclick="showScreen(3)"><span class="btab-icon">🌲</span><span class="btab-label">My Tree</span></button>
-  <button class="btab" id="btab-4" onclick="showScreen(4)"><span class="btab-icon">✨</span><span class="btab-label">Wrap Up</span></button>
 </div>
 
 <!-- ── SETTINGS OVERLAY ── -->
