@@ -2275,16 +2275,41 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 .leaf-p { position:absolute; pointer-events:none; }
 
 /* ── CALENDAR HEATMAP ───────────────────────────────────── */
+/* ── CALENDAR SCREEN HEADER ──────────────────────────────── */
+.cal-screen-hdr {
+  padding:16px 20px 14px;
+  max-width:1200px; margin:0 auto;
+}
+.cal-screen-hdr-top {
+  display:flex; align-items:center; justify-content:space-between;
+}
+.cal-screen-title {
+  font-family:'Playfair Display',serif; font-size:22px; font-weight:700;
+  color:#fff; letter-spacing:-.3px;
+}
+.cal-screen-sub {
+  font-size:12px; font-weight:600; color:rgba(255,255,255,0.45);
+  margin-top:2px; letter-spacing:.02em;
+}
+.cal-nav-btns { display:flex; gap:6px; }
+.cal-nav-btn {
+  width:32px; height:32px; border-radius:50%; border:none;
+  background:rgba(255,255,255,0.10); color:rgba(255,255,255,0.7);
+  font-size:14px; cursor:pointer; display:flex; align-items:center;
+  justify-content:center; transition:all .18s;
+}
+.cal-nav-btn:hover { background:rgba(255,255,255,0.18); color:#fff; }
+
 .cal-wrap {
   max-width:1200px; margin:0 auto; padding:0 20px 24px;
 }
 .cal-card {
   background:var(--card); border-radius:20px; box-shadow:var(--shadow);
-  padding:22px 24px 20px;
+  padding:16px 24px 20px;
 }
 .cal-header {
-  display:flex; align-items:center; justify-content:space-between;
-  margin-bottom:18px;
+  display:flex; align-items:center; justify-content:flex-end;
+  margin-bottom:14px;
 }
 .cal-title { font-family:'Playfair Display',serif; font-size:18px; font-weight:700; color:var(--g1); }
 .cal-legend { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--light); }
@@ -2487,10 +2512,14 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 
 /* ── UPCOMING THIS WEEK ──────────────────────────────────── */
 .cal-upcoming-wrap {
-  margin:16px clamp(12px,4vw,24px) 24px;
+  margin:0 clamp(12px,4vw,24px) 24px;
+  background:rgba(255,255,255,0.04);
+  border-radius:20px;
+  padding:16px;
+  border:1px solid rgba(255,255,255,0.07);
 }
 .cal-upcoming-header {
-  display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;
+  display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;
 }
 .cal-upcoming-title { font-family:'Playfair Display',serif; font-size:17px; font-weight:700; color:#fff; }
 .cal-upcoming-count { font-size:12px; color:rgba(255,255,255,0.45); font-weight:600; }
@@ -3704,10 +3733,23 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
      SCREEN 2 — CALENDAR
 ════════════════════════════════════════════════════════ -->
 <div class="screen" id="sc-cal">
-  <div class="cal-wrap" style="padding-top:24px">
+  <!-- Calendar screen header — fills the dead zone below the fixed nav -->
+  <div class="cal-screen-hdr">
+    <div class="cal-screen-hdr-top">
+      <div>
+        <div class="cal-screen-title" id="cal-screen-month">This Week</div>
+        <div class="cal-screen-sub" id="cal-screen-range">Loading…</div>
+      </div>
+      <div class="cal-nav-btns">
+        <button class="cal-nav-btn" onclick="calShiftWeeks(-4)" title="Back 4 weeks">‹</button>
+        <button class="cal-nav-btn" onclick="calShiftWeeks(4)"  title="Forward 4 weeks">›</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cal-wrap">
     <div class="cal-card">
       <div class="cal-header">
-        <span class="cal-title">Calendar</span>
         <div class="cal-legend">
           <span>Less</span>
           <div class="cal-legend-swatch cal-c0"></div>
@@ -5375,6 +5417,13 @@ function renderGrades(grades) {
 }
 
 // ── CALENDAR HEATMAP ────────────────────────────────────
+let _calWeekOffset = 0; // weeks to shift the calendar view
+
+function calShiftWeeks(delta) {
+  _calWeekOffset += delta;
+  renderCalendar(allAssignments);
+}
+
 function renderCalendar(assignments) {
   const container = document.getElementById('cal-weeks');
   if (!container) return;
@@ -5390,10 +5439,20 @@ function renderCalendar(assignments) {
     dayMap[k].push(a);
   });
 
-  // Start from the Monday of the current week, show 10 weeks
+  // Start from the Monday of the current week + any offset
   const startDate = new Date(today);
   const dow = (startDate.getDay() + 6) % 7; // 0=Mon
-  startDate.setDate(startDate.getDate() - dow);
+  startDate.setDate(startDate.getDate() - dow + (_calWeekOffset * 7));
+
+  // Update screen header
+  const endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + 69); // 10 weeks - 1 day
+  const fmtMonth = d => d.toLocaleDateString('en-US',{month:'short'});
+  const fmtFull  = d => d.toLocaleDateString('en-US',{month:'long', year:'numeric'});
+  const monthEl  = document.getElementById('cal-screen-month');
+  const rangeEl  = document.getElementById('cal-screen-range');
+  if (monthEl) monthEl.textContent = _calWeekOffset === 0 ? 'This Week' : fmtMonth(startDate) + ' — ' + fmtMonth(endDate);
+  if (rangeEl) rangeEl.textContent = fmtFull(startDate) + ' · 10 weeks';
 
   const WEEKS = 10;
   let html = '';
