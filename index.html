@@ -1409,12 +1409,48 @@ body {
   border-radius:4px; transition:width 1.3s ease;
 }
 
+/* ── MY TREE SCREEN — FULL FOREST ENVIRONMENT ───────────── */
+#sc2 {
+  background:linear-gradient(180deg,#020708 0%,#04100A 28%,#081A0E 58%,#0E2210 100%);
+  position:relative; overflow:hidden;
+}
+/* Pinned full-screen forest SVG layer */
+#sc2-forest-bg {
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  /* Only visible when sc2 is active — toggled via JS class */
+  opacity:0; transition:opacity .5s ease;
+}
+#sc2.active #sc2-forest-bg,
+body:has(#sc2.active) #sc2-forest-bg { opacity:1; }
+/* Fallback for browsers without :has — JS adds .sc2-active to body */
+body.sc2-active #sc2-forest-bg { opacity:1; }
+/* Screen content sits above forest */
+#sc2 .tree-screen-inner { position:relative; z-index:1; }
+/* Firefly particles on the tree screen */
+.sc2-firefly {
+  position:fixed; border-radius:50%; pointer-events:none; z-index:2;
+  width:5px; height:5px;
+  background:radial-gradient(circle,rgba(190,255,120,0.95),transparent 70%);
+  animation:sc2FFrise linear infinite, sc2FFpulse ease-in-out infinite alternate;
+}
+@keyframes sc2FFrise {
+  0%   { transform:translate(0,0) scale(0.6); opacity:0; }
+  15%  { opacity:1; }
+  60%  { transform:translate(var(--ffx,12px),-120px) scale(1); opacity:0.8; }
+  100% { transform:translate(var(--ffx2,-8px),-260px) scale(0.3); opacity:0; }
+}
+@keyframes sc2FFpulse {
+  from { box-shadow:0 0 3px 1px rgba(180,255,100,0.5); }
+  to   { box-shadow:0 0 8px 3px rgba(180,255,100,0.9); }
+}
+
 /* ── TREE HERO ───────────────────────────────────────────── */
 .tree-hero {
-  background:linear-gradient(180deg,#0A1A0A 0%,#112411 55%,#1A3A10 100%);
+  background:linear-gradient(180deg,rgba(0,0,0,0.22) 0%,rgba(0,0,0,0.10) 60%,transparent 100%);
   border-radius:24px; overflow:hidden; margin-bottom:16px;
-  box-shadow:0 8px 40px rgba(0,0,0,0.3);
+  box-shadow:0 2px 0 rgba(76,161,48,0.08);
   position:relative;
+  border:1px solid rgba(76,161,48,0.08);
 }
 .tree-hero-scene {
   position:relative; height:380px; display:flex;
@@ -1491,10 +1527,13 @@ body {
   display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:16px;
 }
 .tree-stat-chip {
-  background:rgba(0,0,0,0.28); border-radius:18px; padding:22px 12px;
+  background:rgba(8,28,12,0.52);
+  backdrop-filter:blur(14px) saturate(1.4);
+  -webkit-backdrop-filter:blur(14px) saturate(1.4);
+  border-radius:18px; padding:22px 12px;
   text-align:center;
-  border:1px solid rgba(76,161,48,0.1);
-  box-shadow:0 8px 32px rgba(0,0,0,0.35);
+  border:1px solid rgba(76,161,48,0.15);
+  box-shadow:0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(130,204,85,0.07);
 }
 .tsc-val {
   font-family:'Playfair Display',serif;
@@ -1509,11 +1548,13 @@ body {
   display:grid; grid-template-columns:repeat(4,1fr); gap:14px;
 }
 .stage-card {
-  background:linear-gradient(160deg,#0E2010 0%,#0A1A0C 60%,#081208 100%);
+  background:rgba(10,22,12,0.55);
+  backdrop-filter:blur(16px) saturate(1.3);
+  -webkit-backdrop-filter:blur(16px) saturate(1.3);
   border-radius:20px; padding:24px 18px 22px;
-  text-align:center; border:1px solid rgba(255,255,255,0.08);
+  text-align:center; border:1px solid rgba(255,255,255,0.09);
   transition:all .3s; cursor:default; position:relative; overflow:hidden;
-  box-shadow:0 8px 32px rgba(0,0,0,0.45);
+  box-shadow:0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(130,204,85,0.05);
 }
 .stage-card::before {
   content:''; position:absolute; inset:0; border-radius:18px;
@@ -2159,7 +2200,12 @@ body {
 /* ── STREAK CALENDAR (MY TREE) ──────────────────────────── */
 .streak-cal-wrap {
   margin:0 clamp(12px,4vw,24px) 32px;
-  background:rgba(0,0,0,0.18); border-radius:20px; padding:20px;
+  background:rgba(8,22,10,0.50);
+  backdrop-filter:blur(14px) saturate(1.3);
+  -webkit-backdrop-filter:blur(14px) saturate(1.3);
+  border-radius:20px; padding:20px;
+  border:1px solid rgba(76,161,48,0.10);
+  box-shadow:0 8px 32px rgba(0,0,0,0.35);
 }
 .streak-cal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
 .streak-cal-title  { font-family:'Playfair Display',serif; font-size:16px; font-weight:700; color:#fff; }
@@ -3630,6 +3676,108 @@ body {
 </div>
 
 <!-- ════════════════════════════════════════════════════════
+     MY TREE — FULL-SCREEN FOREST BACKGROUND (fixed layer)
+════════════════════════════════════════════════════════ -->
+<div id="sc2-forest-bg" aria-hidden="true">
+  <svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 900 900" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="sc2Sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="#010608"/>
+        <stop offset="38%"  stop-color="#020E0A"/>
+        <stop offset="72%"  stop-color="#071A0C"/>
+        <stop offset="100%" stop-color="#0E2610"/>
+      </linearGradient>
+      <radialGradient id="sc2MoonGlow" cx="72%" cy="12%" r="18%">
+        <stop offset="0%"   stop-color="rgba(200,230,180,0.18)"/>
+        <stop offset="100%" stop-color="transparent"/>
+      </radialGradient>
+      <filter id="sc2Blur2"><feGaussianBlur stdDeviation="2"/></filter>
+      <filter id="sc2Blur4"><feGaussianBlur stdDeviation="4"/></filter>
+    </defs>
+    <!-- Sky -->
+    <rect width="900" height="900" fill="url(#sc2Sky)"/>
+    <!-- Moon glow -->
+    <rect width="900" height="900" fill="url(#sc2MoonGlow)"/>
+    <!-- Moon -->
+    <circle cx="648" cy="105" r="28" fill="#D8EEC8" opacity="0.82"/>
+    <circle cx="648" cy="105" r="28" fill="rgba(255,255,255,0.12)"/>
+    <!-- Moon craters -->
+    <circle cx="641" cy="98"  r="4"  fill="rgba(0,0,0,0.1)"/>
+    <circle cx="656" cy="113" r="2.5" fill="rgba(0,0,0,0.08)"/>
+    <!-- Stars layer 1 — small far -->
+    <circle cx="45"  cy="38"  r="1"   fill="#fff" opacity="0.55"/>
+    <circle cx="130" cy="20"  r="0.8" fill="#fff" opacity="0.42"/>
+    <circle cx="198" cy="55"  r="1.1" fill="#fff" opacity="0.60"/>
+    <circle cx="310" cy="18"  r="0.9" fill="#fff" opacity="0.38"/>
+    <circle cx="380" cy="42"  r="1.2" fill="#fff" opacity="0.65"/>
+    <circle cx="455" cy="14"  r="0.7" fill="#fff" opacity="0.48"/>
+    <circle cx="520" cy="60"  r="1"   fill="#fff" opacity="0.50"/>
+    <circle cx="580" cy="28"  r="1.3" fill="#fff" opacity="0.44"/>
+    <circle cx="700" cy="48"  r="0.9" fill="#fff" opacity="0.58"/>
+    <circle cx="760" cy="22"  r="1"   fill="#fff" opacity="0.52"/>
+    <circle cx="830" cy="65"  r="1.1" fill="#fff" opacity="0.40"/>
+    <circle cx="875" cy="32"  r="0.8" fill="#fff" opacity="0.55"/>
+    <!-- Stars layer 2 — slightly brighter -->
+    <circle cx="88"  cy="78"  r="1.5" fill="#C8F0A0" opacity="0.45"/>
+    <circle cx="244" cy="90"  r="1.2" fill="#fff"    opacity="0.50"/>
+    <circle cx="434" cy="80"  r="1.4" fill="#C8F0A0" opacity="0.38"/>
+    <circle cx="614" cy="75"  r="1.3" fill="#fff"    opacity="0.48"/>
+    <circle cx="820" cy="88"  r="1.5" fill="#C8F0A0" opacity="0.42"/>
+    <!-- Far mountains / ridgeline -->
+    <path d="M0 620 Q80 480 180 520 Q260 460 360 500 Q460 430 560 475 Q660 400 760 445 Q840 410 900 440 L900 900 L0 900Z" fill="#040E06" opacity="0.90"/>
+    <!-- Mid mountain layer -->
+    <path d="M0 680 Q100 570 220 610 Q340 545 460 590 Q580 520 700 568 Q800 540 900 558 L900 900 L0 900Z" fill="#061208" opacity="0.95"/>
+    <!-- Far conifers — left cluster -->
+    <polygon points="55,640  35,690  75,690"  fill="#050D06" opacity="0.92"/>
+    <polygon points="55,622  38,656  72,656"  fill="#071208"/>
+    <polygon points="55,608  40,638  70,638"  fill="#091608"/>
+    <polygon points="100,650 80,695 120,695"  fill="#050D06" opacity="0.90"/>
+    <polygon points="100,632 82,665 118,665"  fill="#071208"/>
+    <polygon points="140,644 122,688 158,688" fill="#050D06" opacity="0.88"/>
+    <polygon points="140,627 124,660 156,660" fill="#071208"/>
+    <!-- Far conifers — right cluster -->
+    <polygon points="800,640 780,690 820,690" fill="#050D06" opacity="0.92"/>
+    <polygon points="800,622 783,656 817,656" fill="#071208"/>
+    <polygon points="800,608 783,638 817,638" fill="#091608"/>
+    <polygon points="845,652 825,697 865,697" fill="#050D06" opacity="0.90"/>
+    <polygon points="845,633 827,666 863,666" fill="#071208"/>
+    <polygon points="756,645 738,688 774,688" fill="#050D06" opacity="0.88"/>
+    <polygon points="756,628 740,660 772,660" fill="#071208"/>
+    <!-- Mid conifers — left -->
+    <polygon points="20,730  -5,800  45,800"  fill="#061208"/>
+    <polygon points="20,705   0,752  40,752"  fill="#081A0A"/>
+    <polygon points="20,684   2,725  38,725"  fill="#0A2010"/>
+    <polygon points="75,740  48,808 102,808"  fill="#061208"/>
+    <polygon points="75,714  50,760 100,760"  fill="#081A0A"/>
+    <polygon points="75,692  52,736 98,736"   fill="#0A2010"/>
+    <polygon points="128,735 103,800 153,800" fill="#061208"/>
+    <polygon points="128,711 105,756 151,756" fill="#081A0A"/>
+    <!-- Mid conifers — right -->
+    <polygon points="880,730 855,800 905,800" fill="#061208"/>
+    <polygon points="880,705 857,752 903,752" fill="#081A0A"/>
+    <polygon points="880,684 858,725 902,725" fill="#0A2010"/>
+    <polygon points="828,740 803,808 853,808" fill="#061208"/>
+    <polygon points="828,714 805,760 851,760" fill="#081A0A"/>
+    <polygon points="828,692 806,736 850,736" fill="#0A2010"/>
+    <polygon points="775,736 751,800 799,800" fill="#061208"/>
+    <polygon points="775,713 752,756 798,756" fill="#081A0A"/>
+    <!-- Ground -->
+    <ellipse cx="450" cy="890" rx="520" ry="65" fill="#0A1E08" opacity="0.9"/>
+    <ellipse cx="450" cy="900" rx="450" ry="50" fill="#0E2A0A"/>
+    <!-- Ground mist / fog -->
+    <ellipse cx="450" cy="900" rx="520" ry="55" fill="rgba(30,80,20,0.22)" filter="url(#sc2Blur4)"/>
+    <ellipse cx="200" cy="880" rx="260" ry="35" fill="rgba(20,60,15,0.18)" filter="url(#sc2Blur4)"/>
+    <ellipse cx="700" cy="875" rx="240" ry="32" fill="rgba(20,60,15,0.16)" filter="url(#sc2Blur4)"/>
+    <!-- Near framing trees — left -->
+    <polygon points="-20,900 -20,580 30,580"  fill="#030A04"/>
+    <polygon points="38,900  38,620  85,620"  fill="#040C05"/>
+    <!-- Near framing trees — right -->
+    <polygon points="920,900 920,580 870,580" fill="#030A04"/>
+    <polygon points="862,900 862,622 815,622" fill="#040C05"/>
+  </svg>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
      SCREEN 3 — MY TREE
 ════════════════════════════════════════════════════════ -->
 <div class="screen" id="sc2">
@@ -3638,35 +3786,39 @@ body {
     <!-- HERO -->
     <div class="tree-hero">
       <div class="tree-hero-scene" id="th-scene">
-        <!-- bg forest SVG -->
+        <!-- hero overlay — adds near-ground detail only; forest BG shows through -->
         <svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 900 300" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
-          <rect width="900" height="300" fill="url(#thGrad)"/>
           <defs>
-            <linearGradient id="thGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#060F06"/>
-              <stop offset="100%" stop-color="#162A10"/>
+            <linearGradient id="thHeroOverlay" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"   stop-color="rgba(0,0,0,0)"/>
+              <stop offset="65%"  stop-color="rgba(5,14,6,0.3)"/>
+              <stop offset="100%" stop-color="rgba(10,26,10,0.72)"/>
             </linearGradient>
+            <radialGradient id="thGroundGlow" cx="50%" cy="100%" r="55%">
+              <stop offset="0%"   stop-color="rgba(76,161,48,0.18)"/>
+              <stop offset="100%" stop-color="transparent"/>
+            </radialGradient>
           </defs>
-          <!-- far hills -->
-          <ellipse cx="450" cy="310" rx="600" ry="90" fill="#0E200E"/>
-          <ellipse cx="160" cy="305" rx="280" ry="75" fill="#102210"/>
-          <ellipse cx="740" cy="308" rx="240" ry="72" fill="#122414"/>
-          <!-- bg conifers left -->
-          <polygon points="90,240 60,290 120,290" fill="#0A1A0A"/>
-          <polygon points="90,218 66,256 114,256" fill="#0E2010"/>
-          <polygon points="90,200 68,234 112,234" fill="#122814"/>
-          <polygon points="160,250 136,295 184,295" fill="#0A1A0A"/>
-          <polygon points="160,230 138,268 182,268" fill="#0E2010"/>
-          <!-- bg conifers right -->
-          <polygon points="810,240 780,290 840,290" fill="#0A1A0A"/>
-          <polygon points="810,218 786,256 834,256" fill="#0E2010"/>
-          <polygon points="810,200 788,234 832,234" fill="#122814"/>
-          <polygon points="740,252 716,297 764,297" fill="#0A1A0A"/>
-          <polygon points="740,230 718,268 762,268" fill="#0E2010"/>
-          <!-- ground -->
-          <ellipse cx="450" cy="300" rx="500" ry="30" fill="#1A3A10" opacity="0.8"/>
-          <!-- earth anchor under hero tree -->
-          <ellipse cx="450" cy="295" rx="28" ry="7" fill="#1A0A02" opacity="0.7"/>
+          <!-- Soft vignette to ground hero in the scene -->
+          <rect width="900" height="300" fill="url(#thHeroOverlay)"/>
+          <!-- Ground glow wash -->
+          <rect width="900" height="300" fill="url(#thGroundGlow)"/>
+          <!-- Near conifers framing the hero tree — left -->
+          <polygon points="52,240  28,300  76,300"  fill="rgba(4,10,4,0.90)"/>
+          <polygon points="52,218  30,255  74,255"  fill="rgba(6,14,6,0.85)"/>
+          <polygon points="52,200  32,234  72,234"  fill="rgba(8,18,8,0.80)"/>
+          <polygon points="118,252 96,298 140,298"  fill="rgba(4,10,4,0.85)"/>
+          <polygon points="118,232 98,268 138,268"  fill="rgba(6,14,6,0.80)"/>
+          <!-- Near conifers — right -->
+          <polygon points="848,240 824,300 872,300" fill="rgba(4,10,4,0.90)"/>
+          <polygon points="848,218 826,255 870,255" fill="rgba(6,14,6,0.85)"/>
+          <polygon points="848,200 828,234 868,234" fill="rgba(8,18,8,0.80)"/>
+          <polygon points="782,252 760,298 804,298" fill="rgba(4,10,4,0.85)"/>
+          <polygon points="782,232 762,268 802,268" fill="rgba(6,14,6,0.80)"/>
+          <!-- Ground plane -->
+          <ellipse cx="450" cy="298" rx="500" ry="28" fill="rgba(18,50,10,0.70)"/>
+          <!-- Earth anchor under hero tree -->
+          <ellipse cx="450" cy="295" rx="28" ry="7" fill="rgba(14,6,2,0.65)"/>
         </svg>
         <!-- glow under tree -->
         <div style="position:absolute;bottom:26px;left:50%;transform:translateX(-50%);width:180px;height:30px;background:radial-gradient(ellipse,rgba(76,161,48,0.35),transparent 70%);z-index:1;border-radius:50%"></div>
@@ -4710,8 +4862,67 @@ function showScreen(i) {
   _navBtabs.forEach((b, j)   => b.classList.toggle('active', j === i));
   window.scrollTo(0, 0);
   if (i === 1 && allAssignments.length) renderCalendar(allAssignments);
-  if (i === 3) syncTreeScreen();
+  if (i === 3) { syncTreeScreen(); _sc2ForestEnter(); }
+  else         { _sc2ForestLeave(); }
   if (i === 4) syncWrapUp();
+}
+
+// ── MY TREE FOREST ENVIRONMENT ───────────────────────────
+let _sc2FFTimers = [];
+function _sc2ForestEnter() {
+  document.body.classList.add('sc2-active');
+  _sc2SpawnFireflies();
+}
+function _sc2ForestLeave() {
+  document.body.classList.remove('sc2-active');
+  _sc2FFTimers.forEach(t => clearTimeout(t));
+  _sc2FFTimers = [];
+  document.querySelectorAll('.sc2-firefly').forEach(el => el.remove());
+}
+function _sc2SpawnFireflies() {
+  // Spawn 14 fireflies at staggered intervals
+  for (let i = 0; i < 14; i++) {
+    const t = setTimeout(() => {
+      if (!document.body.classList.contains('sc2-active')) return;
+      const el  = document.createElement('div');
+      el.className = 'sc2-firefly';
+      const left  = 8 + Math.random() * 84;  // 8–92% of viewport width
+      const bot   = 10 + Math.random() * 55; // 10–65% from bottom
+      const dur   = 5 + Math.random() * 7;   // 5–12s rise
+      const pdur  = 1.2 + Math.random() * 1.4;
+      const ffx   = (Math.random() - 0.5) * 80 + 'px';
+      const ffx2  = (Math.random() - 0.5) * 60 + 'px';
+      el.style.cssText = `left:${left}%;bottom:${bot}%;` +
+        `--ffx:${ffx};--ffx2:${ffx2};` +
+        `animation-duration:${dur}s,${pdur}s;` +
+        `animation-delay:0s,0s;`;
+      document.body.appendChild(el);
+      // Auto-remove after animation finishes, then maybe re-spawn
+      const removeT = setTimeout(() => {
+        el.remove();
+        if (document.body.classList.contains('sc2-active')) {
+          _sc2SpawnOne();
+        }
+      }, dur * 1000);
+      _sc2FFTimers.push(removeT);
+    }, i * 600);
+    _sc2FFTimers.push(t);
+  }
+}
+function _sc2SpawnOne() {
+  if (!document.body.classList.contains('sc2-active')) return;
+  const el = document.createElement('div');
+  el.className = 'sc2-firefly';
+  const left = 8 + Math.random() * 84;
+  const bot  = 10 + Math.random() * 55;
+  const dur  = 5 + Math.random() * 7;
+  const pdur = 1.2 + Math.random() * 1.4;
+  el.style.cssText = `left:${left}%;bottom:${bot}%;` +
+    `--ffx:${(Math.random()-0.5)*80}px;--ffx2:${(Math.random()-0.5)*60}px;` +
+    `animation-duration:${dur}s,${pdur}s;`;
+  document.body.appendChild(el);
+  const t = setTimeout(() => { el.remove(); _sc2SpawnOne(); }, dur * 1000);
+  _sc2FFTimers.push(t);
 }
 function disconnect() {
   if (isDemo) {
