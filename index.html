@@ -3211,6 +3211,9 @@ posthog.init('POSTHOG_API_KEY_PLACEHOLDER', {
       Continue with Google
     </button>
 
+    <!-- Global auth error (visible even when email form is collapsed) -->
+    <div class="auth-err" id="auth-global-err" style="width:100%;margin-top:4px;margin-bottom:0"></div>
+
     <!-- Pricing -->
     <p class="al-price">Free to start &nbsp;·&nbsp; <strong>Premium $7.99/mo</strong> &nbsp;·&nbsp; Cancel anytime</p>
 
@@ -3234,6 +3237,9 @@ posthog.init('POSTHOG_API_KEY_PLACEHOLDER', {
       <input class="auth-input" type="password" id="auth-password" placeholder="Password" autocomplete="new-password">
       <div id="auth-confirm-wrap" style="overflow:hidden;transition:max-height .28s cubic-bezier(0.4,0,0.2,1),opacity .22s;max-height:80px;opacity:1">
         <input class="auth-input" type="password" id="auth-confirm" placeholder="Confirm password" autocomplete="new-password" style="margin-top:0">
+      </div>
+      <div id="auth-forgot-wrap" style="display:none;text-align:right;margin-top:-4px;margin-bottom:10px">
+        <button onclick="authForgotPassword()" style="background:none;border:none;font-family:'DM Sans',sans-serif;font-size:12px;color:rgba(30,61,30,0.45);cursor:pointer;padding:0;text-decoration:underline">Forgot password?</button>
       </div>
       <button class="auth-submit" id="auth-submit" onclick="authSubmit()">Create Account →</button>
     </div>
@@ -4696,12 +4702,41 @@ function authShowTab(tab) {
     if (el) el.classList.toggle('active', id === 'auth-tab-' + tab);
   });
   const wrap = document.getElementById('auth-confirm-wrap');
-  if (tab === 'signup') { wrap.style.maxHeight = '80px'; wrap.style.opacity = '1'; }
-  else { wrap.style.maxHeight = '0'; wrap.style.opacity = '0'; }
+  const forgotWrap = document.getElementById('auth-forgot-wrap');
+  if (tab === 'signup') {
+    wrap.style.maxHeight = '80px'; wrap.style.opacity = '1';
+    if (forgotWrap) forgotWrap.style.display = 'none';
+  } else {
+    wrap.style.maxHeight = '0'; wrap.style.opacity = '0';
+    if (forgotWrap) forgotWrap.style.display = 'block';
+  }
   document.getElementById('auth-submit').textContent = tab === 'signup' ? 'Create Account →' : 'Log In →';
   document.getElementById('auth-err').textContent = '';
+  document.getElementById('auth-global-err').textContent = '';
   // Fix autocomplete so mobile password managers autofill correctly on login
   document.getElementById('auth-password').autocomplete = tab === 'signup' ? 'new-password' : 'current-password';
+}
+
+async function authForgotPassword() {
+  const email = document.getElementById('auth-email').value.trim();
+  const err = document.getElementById('auth-err');
+  if (!email) { err.textContent = 'Enter your email above, then tap Forgot password.'; return; }
+  try {
+    await auth.sendPasswordResetEmail(email);
+    err.style.color = '#2E6020';
+    err.style.background = 'rgba(76,161,48,0.08)';
+    err.style.borderColor = 'rgba(76,161,48,0.2)';
+    err.textContent = '✓ Reset link sent — check your inbox.';
+  } catch(e) {
+    err.style.color = '';
+    err.style.background = '';
+    err.style.borderColor = '';
+    const msgs = {
+      'auth/user-not-found':  'No account found with that email.',
+      'auth/invalid-email':   'Please enter a valid email address.',
+    };
+    err.textContent = msgs[e.code] || 'Could not send reset email. Please try again.';
+  }
 }
 function showAuthScreen() {
   const s = document.getElementById('auth-screen'); if (s) s.classList.remove('gone');
@@ -4760,7 +4795,8 @@ async function signInWithGoogle() {
     }
   } catch(e) {
     if (e.code !== 'auth/popup-closed-by-user') {
-      document.getElementById('auth-err').textContent = e.message || 'Google sign-in failed.';
+      const el = document.getElementById('auth-global-err') || document.getElementById('auth-err');
+      if (el) el.textContent = e.message || 'Google sign-in failed.';
     }
   }
 }
@@ -5072,7 +5108,12 @@ window.addEventListener('DOMContentLoaded', () => {
     if (result && result.user && result.additionalUserInfo && result.additionalUserInfo.isNewUser) {
       initNewUser(result.user, result.user.displayName || '');
     }
-  }).catch(() => {});
+  }).catch(e => {
+    if (e && e.code !== 'auth/popup-closed-by-user') {
+      const el = document.getElementById('auth-global-err');
+      if (el) el.textContent = 'Google sign-in failed — please try again.';
+    }
+  });
 
   document.getElementById('ob-token').addEventListener('keydown', e => { if (e.key === 'Enter') connectCanvas(); });
   if (typeof Notification !== 'undefined' && Notification.permission === 'granted') document.getElementById('nav-bell').classList.add('enabled');
