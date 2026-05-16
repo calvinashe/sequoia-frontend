@@ -287,20 +287,21 @@ body {
 }
 .nav-avatar:hover { border-color:var(--g4); }
 .nav-tier-badge {
-  position:absolute; top:-5px; right:-6px;
-  font-size:9px; font-weight:800; padding:1px 5px;
-  border-radius:100px; background:var(--border); color:var(--mid);
-  pointer-events:none; white-space:nowrap;
+  position:absolute; top:-6px; right:-8px;
+  font-size:8px; font-weight:800; padding:2px 6px;
+  border-radius:100px; background:rgba(255,255,255,0.12); color:rgba(255,255,255,0.55);
+  pointer-events:none; white-space:nowrap; letter-spacing:.04em;
+  border:1px solid rgba(255,255,255,0.08);
 }
 .nav-tier-badge.pro {
   background:linear-gradient(135deg,#D4882B,#E8A040); color:#fff;
 }
 .account-menu {
-  position:absolute; top:calc(100% + 10px); right:0;
+  position:fixed; top:62px; right:16px;
   background:var(--card); border:1px solid var(--border);
-  border-radius:14px; box-shadow:0 8px 30px rgba(0,0,0,0.15);
-  min-width:200px; overflow:hidden; z-index:500;
-  opacity:0; pointer-events:none; transform:translateY(-6px);
+  border-radius:14px; box-shadow:0 8px 30px rgba(0,0,0,0.18);
+  min-width:220px; overflow:hidden; z-index:500;
+  opacity:0; pointer-events:none; transform:translateY(-8px);
   transition:opacity .18s, transform .18s;
 }
 .account-menu.open { opacity:1; pointer-events:auto; transform:translateY(0); }
@@ -2810,7 +2811,21 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
   .focus-cta { font-size:12px; padding:7px 14px; }
 
   /* Study */
-  .study-layout { padding:16px 12px; }
+  .study-layout { padding:10px 12px; }
+  /* Compact study screen so Start button is visible without scrolling */
+  .study-header { padding:18px 20px 16px; }
+  .study-header h2 { font-size:22px; margin-bottom:2px; }
+  .study-header p  { font-size:11px; }
+  .study-body { padding:18px 20px; }
+  .pomo-goal { margin-bottom:16px; }
+  .ring-wrap { width:200px; height:200px; margin-bottom:14px; }
+  .ring-wrap svg { width:200px; height:200px; }
+  .ring-wrap circle { cx:100; cy:100; r:84; }
+  .pomo-time { font-size:52px; }
+  .pomo-dots { margin-bottom:6px; }
+  .pomo-session-info { font-size:11px; margin-bottom:6px; }
+  .pomo-xp-badge { font-size:11px; padding:3px 10px; }
+  div.pomo-controls { margin-bottom:0; }
 
   /* My Tree hero — give tree more breathing room */
   .tree-hero-scene { height:260px; }
@@ -3629,8 +3644,13 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
     <span class="nav-streak" id="nav-streak">🔥 0</span>
     <button class="nav-bell" id="nav-bell" onclick="toggleNotifPanel()" title="Notifications">🔔<span class="notif-badge" id="notif-badge" style="display:none">0</span></button>
     <div class="nav-account" id="nav-account">
-      <div class="nav-avatar" id="nav-avatar" onclick="toggleAccountMenu()">?</div>
-      <span class="nav-tier-badge" id="nav-tier-badge">Free</span>
+      <div class="nav-avatar" id="nav-avatar" onclick="toggleAccountMenu()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="8" cy="5.5" r="3" fill="rgba(255,255,255,0.9)"/>
+          <path d="M1.5 14c0-3.314 2.91-6 6.5-6s6.5 2.686 6.5 6" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="nav-tier-badge" id="nav-tier-badge" onclick="isPremium()?toggleAccountMenu():openPaywall('nav-badge')" style="pointer-events:all;cursor:pointer">FREE</span>
       <div class="account-menu" id="account-menu">
         <div class="am-header">
           <div class="am-name" id="am-name">—</div>
@@ -4640,7 +4660,7 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
         <button class="share-dl-btn" id="share-dl-btn" onclick="downloadStatsCard()" title="Save image">⬇️</button>
       </div>
       <button class="wu-new-semester" onclick="newSemester()">🌱 Start a New Semester →</button>
-      <button class="wu-archive-link" onclick="alert('Semester archive coming soon — your stump will live here forever. 🌳')">View Archive ↗</button>
+      <button class="wu-archive-link" onclick="showArchiveStub()">View Archive ↗</button>
     </div>
 
   </div>
@@ -4743,7 +4763,7 @@ function updateNavAccount(user, tier) {
     avatar.style.backgroundImage = '';
   }
   const isPro = tier === 'premium';
-  if (badge)  { badge.textContent  = isPro ? '✦ Pro' : 'Free'; badge.className = 'nav-tier-badge' + (isPro ? ' pro' : ''); }
+  if (badge)  { badge.textContent  = isPro ? '✦ PRO' : 'FREE'; badge.className = 'nav-tier-badge' + (isPro ? ' pro' : ''); }
   if (amName) amName.textContent  = displayName;
   if (amEmail)amEmail.textContent = user.email || '';
   if (amTier) { amTier.textContent = isPro ? '✦ Pro' : 'Free Plan'; amTier.className = 'am-tier' + (isPro ? ' pro' : ''); }
@@ -7578,6 +7598,28 @@ function startRegrow() {
     post.style.display = 'block';
     requestAnimationFrame(() => requestAnimationFrame(() => post.classList.add('show')));
   }, 8000);
+}
+
+function showArchiveStub() {
+  // Show a toast-style bottom message — no alert()
+  const existing = document.getElementById('archive-stub-toast');
+  if (existing) { existing.remove(); }
+  const toast = document.createElement('div');
+  toast.id = 'archive-stub-toast';
+  toast.style.cssText = `position:fixed;bottom:calc(90px + env(safe-area-inset-bottom,0px));left:50%;
+    transform:translateX(-50%);z-index:9999;
+    background:linear-gradient(135deg,#0D1F0E,#162A16);
+    border:1px solid rgba(76,161,48,0.25);border-radius:18px;
+    padding:18px 22px;max-width:320px;width:calc(100% - 48px);
+    box-shadow:0 8px 32px rgba(0,0,0,0.45);text-align:center;
+    animation:fadeUp .3s ease both;`;
+  toast.innerHTML = `
+    <div style="font-size:28px;margin-bottom:8px">🌳</div>
+    <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:#FFFEF8;margin-bottom:6px">Semester Archive</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.5;margin-bottom:14px">Your past trees and semester stats will live here. Coming soon — every stump tells a story.</div>
+    <button onclick="document.getElementById('archive-stub-toast').remove()" style="background:rgba(76,161,48,0.2);border:1px solid rgba(76,161,48,0.3);color:var(--g4);border-radius:100px;padding:7px 18px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">Got it</button>`;
+  document.body.appendChild(toast);
+  setTimeout(() => toast?.remove(), 5000);
 }
 
 function newSemester() {
