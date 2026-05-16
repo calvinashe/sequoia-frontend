@@ -4584,13 +4584,8 @@ let _authTab = 'signup';
 // Also fetches unread notification count in parallel (one round-trip instead of two).
 async function loadUserData(uid) {
   try {
-    const userRef  = db.collection('users').doc(uid);
-    const [doc, badgeSnap] = await Promise.all([
-      userRef.get({ source: 'server' }),
-      userRef.collection('notifications').where('read', '==', false).get(),
-    ]);
-    // Update badge count from the parallel query
-    _setBadge(badgeSnap.size);
+    const userRef = db.collection('users').doc(uid);
+    const doc = await userRef.get({ source: 'server' });
     if (!doc.exists) return null;
     const d = doc.data();
     if (d.xp               !== undefined) localStorage.setItem('sq_xp',            String(d.xp));
@@ -4603,6 +4598,9 @@ async function loadUserData(uid) {
     if (d.pomo_sessions    !== undefined) localStorage.setItem('sq_pomo_sessions',  String(d.pomo_sessions));
     if (d.manual_assignments)             localStorage.setItem('sq_manual',         JSON.stringify(d.manual_assignments));
     if (d.tier)                           localStorage.setItem('sq_tier',           d.tier);
+    // Fetch notification badge separately so it can't crash the user data load
+    userRef.collection('notifications').where('read', '==', false).get()
+      .then(snap => _setBadge(snap.size)).catch(() => {});
     return d;
   } catch(e) { return null; }
 }
