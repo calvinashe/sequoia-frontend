@@ -759,8 +759,8 @@ body {
 /* Assignment rows */
 .assign-list { padding:0 12px 12px; }
 .a-row {
-  display:flex; align-items:flex-start; gap:12px;
-  padding:11px 10px; border-radius:12px;
+  display:flex; align-items:flex-start; gap:10px;
+  padding:12px 10px; border-radius:12px;
   cursor:default; transition:background .15s;
   animation:fadeUp .4s ease both;
   border-left:3px solid transparent; margin-left:-3px;
@@ -842,7 +842,7 @@ body {
   display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0;
   margin-top:1px;
 }
-.a-right { text-align:right; flex-shrink:0; padding-top:1px; }
+.a-right { text-align:right; flex-shrink:0; padding-top:1px; min-width:64px; }
 .ai-green  { background:rgba(76,161,48,0.18);  border:1px solid rgba(76,161,48,0.22); }
 .ai-yellow { background:rgba(212,136,43,0.18); border:1px solid rgba(212,136,43,0.22); }
 .ai-blue   { background:rgba(41,128,185,0.18); border:1px solid rgba(41,128,185,0.22); }
@@ -1173,22 +1173,22 @@ body {
 /* ── QUICK PICK ───────────────────────────────────────────── */
 .qpick-label { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--light); text-align:center; margin-bottom:8px; }
 .qpick-row { display:flex; gap:7px; flex-wrap:wrap; justify-content:center; margin-bottom:16px; }
-.qpick-chip { font-size:12px; font-weight:600; padding:6px 14px; border-radius:100px; border:1.5px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.58); cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px; transition:all .18s; font-family:'DM Sans',sans-serif; }
+.qpick-chip { font-size:12px; font-weight:600; padding:6px 14px; border-radius:100px; border:1.5px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.58); cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:240px; transition:all .18s; font-family:'DM Sans',sans-serif; }
 .qpick-chip:hover { border-color:rgba(76,161,48,0.45); color:rgba(255,255,255,0.85); background:rgba(76,161,48,0.1); }
 .qpick-chip.selected { border-color:var(--g3); background:rgba(76,161,48,0.2); color:#FFFEF8; box-shadow:0 0 12px rgba(76,161,48,0.2); }
 
 /* ── AMBIENCE ─────────────────────────────────────────────── */
 .ambience-section { margin-top:28px; border-top:1px solid rgba(255,255,255,0.07); padding-top:22px; }
 .ambience-title { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:rgba(255,255,255,0.3); text-align:center; margin-bottom:14px; }
-.ambience-row { display:flex; justify-content:center; gap:8px; flex-wrap:wrap; }
+.ambience-row { display:grid; grid-template-columns:repeat(5,1fr); gap:7px; }
 .amb-btn {
-  display:flex; flex-direction:column; align-items:center; gap:6px;
-  padding:12px 16px; border-radius:16px;
+  display:flex; flex-direction:column; align-items:center; gap:5px;
+  padding:10px 4px; border-radius:14px;
   border:1.5px solid rgba(255,255,255,0.1);
   background:rgba(255,255,255,0.05);
   cursor:pointer; font-family:'DM Sans',sans-serif;
   font-size:11px; font-weight:700; color:rgba(255,255,255,0.42);
-  transition:all .2s; min-width:62px;
+  transition:all .2s; min-width:0;
 }
 .amb-btn .amb-icon { font-size:22px; line-height:1; }
 .amb-btn:hover { border-color:rgba(76,161,48,0.4); color:rgba(255,255,255,0.8); background:rgba(76,161,48,0.08); }
@@ -1518,7 +1518,7 @@ body {
 
 /* ── SETTINGS MODAL ─────────────────────────────────────── */
 #settings-overlay {
-  position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(4px);
+  position:fixed; inset:0; background:rgba(0,0,0,0.72); backdrop-filter:blur(6px);
   z-index:10000; display:none; align-items:flex-start; justify-content:flex-end;
   padding:64px clamp(12px,2vw,24px) 0;
 }
@@ -2596,7 +2596,10 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
   100% { transform:scale(1); }
 }
 .deco-cell.deco-locked {
-  opacity:0.4; filter:saturate(0.2); cursor:default;
+  filter:saturate(0.15) brightness(0.55); cursor:default;
+}
+.deco-cell.deco-locked .deco-cell-badge {
+  filter:saturate(5) brightness(1.8);
 }
 .deco-cell.deco-shop {
   border-color:rgba(212,136,43,0.3);
@@ -2694,8 +2697,9 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
   color:var(--g4); margin-bottom:3px;
 }
 .focus-title {
-  font-size:16px; font-weight:800; color:#fff;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  font-size:15px; font-weight:800; color:#fff;
+  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2;
+  overflow:hidden; white-space:normal; line-height:1.25;
   margin-bottom:2px; letter-spacing:-0.2px;
 }
 .focus-reason {
@@ -3522,7 +3526,8 @@ posthog.init('POSTHOG_API_KEY_PLACEHOLDER', {
         </div>
         <button class="am-btn" onclick="closeAccountMenu();openSettings()">⚙️ Settings</button>
         <button class="am-btn" id="am-upgrade-btn" onclick="closeAccountMenu();openPaywall('account-menu')" style="background:linear-gradient(135deg,rgba(76,161,48,0.15),rgba(76,161,48,0.08));border-color:rgba(76,161,48,0.3);color:var(--g3)">✦ Upgrade to Premium</button>
-        <button class="am-btn danger" onclick="signOutUser()">Sign Out</button>
+        <button class="am-btn danger" id="am-signout-btn" onclick="signOutUser()">Sign Out</button>
+        <button class="am-btn" id="am-signin-btn" onclick="closeAccountMenu();location.reload()" style="display:none">🔑 Sign In / Create Account</button>
       </div>
     </div>
   </div>
@@ -5025,6 +5030,19 @@ function loadDemo() {
   const demoName = document.getElementById('ob-name')?.value.trim() || 'Demo User';
   localStorage.setItem('sq_name', demoName);
   setGreeting(demoName);
+  // Populate account menu header for demo mode
+  const amName  = document.getElementById('am-name');
+  const amEmail = document.getElementById('am-email');
+  const amTier  = document.getElementById('am-tier');
+  const navAvatar = document.getElementById('nav-avatar');
+  if (amName)  amName.textContent  = demoName;
+  if (amEmail) amEmail.textContent = 'demo mode — not signed in';
+  if (amTier)  { amTier.textContent = 'Free Plan'; amTier.className = 'am-tier'; }
+  if (navAvatar) { navAvatar.textContent = demoName.slice(0,1).toUpperCase(); navAvatar.style.backgroundImage = ''; }
+  const amSignout = document.getElementById('am-signout-btn');
+  const amSignin  = document.getElementById('am-signin-btn');
+  if (amSignout) amSignout.style.display = 'none';
+  if (amSignin)  amSignin.style.display  = 'block';
   const t = new Date();
   const add = (d, h=23, m=59) => {
     const x = new Date(t);
@@ -5482,7 +5500,7 @@ function renderGrades(grades) {
       if (needed <= 0) {
         forecastHtml = `<div class="g-forecast good">Already on track for a ${target}%+ ✓</div>`;
       } else if (needed > 100) {
-        forecastHtml = `<div class="g-forecast hard">Not achievable with remaining work</div>`;
+        forecastHtml = `<div class="g-forecast hard">Target unlikely — consider extra credit or office hours</div>`;
       } else if (needed >= 90) {
         forecastHtml = `<div class="g-forecast warn">Need avg ${needed}% on remaining work</div>`;
       } else {
