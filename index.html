@@ -2109,6 +2109,73 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
   width:100%; max-width:420px; margin-left:auto; margin-right:auto;
 }
 .wu-archive-link:hover { color:rgba(255,255,255,0.55); }
+
+/* ── Archive overlay ── */
+#archive-overlay {
+  position:fixed; inset:0; z-index:9000;
+  background:rgba(4,9,4,0.94); backdrop-filter:blur(8px);
+  display:flex; flex-direction:column;
+  opacity:0; pointer-events:none; visibility:hidden;
+  transition:opacity .25s ease, visibility .25s;
+}
+#archive-overlay.open { opacity:1; pointer-events:auto; visibility:visible; }
+.arc-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:calc(env(safe-area-inset-top,0px) + 20px) 20px 18px;
+  border-bottom:1px solid rgba(76,161,48,0.12);
+  flex-shrink:0;
+}
+.arc-title { font-family:'Playfair Display',serif; font-size:22px; font-weight:800; color:#FFFEF8; }
+.arc-sub { font-size:12px; color:rgba(255,255,255,0.35); margin-top:2px; }
+.arc-close { background:none; border:none; color:rgba(255,255,255,0.4); font-size:24px; cursor:pointer; padding:4px 8px; line-height:1; }
+#arc-body {
+  flex:1; overflow-y:auto; padding:24px 20px;
+  -webkit-overflow-scrolling:touch;
+}
+.arc-empty { text-align:center; padding:60px 20px; }
+.arc-empty-icon { font-size:48px; margin-bottom:16px; }
+.arc-empty p { font-size:14px; color:rgba(255,255,255,0.35); line-height:1.7; }
+.arc-grid { display:flex; flex-direction:column; gap:16px; max-width:480px; margin:0 auto; }
+.arc-card {
+  background:linear-gradient(135deg,#0E1F0E,#162616);
+  border:1px solid rgba(76,161,48,0.18);
+  border-radius:20px; padding:20px;
+  display:flex; gap:16px; align-items:center;
+}
+.arc-stump { flex-shrink:0; opacity:.85; }
+.arc-info { flex:1; min-width:0; }
+.arc-sem-label { font-family:'Playfair Display',serif; font-size:16px; font-weight:700; color:#FFFEF8; margin-bottom:4px; }
+.arc-stage-pill { display:inline-block; font-size:10px; font-weight:700; letter-spacing:.6px; text-transform:uppercase;
+  color:var(--g3); background:rgba(76,161,48,0.12); border:1px solid rgba(76,161,48,0.2);
+  border-radius:100px; padding:2px 10px; margin-bottom:10px; }
+.arc-stats { display:grid; grid-template-columns:1fr 1fr; gap:4px 12px; }
+.arc-stat { font-size:12px; color:rgba(255,255,255,0.5); }
+.arc-stat strong { color:rgba(255,255,255,0.82); }
+
+/* ── New semester confirm modal ── */
+#new-sem-modal {
+  position:fixed; inset:0; z-index:9500;
+  background:rgba(4,9,4,0.88); backdrop-filter:blur(10px);
+  display:flex; align-items:center; justify-content:center; padding:24px;
+  opacity:0; pointer-events:none; visibility:hidden;
+  transition:opacity .2s ease, visibility .2s;
+}
+#new-sem-modal.open { opacity:1; pointer-events:auto; visibility:visible; }
+.nsm-card {
+  background:linear-gradient(160deg,#0F200F,#172817);
+  border:1px solid rgba(76,161,48,0.22); border-radius:24px;
+  padding:32px 24px; max-width:360px; width:100%;
+  box-shadow:0 20px 60px rgba(0,0,0,0.6);
+}
+.nsm-icon { font-size:44px; text-align:center; margin-bottom:14px; }
+.nsm-title { font-family:'Playfair Display',serif; font-size:22px; font-weight:800; color:#FFFEF8; text-align:center; margin-bottom:10px; }
+.nsm-body { font-size:13px; color:rgba(255,255,255,0.5); text-align:center; line-height:1.7; margin-bottom:24px; }
+.nsm-btns { display:flex; gap:10px; }
+.nsm-cancel { flex:1; padding:13px; border-radius:14px; border:1px solid rgba(255,255,255,0.1); background:transparent; color:rgba(255,255,255,0.45); font-family:'DM Sans',sans-serif; font-size:14px; font-weight:600; cursor:pointer; transition:all .18s; }
+.nsm-cancel:hover { border-color:rgba(255,255,255,0.22); color:rgba(255,255,255,0.7); }
+.nsm-confirm { flex:2; padding:13px; border-radius:14px; border:none; background:linear-gradient(135deg,#2E6020,#4CA130); color:#fff; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:700; cursor:pointer; transition:opacity .18s; }
+.nsm-confirm:hover { opacity:.88; }
+
 /* keep compat */
 .fade-scene { display:none; }
 .release-btn { display:none; }
@@ -4538,7 +4605,7 @@ posthog.init('POSTHOG_API_KEY_PLACEHOLDER', {
         <button class="share-dl-btn" id="share-dl-btn" onclick="downloadStatsCard()" title="Save image">⬇️</button>
       </div>
       <button class="wu-new-semester" onclick="newSemester()">🌱 Start a New Semester →</button>
-      <button class="wu-archive-link" onclick="showArchiveStub()">View Archive ↗</button>
+      <button class="wu-archive-link" onclick="openArchive()">View Archive ↗</button>
     </div>
 
   </div>
@@ -7694,30 +7761,95 @@ function startRegrow() {
   }, 8000);
 }
 
-function showArchiveStub() {
-  // Show a toast-style bottom message — no alert()
-  const existing = document.getElementById('archive-stub-toast');
-  if (existing) { existing.remove(); }
-  const toast = document.createElement('div');
-  toast.id = 'archive-stub-toast';
-  toast.style.cssText = `position:fixed;bottom:calc(90px + env(safe-area-inset-bottom,0px));left:50%;
-    transform:translateX(-50%);z-index:9999;
-    background:linear-gradient(135deg,#0D1F0E,#162A16);
-    border:1px solid rgba(76,161,48,0.25);border-radius:18px;
-    padding:18px 22px;max-width:320px;width:calc(100% - 48px);
-    box-shadow:0 8px 32px rgba(0,0,0,0.45);text-align:center;
-    animation:fadeUp .3s ease both;`;
-  toast.innerHTML = `
-    <div style="font-size:28px;margin-bottom:8px">🌳</div>
-    <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:#FFFEF8;margin-bottom:6px">Semester Archive</div>
-    <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.5;margin-bottom:14px">Your past trees and semester stats will live here. Coming soon — every stump tells a story.</div>
-    <button onclick="document.getElementById('archive-stub-toast').remove()" style="background:rgba(76,161,48,0.2);border:1px solid rgba(76,161,48,0.3);color:var(--g4);border-radius:100px;padding:7px 18px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">Got it</button>`;
-  document.body.appendChild(toast);
-  setTimeout(() => toast?.remove(), 5000);
+// ── SEMESTER ARCHIVE ─────────────────────────────────────
+
+// Save current semester stats to Firestore before resetting
+async function saveSemesterToArchive() {
+  if (!currentUser || isDemo) return;
+  const xp       = getXP();
+  const streak   = getStreak();
+  const sessions = parseInt(localStorage.getItem('sq_pomo_sessions') || '0');
+  const done     = completedIds.size;
+  const now      = new Date();
+  const sem      = (now.getMonth() < 6 ? 'Spring' : 'Fall') + ' ' + now.getFullYear();
+  const st       = stageFor(xp);
+  const stageIdx = STAGES.indexOf(st);
+  await db.collection('users').doc(currentUser.uid).collection('semesters').add({
+    sem, xp, streak, sessions, done,
+    stage: st.name, stage_idx: stageIdx,
+    archived_at: firebase.firestore.FieldValue.serverTimestamp(),
+  }).catch(() => {});
 }
 
-function newSemester() {
-  if (!confirm('Start a fresh semester? Your XP and progress will reset.')) return;
+// Open archive overlay and load past semesters from Firestore
+async function openArchive() {
+  document.getElementById('archive-overlay').classList.add('open');
+  const body = document.getElementById('arc-body');
+  if (!currentUser || isDemo) {
+    body.innerHTML = '<div class="arc-empty"><div class="arc-empty-icon">🔒</div><p>Sign in to see your semester archive.</p></div>';
+    return;
+  }
+  body.innerHTML = '<div class="arc-empty"><div class="arc-empty-icon">⏳</div><p>Loading your history…</p></div>';
+  try {
+    const snap = await db.collection('users').doc(currentUser.uid)
+      .collection('semesters').orderBy('archived_at', 'desc').limit(20).get();
+    if (snap.empty) {
+      body.innerHTML = '<div class="arc-empty"><div class="arc-empty-icon">🌱</div><p>Your past semesters will appear here after your first regrow.<br><br>Release your tree at the end of semester to start building your archive.</p></div>';
+      return;
+    }
+    const stumpSVG = `<svg viewBox="0 0 110 64" width="76" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="55" cy="56" rx="48" ry="12" fill="#0E0A02" opacity="0.6"/>
+      <rect x="14" y="18" width="62" height="38" rx="6" fill="#28100A"/>
+      <rect x="17" y="21" width="56" height="32" rx="5" fill="#341608"/>
+      <ellipse cx="55" cy="21" rx="26" ry="6" fill="none" stroke="#4A2010" stroke-width="2" opacity="0.7"/>
+      <ellipse cx="55" cy="21" rx="19" ry="4.5" fill="none" stroke="#5A2E14" stroke-width="1.6" opacity="0.6"/>
+      <ellipse cx="55" cy="21" rx="12" ry="3" fill="none" stroke="#6A3A1A" stroke-width="1.2" opacity="0.5"/>
+      <ellipse cx="55" cy="21" rx="6" ry="1.5" fill="none" stroke="#7A4822" stroke-width="1" opacity="0.4"/>
+      <ellipse cx="55" cy="21" rx="2" ry="0.8" fill="#8A5828" opacity="0.5"/>
+    </svg>`;
+    const cards = snap.docs.map(doc => {
+      const d = doc.data();
+      const hrs = Math.floor((d.sessions || 0) * 25 / 60);
+      const min = Math.round(((d.sessions || 0) * 25) % 60);
+      const hoursStr = hrs > 0 ? hrs + 'h ' + min + 'm' : min + 'm';
+      return `<div class="arc-card">
+        <div class="arc-stump">${stumpSVG}</div>
+        <div class="arc-info">
+          <div class="arc-sem-label">${d.sem || 'Past Semester'}</div>
+          <div class="arc-stage-pill">${d.stage || 'Seedling'}</div>
+          <div class="arc-stats">
+            <div class="arc-stat"><strong>${(d.xp || 0).toLocaleString()}</strong> XP</div>
+            <div class="arc-stat"><strong>${hoursStr}</strong> studied</div>
+            <div class="arc-stat"><strong>${d.done || 0}</strong> assignments</div>
+            <div class="arc-stat"><strong>${d.streak || 0}d</strong> streak</div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    body.innerHTML = `<div class="arc-grid">${cards}</div>`;
+  } catch(e) {
+    body.innerHTML = '<div class="arc-empty"><div class="arc-empty-icon">⚠️</div><p>Couldn\'t load archive. Check your connection.</p></div>';
+  }
+}
+
+function closeArchive() {
+  document.getElementById('archive-overlay').classList.remove('open');
+}
+
+// New semester modal
+function openNewSemesterModal() {
+  document.getElementById('new-sem-modal').classList.add('open');
+}
+function closeNewSemesterModal() {
+  document.getElementById('new-sem-modal').classList.remove('open');
+}
+async function confirmNewSemester() {
+  closeNewSemesterModal();
+  await saveSemesterToArchive();
+  _resetSemesterState();
+}
+
+function _resetSemesterState() {
   localStorage.setItem('sq_xp','0'); localStorage.setItem('sq_streak','0');
   localStorage.setItem('sq_pomo_sessions','0'); localStorage.setItem('sq_done','[]');
   localStorage.removeItem('sq_sessions');
@@ -7740,12 +7872,14 @@ function newSemester() {
   stump.style.animation = ''; stump.style.filter = '';
   document.getElementById('wu-release-btn').style.opacity = '1';
   document.getElementById('wu-release-btn').style.display = '';
-  // Restore wu-pre visibility and layout
   const pre = document.getElementById('wu-pre');
   pre.style.display = ''; pre.style.opacity = '1'; pre.style.pointerEvents = '';
   syncWrapUp();
   showScreen(0);
 }
+
+// Keep old name as alias (used by other potential call sites)
+function newSemester() { openNewSemesterModal(); }
 
 // ── Capture the stats card to a canvas (shared by share + download) ──
 function _captureStatsCard() {
@@ -8537,6 +8671,36 @@ if ('serviceWorker' in navigator) {
       <textarea class="ad-notes" id="ad-notes" rows="4" placeholder="Add study notes, reminders, or ideas…"></textarea>
       <div class="ad-notes-save" id="ad-notes-save">✓ Notes saved</div>
       <button class="ad-done-btn" id="ad-done-btn" onclick="adToggleDone()">Mark Complete ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── SEMESTER ARCHIVE OVERLAY ── -->
+<div id="archive-overlay">
+  <div class="arc-header">
+    <div>
+      <div class="arc-title">🌳 Semester Archive</div>
+      <div class="arc-sub">Every stump tells a story</div>
+    </div>
+    <button class="arc-close" onclick="closeArchive()">×</button>
+  </div>
+  <div id="arc-body">
+    <div class="arc-empty">
+      <div class="arc-empty-icon">⏳</div>
+      <p>Loading your history…</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── NEW SEMESTER CONFIRM MODAL ── -->
+<div id="new-sem-modal">
+  <div class="nsm-card">
+    <div class="nsm-icon">🌱</div>
+    <div class="nsm-title">Start Fresh?</div>
+    <div class="nsm-body">Your current semester will be saved to your archive — XP, streak, and progress will reset to zero so your new tree can grow.</div>
+    <div class="nsm-btns">
+      <button class="nsm-cancel" onclick="closeNewSemesterModal()">Cancel</button>
+      <button class="nsm-confirm" onclick="confirmNewSemester()">Start New Semester</button>
     </div>
   </div>
 </div>
