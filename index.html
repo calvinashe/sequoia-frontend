@@ -3166,6 +3166,17 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
   document.documentElement.setAttribute('data-theme', theme);
 })();
 </script>
+
+<!-- ── PostHog Analytics ──────────────────────────────── -->
+<script>
+!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+posthog.init('POSTHOG_API_KEY_PLACEHOLDER', {
+  api_host: 'https://us.i.posthog.com',
+  person_profiles: 'identified_only',
+  autocapture: false,        // manual only — cleaner event names
+  capture_pageview: false,   // we fire app_opened manually
+});
+</script>
 </head>
 <body>
 
@@ -4679,6 +4690,14 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 <script>
 const API = 'https://sequoia-backend-szss.onrender.com';
 
+// ── ANALYTICS ────────────────────────────────────────────
+// Thin wrapper — safe to call before PostHog loads, no-ops if blocked.
+function track(event, props) {
+  try { window.posthog?.capture(event, props || {}); } catch (_) {}
+}
+// Fire on every app open
+track('app_opened', { referrer: document.referrer || 'direct' });
+
 // ── BACKEND WARMUP PING ───────────────────────────────────
 // Silently wake the Render dyno before the user needs it.
 // Fire-and-forget — no UI impact if it fails.
@@ -5039,6 +5058,7 @@ async function connectCanvas() {
   }
 
   btn.textContent = 'Connecting…'; btn.disabled = true;
+  track('canvas_connect_attempted');
   const wt = setTimeout(() => obSetWake(true), 3500);
 
   try {
@@ -5058,11 +5078,13 @@ async function connectCanvas() {
       let msg = data.error || 'Something went wrong — please try again.';
       if (code === 401) msg = 'Token not recognized — double-check you copied the full token from Canvas.';
       if (code === 404) msg = 'Canvas URL not found — check your school\'s Canvas address and try again.';
+      track('canvas_connect_failed', { http_status: code });
       obSetErr(msg);
       btn.textContent = 'Connect & Enter →'; btn.disabled = false; return;
     }
 
     // Success!
+    track('canvas_connect_success');
     const name = nameInput || data.short_name || data.name || 'Student';
     localStorage.setItem('sq_token', token);
     localStorage.setItem('sq_url', url);
@@ -5128,6 +5150,7 @@ function loadDemo() {
   updateDashTree();
   syncTreeScreen();
   closeOnboard();
+  track('demo_started');
   starterGrant('sq_grant_demo', 75, '🌿 +75 XP — Welcome to Sequoia! Let\'s grow.');
   const demoName = document.getElementById('ob-name')?.value.trim() || 'Demo User';
   localStorage.setItem('sq_name', demoName);
@@ -5233,6 +5256,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // Signed in — show app immediately using cached localStorage data
     currentUser = user;
+    // Identify user in PostHog (ties all future events to this person)
+    try { window.posthog?.identify(user.uid, { email: user.email, name: user.displayName }); } catch (_) {}
+    track('user_signed_in', { method: user.providerData?.[0]?.providerId || 'unknown' });
     hideAuthScreen(); // don't wait for Firestore — show app right away
 
     // Load UI from localStorage instantly
@@ -5323,6 +5349,9 @@ function showScreen(i) {
   if (i === 4) syncWrapUp();
   // Auto-stop ambient sound when leaving Study screen
   if (i !== 2 && ambActive !== 'none') stopAmbience();
+  // Track screen view
+  const screenNames = ['dashboard','calendar','study','my_tree','wrap_up'];
+  track('screen_viewed', { screen: screenNames[i] || String(i) });
 }
 
 // ── MY TREE FOREST ENVIRONMENT ───────────────────────────
@@ -5945,6 +5974,7 @@ function toggleDone(id, el, title, weight) {
   const xp = Math.round(50 * Math.max(1, weight / 10) * early);
   showXPBurst(xp, el);
   addXP(xp); updateStreak(); totalCompleted++;
+  track('assignment_done', { xp_earned: xp, weight_pct: weight, course: a?.course || '' });
   starterGrant('sq_grant_first_done', 25, '✅ +25 XP — First assignment crushed! Keep the momentum.');
   document.getElementById('hstat-done').textContent = totalCompleted;
   showUndoToast(id, title, xp);
@@ -6592,7 +6622,7 @@ function pomoToggle() {
     }
   }
   if (pomoRunning) { pomoSecs=rem(); pomoAt=null; pomoRunning=false; clearInterval(pomoInt); }
-  else { pomoAt=Date.now()-((phaseDur()-pomoSecs)*1000); pomoRunning=true; pomoInt=setInterval(pomoTick,500); }
+  else { pomoAt=Date.now()-((phaseDur()-pomoSecs)*1000); pomoRunning=true; pomoInt=setInterval(pomoTick,500); track('session_started', { goal: document.getElementById('pomo-goal')?.value?.trim() || '' }); }
   renderPomoUI();
 }
 function pomoTick() {
@@ -6602,6 +6632,7 @@ function pomoTick() {
       const sessionXP = Math.round(50 * mult);
       pomoCount++; pomoCycle=pomoCount%4; pomoXP+=sessionXP;
       addXP(sessionXP); updateStreak(); updateDashTree();
+      track('session_completed', { xp_earned: sessionXP, session_number: pomoCount });
       starterGrant('sq_grant_first_session', 50, '⏱ +50 XP — First focus session done! The habit starts here.');
       const goal=document.getElementById('pomo-goal').value.trim()||'Focus session';
       logSession(goal,sessionXP);
@@ -7071,6 +7102,7 @@ function setAmbience(type) {
   document.querySelectorAll('.amb-btn').forEach(b => b.classList.remove('active', 'amb-playing'));
   ambActive = type;
   document.getElementById('amb-' + type)?.classList.add('active');
+  track('ambience_selected', { type });
 
   // Lo-fi: HTML audio element, not Web Audio
   if (type === 'lofi') {
@@ -7366,6 +7398,7 @@ function aiQuickPick() {
   scored.sort((a, b) => b.score - a.score);
   const top = scored[0];
   _aiPickAssignment = top.a;
+  track('ai_pick_used', { recommended_course: top.a.course, weight_pct: top.a.weight_pct, days_until: top.days });
 
   // Build natural language explanation
   const { a, grade, days } = top;
@@ -8211,7 +8244,11 @@ let _userTier = 'free';       // updated from Firestore on login
 let _paywallContext = null;   // what triggered the paywall (for analytics later)
 
 function setUserTier(tier) {
+  const prev = _userTier;
   _userTier = tier || 'free';
+  if (prev !== 'premium' && _userTier === 'premium') {
+    track('premium_activated');
+  }
   // Re-render anything tier-dependent
   renderDecorations();
   _syncPremiumUI();
@@ -8265,6 +8302,7 @@ function _useStreakFreeze() {
 
 function openPaywall(context) {
   _paywallContext = context || 'generic';
+  track('paywall_opened', { context: _paywallContext });
   // Contextual copy
   const heading = document.getElementById('pw-heading');
   const sub     = document.getElementById('pw-sub');
@@ -8303,6 +8341,7 @@ async function startCheckout() {
     });
     const data = await res.json();
     if (data.ok && data.url) {
+      track('checkout_started', { context: _paywallContext });
       window.location.href = data.url;
     } else {
       alert('Could not start checkout: ' + (data.error || 'Unknown error'));
