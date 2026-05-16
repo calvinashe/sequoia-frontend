@@ -72,8 +72,8 @@ body {
 #auth-screen {
   position:fixed; inset:0; z-index:10000;
   background:linear-gradient(160deg,#F4F0E8 0%,#EDE8DC 55%,#E6E0D4 100%);
-  display:flex; align-items:center; justify-content:center;
-  padding:20px 16px; overflow:hidden;
+  display:flex; align-items:flex-start; justify-content:center;
+  padding:0; overflow-y:auto;
 }
 /* Subtle warm texture dots */
 #auth-screen::before {
@@ -98,11 +98,9 @@ body {
   width:100%; max-width:420px;
   display:flex; flex-direction:column; align-items:center;
   position:relative; z-index:3;
-  overflow-y:auto; max-height:100vh;
-  padding:env(safe-area-inset-top,24px) 24px 40px;
-  scrollbar-width:none;
+  padding:env(safe-area-inset-top,32px) 24px 48px;
+  min-height:100vh;
 }
-.auth-landing::-webkit-scrollbar { display:none; }
 
 /* Logo */
 .al-logo {
@@ -191,7 +189,7 @@ body {
   transition:max-height .34s cubic-bezier(0.4,0,0.2,1), opacity .28s;
   opacity:0;
 }
-.al-email-form.open { max-height:340px; opacity:1; }
+.al-email-form.open { max-height:420px; opacity:1; }
 
 /* Sign up / Log in sub-toggle inside email form */
 .al-subtoggle {
@@ -4681,7 +4679,11 @@ function toggleEmailAuth() {
   form.classList.toggle('open', !isOpen);
   toggle.classList.toggle('open', !isOpen);
   if (!isOpen) {
-    setTimeout(() => document.getElementById('auth-email')?.focus(), 340);
+    // Scroll the landing so the full form is visible after transition
+    setTimeout(() => {
+      form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      document.getElementById('auth-email')?.focus();
+    }, 350);
   }
 }
 
