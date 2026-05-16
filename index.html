@@ -74,6 +74,8 @@ body {
   background:linear-gradient(160deg,#F4F0E8 0%,#EDE8DC 55%,#E6E0D4 100%);
   display:flex; align-items:flex-start; justify-content:center;
   padding:0; overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
 }
 /* Subtle warm texture dots */
 #auth-screen::before {
@@ -4695,6 +4697,12 @@ function toggleEmailAuth() {
       form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       document.getElementById('auth-email')?.focus();
     }, 350);
+  } else {
+    // Clear stale errors when user closes the email form
+    const e1 = document.getElementById('auth-err');
+    const e2 = document.getElementById('auth-global-err');
+    if (e1) e1.textContent = '';
+    if (e2) e2.textContent = '';
   }
 }
 
@@ -4710,9 +4718,13 @@ function authShowTab(tab) {
   const forgotWrap = document.getElementById('auth-forgot-wrap');
   if (tab === 'signup') {
     wrap.style.maxHeight = '80px'; wrap.style.opacity = '1';
+    wrap.removeAttribute('aria-hidden'); wrap.removeAttribute('inert');
+    document.getElementById('auth-confirm').removeAttribute('tabindex');
     if (forgotWrap) forgotWrap.style.display = 'none';
   } else {
     wrap.style.maxHeight = '0'; wrap.style.opacity = '0';
+    wrap.setAttribute('aria-hidden', 'true'); wrap.setAttribute('inert', '');
+    document.getElementById('auth-confirm').setAttribute('tabindex', '-1');
     if (forgotWrap) forgotWrap.style.display = 'block';
   }
   document.getElementById('auth-submit').textContent = tab === 'signup' ? 'Create Account →' : 'Log In →';
@@ -4785,13 +4797,17 @@ async function authSubmit() {
 
 async function signInWithGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
-  // iOS Safari and most mobile browsers block popups — use redirect instead
+  // iOS standalone PWA: signInWithRedirect breaks — it sends the user to Safari and
+  // never returns to the home-screen app. Use popup for standalone mode instead.
+  const isStandalone = (typeof _isIOSStandalone === 'function' && _isIOSStandalone())
+    || window.matchMedia('(display-mode: standalone)').matches;
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
   try {
-    if (isMobile) {
+    if (isMobile && !isStandalone) {
       // Redirect flow: page reloads after sign-in; onAuthStateChanged + getRedirectResult handle the rest
       await auth.signInWithRedirect(provider);
     } else {
+      // Desktop or iOS PWA: popup works reliably
       const cred = await auth.signInWithPopup(provider);
       if (cred.additionalUserInfo && cred.additionalUserInfo.isNewUser) {
         await initNewUser(cred.user, cred.user.displayName || '');
@@ -4799,7 +4815,7 @@ async function signInWithGoogle() {
       // onAuthStateChanged handles the rest
     }
   } catch(e) {
-    if (e.code !== 'auth/popup-closed-by-user') {
+    if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') {
       const el = document.getElementById('auth-global-err') || document.getElementById('auth-err');
       if (el) el.textContent = e.message || 'Google sign-in failed.';
     }
