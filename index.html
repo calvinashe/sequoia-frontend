@@ -92,158 +92,147 @@ body {
 }
 #auth-screen.gone { display:none; }
 
-/* ── AUTH INTRO SLIDES ──────────────────────────────────── */
-.auth-slides {
-  position:absolute; inset:0; z-index:3; overflow:hidden;
-  display:flex; flex-direction:column;
-  transition:opacity .4s ease, transform .4s ease;
-  opacity:1; transform:scale(1);
+/* ── AUTH LANDING PAGE ───────────────────────────────────── */
+/* Single-screen layout — no mandatory slides, Google is the hero CTA */
+.auth-landing {
+  width:100%; max-width:420px;
+  display:flex; flex-direction:column; align-items:center;
+  position:relative; z-index:3;
+  overflow-y:auto; max-height:100vh;
+  padding:env(safe-area-inset-top,24px) 24px 40px;
+  scrollbar-width:none;
 }
-.auth-slides.gone { opacity:0; pointer-events:none; transform:scale(1.04); }
+.auth-landing::-webkit-scrollbar { display:none; }
 
-.slide-track {
-  display:flex; flex:1; min-height:0;
-  width:300%;
-  transition:transform .44s cubic-bezier(0.4,0,0.2,1);
-  will-change:transform;
+/* Logo */
+.al-logo {
+  display:flex; align-items:center; gap:10px;
+  margin-bottom:28px; margin-top:8px;
 }
-.auth-slide {
-  flex:0 0 33.3333%; height:100%;
-  display:flex; flex-direction:column; align-items:center; overflow:hidden;
-}
-.auth-slide-visual {
-  flex:1; width:100%; min-height:0;
-  display:flex; align-items:center; justify-content:center;
-  padding:36px 24px 0; position:relative;
-}
-.auth-slide-text {
-  text-align:center; padding:18px 32px 0;
-}
-.auth-slide-headline {
-  font-family:'Playfair Display',serif;
-  font-size:25px; font-weight:800; color:#1C3A1C;
-  line-height:1.25; margin:0 0 9px;
-}
-.auth-slide-sub {
-  font-size:13.5px; color:rgba(30,61,30,0.52);
-  line-height:1.65; margin:0; max-width:290px;
-}
-.slide-nav {
-  width:100%; padding:22px 28px 42px;
-  display:flex; flex-direction:column; align-items:center; gap:14px;
-}
-.slide-dots {
-  display:flex; gap:7px; align-items:center;
-}
-.slide-dot {
-  height:6px; width:6px; border-radius:3px;
-  background:rgba(30,61,30,0.18); transition:all .32s;
-}
-.slide-dot.active {
-  width:24px; background:#2E6020;
-  box-shadow:0 0 8px rgba(46,96,32,0.35);
-}
-.slide-cta-btn {
-  width:100%; padding:15px; border:none; border-radius:14px;
-  background:linear-gradient(135deg,#2E6020,#4CA130,#5DD140);
-  color:#fff; font-family:'DM Sans',sans-serif;
-  font-size:15px; font-weight:800; cursor:pointer;
-  box-shadow:0 8px 28px rgba(76,161,48,0.45);
-  position:relative; overflow:hidden;
-  transition:transform .2s, box-shadow .2s;
-}
-.slide-cta-btn::after {
-  content:''; position:absolute; inset:0;
-  background:linear-gradient(135deg,rgba(255,255,255,0.15),transparent 60%);
-  pointer-events:none;
-}
-.slide-cta-btn:hover { transform:translateY(-1px); box-shadow:0 12px 36px rgba(76,161,48,0.6); }
-.slide-skip-btn {
-  background:none; border:none; padding:8px;
-  font-family:'DM Sans',sans-serif; font-size:13px;
-  color:rgba(30,61,30,0.38); cursor:pointer; transition:color .18s;
-}
-.slide-skip-btn:hover { color:rgba(30,61,30,0.65); }
-
-/* Slides always use dark forest palette — no light-theme overrides needed */
-
-/* ── AUTH CARD — always cream/light (conversion surface) ─── */
-.auth-card {
-  background:#FFFEF8;
-  border-radius:28px;
-  padding:40px 32px 32px; width:100%; max-width:400px;
-  box-shadow:0 24px 64px rgba(0,0,0,0.13), 0 4px 16px rgba(0,0,0,0.06), 0 0 0 1px rgba(30,61,30,0.07);
-  position:relative; overflow:hidden; z-index:1;
-  opacity:0; transform:translateY(18px); pointer-events:none;
-  transition:opacity .42s ease, transform .42s ease;
-}
-.auth-card.visible { opacity:1; transform:none; pointer-events:auto; }
-/* Soft green top glow */
-.auth-card::before {
-  content:''; position:absolute; top:-60px; left:50%; transform:translateX(-50%);
-  width:260px; height:120px; border-radius:50%;
-  background:radial-gradient(ellipse,rgba(76,161,48,0.1),transparent 70%);
-  pointer-events:none;
-}
-.auth-logo {
-  display:flex; align-items:center; justify-content:center;
-  gap:10px; margin-bottom:8px; position:relative; z-index:1;
-}
-.auth-logo-icon {
-  width:40px; height:40px; border-radius:12px;
+.al-logo-icon {
+  width:42px; height:42px; border-radius:13px;
   background:linear-gradient(135deg,#2E6020,#4CA130);
   display:flex; align-items:center; justify-content:center;
-  box-shadow:0 4px 14px rgba(76,161,48,0.35);
+  box-shadow:0 4px 16px rgba(76,161,48,0.38);
 }
-.auth-logo-wordmark {
-  font-family:'Playfair Display',serif; font-size:24px;
+.al-wordmark {
+  font-family:'Playfair Display',serif; font-size:26px;
   font-weight:800; color:#1C3A1C; letter-spacing:-0.3px;
 }
-.auth-tagline {
-  text-align:center; font-size:13px; color:rgba(30,61,30,0.48);
-  margin-bottom:28px; line-height:1.5;
+
+/* Hero text */
+.al-headline {
+  font-family:'Playfair Display',serif;
+  font-size:clamp(26px,7vw,34px); font-weight:800;
+  color:#1C3A1C; line-height:1.2;
+  text-align:center; margin:0 0 12px; letter-spacing:-0.4px;
 }
-.auth-toggle {
-  display:flex;
-  background:#EDE8DC;
+.al-sub {
+  font-size:14px; color:rgba(30,61,30,0.52);
+  line-height:1.65; text-align:center;
+  margin:0 0 28px; max-width:300px;
+}
+
+/* Primary Google CTA */
+.al-google-btn {
+  width:100%; padding:16px 20px; border:none; border-radius:16px;
+  background:linear-gradient(135deg,#1E3D1E,#2E6020,#4CA130);
+  color:#fff; font-family:'DM Sans',sans-serif;
+  font-size:16px; font-weight:800; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:11px;
+  box-shadow:0 8px 28px rgba(76,161,48,0.42);
+  position:relative; overflow:hidden;
+  transition:transform .2s, box-shadow .2s;
+  margin-bottom:12px;
+}
+.al-google-btn::after {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.14),transparent 60%);
+  pointer-events:none;
+}
+.al-google-btn:hover { transform:translateY(-1px); box-shadow:0 12px 36px rgba(76,161,48,0.6); }
+.al-google-icon {
+  width:22px; height:22px; border-radius:50%; background:#fff;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+
+/* Pricing badge */
+.al-price {
+  font-size:11.5px; color:rgba(30,61,30,0.42); text-align:center;
+  margin-bottom:20px; letter-spacing:0.01em;
+}
+.al-price strong { color:rgba(30,61,30,0.65); font-weight:700; }
+
+/* Divider */
+.al-divider {
+  display:flex; align-items:center; gap:10px; width:100%;
+  font-size:11px; color:rgba(30,61,30,0.3); margin-bottom:14px;
+}
+.al-divider::before,.al-divider::after {
+  content:''; flex:1; height:1px; background:rgba(30,61,30,0.12);
+}
+
+/* Email toggle button */
+.al-email-toggle {
+  width:100%; padding:13px; border:1.5px solid rgba(30,61,30,0.14);
+  border-radius:14px; background:#fff; cursor:pointer;
+  font-family:'DM Sans',sans-serif; font-size:14px; font-weight:600;
+  color:rgba(30,61,30,0.65); transition:all .18s; margin-bottom:14px;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.al-email-toggle:hover { border-color:rgba(30,61,30,0.3); color:#1C3A1C; }
+.al-email-toggle .al-chevron { transition:transform .22s; display:inline-block; }
+.al-email-toggle.open .al-chevron { transform:rotate(180deg); }
+
+/* Collapsible email form */
+.al-email-form {
+  width:100%;
+  overflow:hidden; max-height:0;
+  transition:max-height .34s cubic-bezier(0.4,0,0.2,1), opacity .28s;
+  opacity:0;
+}
+.al-email-form.open { max-height:340px; opacity:1; }
+
+/* Sign up / Log in sub-toggle inside email form */
+.al-subtoggle {
+  display:flex; background:#EDE8DC;
   border:1px solid rgba(30,61,30,0.1);
-  border-radius:12px; padding:3px; margin-bottom:22px;
+  border-radius:12px; padding:3px; margin-bottom:14px;
 }
-.auth-toggle-btn {
-  flex:1; padding:9px; border:none; border-radius:10px;
+.al-subtoggle-btn {
+  flex:1; padding:8px; border:none; border-radius:10px;
   font-family:'DM Sans',sans-serif; font-size:13px; font-weight:700;
   cursor:pointer; background:transparent; color:rgba(30,61,30,0.45);
   transition:all .18s;
 }
-.auth-toggle-btn.active {
+.al-subtoggle-btn.active {
   background:#1E3D1E; color:#fff;
-  border:1px solid #1E3D1E;
   box-shadow:0 2px 10px rgba(30,61,30,0.22);
 }
+
+/* Reuse auth-input, auth-err, auth-submit for the email form */
 .auth-input {
   display:block; width:100%; padding:13px 16px;
   border:1.5px solid rgba(30,61,30,0.14); border-radius:12px;
   font-family:'DM Sans',sans-serif; font-size:16px; color:#1C3A1C;
   background:#fff; outline:none; transition:all .2s;
-  margin-bottom:10px;
+  margin-bottom:10px; box-sizing:border-box;
 }
 .auth-input::placeholder { color:rgba(30,61,30,0.35); }
 .auth-input:focus { border-color:var(--g3); background:#fff; box-shadow:0 0 0 3px rgba(76,161,48,0.1); }
 .auth-err {
   font-size:12px; color:#C75B3A; margin-bottom:10px;
-  min-height:16px; line-height:1.4;
+  min-height:0; line-height:1.4;
   background:rgba(199,91,58,0.08); border:1px solid rgba(199,91,58,0.2);
   border-radius:8px; padding:6px 10px;
 }
-.auth-err:empty { background:none; border:none; padding:0; }
+.auth-err:empty { display:none; }
 .auth-submit {
   width:100%; padding:14px; border:none; border-radius:14px;
   background:linear-gradient(135deg,#1E3D1E,#2E6020,#4CA130);
-  color:#fff;
-  font-family:'DM Sans',sans-serif; font-size:15px; font-weight:800;
-  cursor:pointer; transition:transform .2s, box-shadow .2s; margin-bottom:18px;
-  box-shadow:0 6px 22px rgba(30,61,30,0.32);
-  position:relative; overflow:hidden;
+  color:#fff; font-family:'DM Sans',sans-serif; font-size:15px; font-weight:800;
+  cursor:pointer; transition:transform .2s, box-shadow .2s; margin-bottom:10px;
+  box-shadow:0 6px 22px rgba(30,61,30,0.32); position:relative; overflow:hidden;
 }
 .auth-submit::after {
   content:''; position:absolute; inset:0;
@@ -252,27 +241,32 @@ body {
 }
 .auth-submit:hover { transform:translateY(-1px); box-shadow:0 10px 30px rgba(30,61,30,0.42); }
 .auth-submit:disabled { opacity:0.55; cursor:not-allowed; transform:none; }
-.auth-divider {
-  display:flex; align-items:center; gap:10px;
-  font-size:11px; color:rgba(30,61,30,0.3); margin-bottom:16px;
-}
-.auth-divider::before,.auth-divider::after {
-  content:''; flex:1; height:1px; background:rgba(30,61,30,0.1);
-}
-.auth-google {
-  width:100%; padding:13px; border:1.5px solid rgba(30,61,30,0.12);
-  border-radius:14px; background:#fff; cursor:pointer;
-  font-family:'DM Sans',sans-serif; font-size:14px; font-weight:600;
-  color:#1C3A1C; display:flex; align-items:center; justify-content:center;
-  gap:10px; transition:all .18s; margin-bottom:14px;
-}
-.auth-google:hover { border-color:rgba(30,61,30,0.28); box-shadow:0 2px 10px rgba(0,0,0,0.07); }
-.auth-demo-link {
+
+/* Demo link */
+.al-demo-link {
   width:100%; padding:10px; border:none; background:none;
-  font-family:'DM Sans',sans-serif; font-size:13px; color:rgba(30,61,30,0.38);
-  cursor:pointer; text-align:center; transition:color .18s;
+  font-family:'DM Sans',sans-serif; font-size:13px;
+  color:rgba(30,61,30,0.4); cursor:pointer; text-align:center;
+  transition:color .18s; margin-bottom:28px;
 }
-.auth-demo-link:hover { color:var(--g2); }
+.al-demo-link:hover { color:var(--g2); }
+
+/* Benefit chips strip at the bottom */
+.al-benefits {
+  display:flex; flex-wrap:wrap; gap:8px;
+  justify-content:center; width:100%;
+  border-top:1px solid rgba(30,61,30,0.1);
+  padding-top:22px;
+}
+.al-chip {
+  font-size:12px; font-weight:600; color:rgba(30,61,30,0.55);
+  background:rgba(30,61,30,0.06); border:1px solid rgba(30,61,30,0.1);
+  border-radius:100px; padding:5px 12px;
+}
+
+/* Keep auth-google + auth-demo-link for any legacy references */
+.auth-google { display:none; }
+.auth-demo-link { display:none; }
 
 /* ── NAV ACCOUNT ─────────────────────────────────────────── */
 .nav-account { position:relative; }
@@ -3187,9 +3181,82 @@ posthog.init('POSTHOG_API_KEY_PLACEHOLDER', {
      AUTH SCREEN
 ════════════════════════════════════════════════════════ -->
 <div id="auth-screen">
+  <div class="auth-landing" id="auth-landing">
 
-  <!-- ── Intro Slides ─────────────────────────────────── -->
-  <div class="auth-slides" id="auth-slides">
+    <!-- Logo -->
+    <div class="al-logo">
+      <div class="al-logo-icon">
+        <svg viewBox="0 0 30 30" width="22" height="22" xmlns="http://www.w3.org/2000/svg">
+          <rect x="13" y="22" width="4" height="7" rx="1" fill="#FFFEF8" opacity="0.8"/>
+          <polygon points="15,4 8,14 22,14" fill="#FFFEF8" opacity="0.7"/>
+          <polygon points="15,9 7,19 23,19" fill="#FFFEF8" opacity="0.85"/>
+          <polygon points="15,14 6,23 24,23" fill="#FFFEF8"/>
+        </svg>
+      </div>
+      <span class="al-wordmark">Sequoia</span>
+    </div>
+
+    <!-- Hero -->
+    <h1 class="al-headline">The study app<br>that grows as you do.</h1>
+    <p class="al-sub">Connect Canvas, tackle what matters most, and watch your Sequoia grow all semester long.</p>
+
+    <!-- Primary CTA — Google -->
+    <button class="al-google-btn" id="al-google-btn" onclick="signInWithGoogle()">
+      <span class="al-google-icon">
+        <svg width="14" height="14" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+          <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+          <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+          <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+          <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+        </svg>
+      </span>
+      Continue with Google
+    </button>
+
+    <!-- Pricing -->
+    <p class="al-price">Free to start &nbsp;·&nbsp; <strong>Premium $7.99/mo</strong> &nbsp;·&nbsp; Cancel anytime</p>
+
+    <!-- Divider -->
+    <div class="al-divider">or</div>
+
+    <!-- Email toggle -->
+    <button class="al-email-toggle" id="al-email-toggle" onclick="toggleEmailAuth()">
+      <span>Use email instead</span>
+      <span class="al-chevron">▾</span>
+    </button>
+
+    <!-- Collapsible email form -->
+    <div class="al-email-form" id="al-email-form">
+      <div class="al-subtoggle">
+        <button class="al-subtoggle-btn active" id="auth-tab-signup" onclick="authShowTab('signup')">Sign Up</button>
+        <button class="al-subtoggle-btn" id="auth-tab-login" onclick="authShowTab('login')">Log In</button>
+      </div>
+      <div class="auth-err" id="auth-err"></div>
+      <input class="auth-input" type="email" id="auth-email" placeholder="Email address" autocomplete="email">
+      <input class="auth-input" type="password" id="auth-password" placeholder="Password" autocomplete="new-password">
+      <div id="auth-confirm-wrap" style="overflow:hidden;transition:max-height .28s cubic-bezier(0.4,0,0.2,1),opacity .22s;max-height:80px;opacity:1">
+        <input class="auth-input" type="password" id="auth-confirm" placeholder="Confirm password" autocomplete="new-password" style="margin-top:0">
+      </div>
+      <button class="auth-submit" id="auth-submit" onclick="authSubmit()">Create Account →</button>
+    </div>
+
+    <!-- Demo link -->
+    <button class="al-demo-link" onclick="loadDemoFromAuth()">🌱 Try Demo Mode — no account needed</button>
+
+    <!-- Benefit chips -->
+    <div class="al-benefits">
+      <span class="al-chip">📊 Grade-weighted priorities</span>
+      <span class="al-chip">⏱ Focus timer + XP</span>
+      <span class="al-chip">🌲 Tree grows with you</span>
+      <span class="al-chip">🔥 Streak rewards</span>
+      <span class="al-chip">🤖 AI Quick Pick</span>
+      <span class="al-chip">📅 Calendar view</span>
+    </div>
+
+  </div><!-- /auth-landing -->
+
+  <!-- Keep old slide refs as empty placeholders so legacy JS doesn't throw -->
+  <div class="auth-slides gone" id="auth-slides" style="display:none">
     <div class="slide-track" id="slide-track">
 
       <!-- Slide 1: Priority-sorted assignments -->
@@ -3382,48 +3449,8 @@ posthog.init('POSTHOG_API_KEY_PLACEHOLDER', {
     </div>
   </div><!-- /auth-slides -->
 
-  <!-- ── Auth Form (revealed after slides) ────────────── -->
-  <div class="auth-card" id="auth-card">
-    <div class="auth-logo">
-      <div class="auth-logo-icon">
-        <svg viewBox="0 0 30 30" width="22" height="22" xmlns="http://www.w3.org/2000/svg">
-          <rect x="13" y="22" width="4" height="7" rx="1" fill="#7B4A1E"/>
-          <polygon points="15,4 8,14 22,14" fill="#3A7A1E"/>
-          <polygon points="15,9 7,19 23,19" fill="#4A9028"/>
-          <polygon points="15,14 6,23 24,23" fill="#5AAF35"/>
-        </svg>
-      </div>
-      <span class="auth-logo-wordmark">Sequoia</span>
-    </div>
-    <p class="auth-tagline">Grow through every semester.</p>
-
-    <div class="auth-toggle">
-      <button class="auth-toggle-btn active" id="auth-tab-signup" onclick="authShowTab('signup')">Sign Up</button>
-      <button class="auth-toggle-btn" id="auth-tab-login" onclick="authShowTab('login')">Log In</button>
-    </div>
-
-    <div class="auth-err" id="auth-err"></div>
-    <input class="auth-input" type="email" id="auth-email" placeholder="Email address" autocomplete="email">
-    <input class="auth-input" type="password" id="auth-password" placeholder="Password" autocomplete="new-password">
-    <div id="auth-confirm-wrap" style="overflow:hidden;transition:max-height .28s cubic-bezier(0.4,0,0.2,1),opacity .22s;max-height:80px;opacity:1">
-      <input class="auth-input" type="password" id="auth-confirm" placeholder="Confirm password" autocomplete="new-password" style="margin-top:0">
-    </div>
-    <button class="auth-submit" id="auth-submit" onclick="authSubmit()">Create Account →</button>
-
-    <div class="auth-divider"><span>or</span></div>
-
-    <button class="auth-google" onclick="signInWithGoogle()">
-      <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
-        <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
-        <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
-        <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
-        <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
-      </svg>
-      Continue with Google
-    </button>
-
-    <button class="auth-demo-link" onclick="loadDemoFromAuth()">🌱 Try Demo Mode first — no account needed</button>
-  </div>
+  <!-- legacy auth-card kept as hidden stub so JS references don't throw -->
+  <div class="auth-card" id="auth-card" style="display:none"></div>
 </div>
 
 <div id="onboard">
@@ -4831,36 +4858,27 @@ function slideNext() {
   }
 }
 
-function showAuthForm() {
-  const slides = document.getElementById('auth-slides');
-  const card   = document.getElementById('auth-card');
-  if (slides) slides.classList.add('gone');
-  if (card)   { card.classList.add('visible'); }
-}
+function showAuthForm() { /* legacy no-op — new landing shows form inline */ }
 
-// Touch/swipe support for slides
-(function() {
-  let startX = 0;
-  document.addEventListener('touchstart', e => {
-    if (!document.getElementById('auth-slides') || document.getElementById('auth-slides').classList.contains('gone')) return;
-    startX = e.touches[0].clientX;
-  }, { passive: true });
-  document.addEventListener('touchend', e => {
-    const slides = document.getElementById('auth-slides');
-    if (!slides || slides.classList.contains('gone')) return;
-    const dx = e.changedTouches[0].clientX - startX;
-    if (Math.abs(dx) > 48) {
-      if (dx < 0) slideNext();
-      else if (_slideIdx > 0) slideGo(_slideIdx - 1);
-    }
-  }, { passive: true });
-})();
+function toggleEmailAuth() {
+  const form   = document.getElementById('al-email-form');
+  const toggle = document.getElementById('al-email-toggle');
+  const isOpen = form.classList.contains('open');
+  form.classList.toggle('open', !isOpen);
+  toggle.classList.toggle('open', !isOpen);
+  if (!isOpen) {
+    setTimeout(() => document.getElementById('auth-email')?.focus(), 340);
+  }
+}
 
 // ── AUTH SCREEN LOGIC ──────────────────────────────────
 function authShowTab(tab) {
   _authTab = tab;
-  document.getElementById('auth-tab-signup').classList.toggle('active', tab === 'signup');
-  document.getElementById('auth-tab-login').classList.toggle('active',  tab === 'login');
+  // support both old auth-toggle-btn and new al-subtoggle-btn
+  ['auth-tab-signup','auth-tab-login'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('active', id === 'auth-tab-' + tab);
+  });
   const wrap = document.getElementById('auth-confirm-wrap');
   if (tab === 'signup') { wrap.style.maxHeight = '80px'; wrap.style.opacity = '1'; }
   else { wrap.style.maxHeight = '0'; wrap.style.opacity = '0'; }
