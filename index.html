@@ -5133,22 +5133,54 @@ function loadDemo() {
   localStorage.setItem('sq_name', demoName);
   setGreeting(demoName);
   const t = new Date();
-  const add = d => { const x = new Date(t); x.setDate(x.getDate()+d); return x.toISOString(); };
+  const add = (d, h=23, m=59) => {
+    const x = new Date(t);
+    x.setDate(x.getDate() + d);
+    x.setHours(h, m, 0, 0);
+    return x.toISOString();
+  };
   allAssignments = [
-    { title:'Midterm Exam',             course:'CHEM 1040', due_at:add(2),  days_until:2,   weight_pct:30, urgency:'high',   priority_score:120, id:'a1' },
-    { title:'Research Paper Draft',     course:'ENG 1100',  due_at:add(4),  days_until:4,   weight_pct:25, urgency:'medium', priority_score:75,  id:'a2' },
-    { title:'Lab Report #6',            course:'BIOL 1030', due_at:add(3),  days_until:3,   weight_pct:15, urgency:'medium', priority_score:45,  id:'a3' },
-    { title:'Problem Set 8',            course:'MATH 1610', due_at:add(5),  days_until:5,   weight_pct:10, urgency:'medium', priority_score:30,  id:'a4' },
-    { title:'Discussion Post: Week 11', course:'PSY 2010',  due_at:add(1),  days_until:1,   weight_pct:5,  urgency:'high',   priority_score:20,  id:'a5' },
-    { title:'Reading Quiz Ch. 9',       course:'HIST 1010', due_at:add(7),  days_until:7,   weight_pct:3,  urgency:'low',    priority_score:6,   id:'a6' },
+    // ── Overdue (should have been done already) ──────────
+    { title:'Reaction Mechanism Problem Set',  course:'CHEM 2310', due_at:add(-2,11,59), days_until:-2,  weight_pct:12, urgency:'high',   priority_score:134, id:'d1' },
+
+    // ── Due today ────────────────────────────────────────
+    { title:'Cell Cycle & Mitosis Lab Report', course:'BIOL 2200', due_at:add(0,23,59),  days_until:0,   weight_pct:18, urgency:'high',   priority_score:118, id:'d2' },
+
+    // ── Due tomorrow ─────────────────────────────────────
+    { title:'Thesis Statement Workshop',       course:'ENG 1020',  due_at:add(1,23,59),  days_until:1,   weight_pct:8,  urgency:'high',   priority_score:56,  id:'d3' },
+
+    // ── Due in 2-4 days ───────────────────────────────────
+    { title:'Organic Chemistry II Midterm',    course:'CHEM 2310', due_at:add(2,14,0),   days_until:2,   weight_pct:35, urgency:'high',   priority_score:245, id:'d4' },
+    { title:'Vector Calculus Problem Set 7',   course:'MATH 2410', due_at:add(3,23,59),  days_until:3,   weight_pct:10, urgency:'medium', priority_score:48,  id:'d5' },
+    { title:'Reconstruction Era Essay',        course:'HIST 1200', due_at:add(4,23,59),  days_until:4,   weight_pct:20, urgency:'medium', priority_score:72,  id:'d6' },
+
+    // ── Due this week (5-7 days) ──────────────────────────
+    { title:'Protein Folding Case Study',      course:'BIOL 2200', due_at:add(5,23,59),  days_until:5,   weight_pct:12, urgency:'medium', priority_score:43,  id:'d7' },
+    { title:'Participation Quiz: Week 13',     course:'SOC 1010',  due_at:add(5,23,59),  days_until:5,   weight_pct:4,  urgency:'medium', priority_score:14,  id:'d8' },
+    { title:'Argumentative Essay Draft',       course:'ENG 1020',  due_at:add(7,23,59),  days_until:7,   weight_pct:25, urgency:'medium', priority_score:85,  id:'d9' },
+
+    // ── Next week ─────────────────────────────────────────
+    { title:'Multivariable Integration Exam',  course:'MATH 2410', due_at:add(9,10,0),   days_until:9,   weight_pct:30, urgency:'low',    priority_score:76,  id:'d10' },
+    { title:'Carbonyl Chemistry Lab',          course:'CHEM 2310', due_at:add(10,14,0),  days_until:10,  weight_pct:8,  urgency:'low',    priority_score:28,  id:'d11' },
+    { title:'Social Stratification Paper',     course:'SOC 1010',  due_at:add(11,23,59), days_until:11,  weight_pct:22, urgency:'low',    priority_score:55,  id:'d12' },
+
+    // ── Further out ───────────────────────────────────────
+    { title:'Cell Signaling Final Project',    course:'BIOL 2200', due_at:add(18,23,59), days_until:18,  weight_pct:30, urgency:'low',    priority_score:38,  id:'d13' },
+    { title:'Civil Rights Movement Research',  course:'HIST 1200', due_at:add(21,23,59), days_until:21,  weight_pct:30, urgency:'low',    priority_score:34,  id:'d14' },
   ];
   renderGrades([
-    { name:'CHEM 1040', color:'#C75B3A', current:88, earned_pct:60 },
-    { name:'ENG 1100',  color:'#4A9C28', current:92, earned_pct:45 },
-    { name:'BIOL 1030', color:'#D4882B', current:74, earned_pct:70 },
-    { name:'MATH 1610', color:'#5B8ACF', current:81, earned_pct:55 },
-    { name:'PSY 2010',  color:'#9B59B6', current:95, earned_pct:40 },
-    { name:'HIST 1010', color:'#7B4A1E', current:67, earned_pct:75 },
+    // CHEM 2310: struggling (72%) — AI Pick will weight this heavily
+    { name:'CHEM 2310', color:'#C75B3A', current:72, earned_pct:58 },
+    // BIOL 2200: below average (79%) — doing okay but room to improve
+    { name:'BIOL 2200', color:'#4A9C28', current:79, earned_pct:62 },
+    // MATH 2410: average (82%)
+    { name:'MATH 2410', color:'#5B8ACF', current:82, earned_pct:55 },
+    // HIST 1200: good (89%)
+    { name:'HIST 1200', color:'#7B4A1E', current:89, earned_pct:48 },
+    // ENG 1020: strong (91%)
+    { name:'ENG 1020',  color:'#D4882B', current:91, earned_pct:50 },
+    // SOC 1010: easy A (95%)
+    { name:'SOC 1010',  color:'#9B59B6', current:95, earned_pct:42 },
   ]);
   renderAssignments(allAssignments);
   scheduleNotifications(allAssignments);
