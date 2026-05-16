@@ -4672,6 +4672,14 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 <script>
 const API = 'https://sequoia-backend-szss.onrender.com';
 
+// ── BACKEND WARMUP PING ───────────────────────────────────
+// Silently wake the Render dyno before the user needs it.
+// Fire-and-forget — no UI impact if it fails.
+(function warmupBackend() {
+  fetch(API + '/healthz', { method: 'GET', cache: 'no-store' })
+    .catch(() => { /* dyno was cold — ping sent, it's warming now */ });
+})();
+
 // ── FIREBASE ─────────────────────────────────────────────
 firebase.initializeApp({
   apiKey:            "AIzaSyCKZa2AEso1J33om4LoxkJSb6WMm1vMyR0",
