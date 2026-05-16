@@ -4586,7 +4586,7 @@ async function loadUserData(uid) {
   try {
     const userRef  = db.collection('users').doc(uid);
     const [doc, badgeSnap] = await Promise.all([
-      userRef.get(),
+      userRef.get({ source: 'server' }),
       userRef.collection('notifications').where('read', '==', false).get(),
     ]);
     // Update badge count from the parallel query
