@@ -664,6 +664,95 @@ body {
 }
 .add-btn:hover { background:rgba(76,161,48,0.32); color:#fff; }
 
+/* ── AI QUICK PICK BUTTON ────────────────────────────────── */
+.ai-pick-btn {
+  height:32px; padding:0 12px; border-radius:9px;
+  border:1px solid rgba(76,161,48,0.35);
+  background:linear-gradient(135deg,rgba(76,161,48,0.22),rgba(46,96,32,0.15));
+  color:rgba(255,255,255,0.85); font-size:12px; font-weight:700;
+  cursor:pointer; display:flex; align-items:center; gap:5px;
+  transition:all .2s; font-family:'DM Sans',sans-serif;
+  white-space:nowrap;
+}
+.ai-pick-btn:hover { background:linear-gradient(135deg,rgba(76,161,48,0.35),rgba(46,96,32,0.25)); color:#fff; transform:translateY(-1px); }
+.ai-pick-btn .ai-spark { font-size:13px; }
+
+/* ── AI QUICK PICK MODAL ─────────────────────────────────── */
+#aipick-overlay {
+  position:fixed; inset:0; z-index:9300;
+  background:rgba(0,0,0,0); pointer-events:none;
+  transition:background .25s;
+  display:flex; align-items:flex-end; justify-content:center;
+}
+#aipick-overlay.show {
+  background:rgba(0,0,0,0.65); pointer-events:all;
+  backdrop-filter:blur(4px);
+}
+#aipick-sheet {
+  width:100%; max-width:520px;
+  background:linear-gradient(160deg,#0D1F0E 0%,#0A1808 60%,#070F05 100%);
+  border-radius:28px 28px 0 0;
+  padding:12px 24px 36px;
+  border-top:1px solid rgba(76,161,48,0.18);
+  box-shadow:0 -12px 60px rgba(0,0,0,0.55);
+  transform:translateY(100%); transition:transform .32s cubic-bezier(.32,1.1,.52,1);
+}
+#aipick-overlay.show #aipick-sheet { transform:translateY(0); }
+.aipick-handle { width:36px; height:4px; border-radius:2px; background:rgba(255,255,255,0.12); margin:0 auto 20px; }
+.aipick-pill {
+  display:inline-flex; align-items:center; gap:5px;
+  background:linear-gradient(135deg,rgba(76,161,48,0.25),rgba(46,96,32,0.15));
+  border:1px solid rgba(76,161,48,0.3); border-radius:100px;
+  padding:4px 12px; font-size:10px; font-weight:800;
+  color:var(--g4); letter-spacing:.08em; text-transform:uppercase;
+  margin-bottom:14px;
+}
+.aipick-assignment {
+  font-family:'Playfair Display',serif; font-size:26px; font-weight:800;
+  color:#FFFEF8; line-height:1.15; letter-spacing:-0.4px; margin-bottom:6px;
+}
+.aipick-meta {
+  display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px;
+}
+.aipick-tag {
+  font-size:11px; font-weight:700; padding:3px 10px; border-radius:100px;
+  background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.55);
+}
+.aipick-tag.hot { background:rgba(199,91,58,0.18); color:#E8836A; }
+.aipick-tag.weight { background:rgba(76,161,48,0.18); color:var(--g4); }
+.aipick-reason {
+  font-size:14px; line-height:1.65; color:rgba(255,255,255,0.72);
+  margin-bottom:24px; padding:14px 16px;
+  background:rgba(255,255,255,0.04); border-radius:14px;
+  border-left:3px solid rgba(76,161,48,0.4);
+}
+.aipick-reason strong { color:rgba(255,255,255,0.92); }
+.aipick-cta {
+  width:100%; padding:16px; border-radius:16px; border:none;
+  background:linear-gradient(135deg,#4CA130,#2E6020);
+  color:#fff; font-family:'DM Sans',sans-serif;
+  font-size:16px; font-weight:800; cursor:pointer;
+  box-shadow:0 6px 20px rgba(76,161,48,0.4);
+  transition:all .2s; margin-bottom:10px;
+}
+.aipick-cta:hover { transform:translateY(-1px); box-shadow:0 8px 24px rgba(76,161,48,0.5); }
+.aipick-dismiss {
+  width:100%; padding:10px; border-radius:12px; border:none;
+  background:transparent; color:rgba(255,255,255,0.3);
+  font-family:'DM Sans',sans-serif; font-size:13px; cursor:pointer;
+  transition:color .2s;
+}
+.aipick-dismiss:hover { color:rgba(255,255,255,0.55); }
+[data-theme="light"] #aipick-sheet {
+  background:linear-gradient(160deg,#f0f7e8 0%,#e8f3dc 100%);
+  border-top:1px solid rgba(76,161,48,0.2);
+}
+[data-theme="light"] .aipick-assignment { color:var(--g1); }
+[data-theme="light"] .aipick-reason { background:rgba(76,161,48,0.06); color:var(--mid); }
+[data-theme="light"] .aipick-reason strong { color:var(--g1); }
+[data-theme="light"] .aipick-tag { background:var(--g-pale); color:var(--mid); }
+[data-theme="light"] .aipick-dismiss { color:var(--light); }
+
 /* Filter tabs */
 .filter-tabs { display:flex; gap:4px; padding:12px 20px; }
 .ftab {
@@ -3724,7 +3813,8 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
     <div class="assign-card">
       <div class="assign-header">
         <span class="assign-title">Your Priorities</span>
-        <div style="display:flex;gap:6px">
+        <div style="display:flex;gap:6px;align-items:center">
+          <button class="ai-pick-btn" onclick="aiQuickPick()" title="AI recommendation"><span class="ai-spark">⚡</span> AI Pick</button>
           <button class="add-btn" onclick="openAddAssign()" title="Add assignment">＋</button>
           <button class="add-btn" onclick="refreshAssignments()" title="Refresh">↻</button>
         </div>
@@ -7068,6 +7158,118 @@ function pickAssignment(btn, title) {
   if (input) { input.value = title; input.focus(); }
 }
 
+// ── AI QUICK PICK ─────────────────────────────────────────
+let _aiPickAssignment = null;
+
+function aiQuickPick() {
+  if (!isPremium()) { openPaywall('ai-pick'); return; }
+  const pending = allAssignments.filter(a => !completedIds.has(a.id));
+  if (!pending.length) { showToast('🎉 No pending assignments — you\'re all caught up!'); return; }
+
+  // Build grade lookup: course name → current grade %
+  const gradeMap = {};
+  (window._lastGrades || []).forEach(g => { gradeMap[g.name] = g.current; });
+
+  // Score each assignment
+  const scored = pending.map(a => {
+    const days   = a.days_until;
+    const weight = a.weight_pct || 1;
+    const grade  = gradeMap[a.course] ?? 85;
+
+    // Urgency factor
+    let urgency = 1.0;
+    if      (days === null)  urgency = 0.8;
+    else if (days < 0)       urgency = 3.5;   // overdue
+    else if (days < 1)       urgency = 2.8;   // due today
+    else if (days < 2)       urgency = 2.2;   // due tomorrow
+    else if (days < 4)       urgency = 1.7;   // 2-3 days
+    else if (days < 8)       urgency = 1.2;   // this week
+    else if (days < 15)      urgency = 0.85;  // next 2 weeks
+    else                     urgency = 0.55;  // far out
+
+    // Grade gap factor — lower grade = more leverage from doing this assignment
+    let gradeFactor = 1.0;
+    if      (grade < 60) gradeFactor = 2.2;
+    else if (grade < 70) gradeFactor = 1.8;
+    else if (grade < 80) gradeFactor = 1.4;
+    else if (grade < 87) gradeFactor = 1.15;
+    else                 gradeFactor = 1.0;
+
+    return { a, score: weight * urgency * gradeFactor, grade, days, urgency, gradeFactor };
+  });
+
+  scored.sort((a, b) => b.score - a.score);
+  const top = scored[0];
+  _aiPickAssignment = top.a;
+
+  // Build natural language explanation
+  const { a, grade, days } = top;
+  const coursGrade = grade != null ? Math.round(grade) + '%' : null;
+  const letterGrade = grade >= 90 ? 'A' : grade >= 80 ? 'B' : grade >= 70 ? 'C' : grade >= 60 ? 'D' : 'F';
+  const dueStr = days === null ? 'no due date set'
+    : days < 0  ? `${Math.abs(Math.round(days))} day${Math.abs(Math.round(days)) !== 1 ? 's' : ''} overdue`
+    : days < 1  ? 'due today'
+    : days < 2  ? 'due tomorrow'
+    : `due in ${Math.ceil(days)} days`;
+
+  let reason = '';
+  if (days !== null && days < 0) {
+    reason = `This assignment is already <strong>${dueStr}</strong>. A late submission is always better than a missing one — tackle it first and turn in what you can.`;
+  } else if (days !== null && days < 1) {
+    reason = `<strong>This is due today</strong> and worth <strong>${Math.round(a.weight_pct)}%</strong> of your ${a.course} grade. Everything else can wait — this is your only priority right now.`;
+  } else if (days !== null && days < 2 && a.weight_pct >= 20) {
+    reason = `Due <strong>tomorrow</strong> and worth <strong>${Math.round(a.weight_pct)}%</strong> of your grade — that combination makes this your highest-leverage use of time today. Start your first session on this now.`;
+  } else if (grade !== null && grade < 75 && a.weight_pct >= 15) {
+    reason = `You're sitting at a <strong>${letterGrade} (${coursGrade})</strong> in ${a.course} and this assignment is worth <strong>${Math.round(a.weight_pct)}%</strong>. Doing well here is one of the biggest moves you can make on that grade before the semester ends.`;
+  } else if (a.weight_pct >= 25) {
+    reason = `At <strong>${Math.round(a.weight_pct)}% of your ${a.course} grade</strong>, this is one of the most impactful things left on your list — ${dueStr}. High-weight assignments are where your time pays off most.`;
+  } else if (grade !== null && grade < 80) {
+    reason = `Your ${a.course} grade is at <strong>${coursGrade}</strong> — there's room to move it up. This assignment, worth <strong>${Math.round(a.weight_pct)}%</strong> and ${dueStr}, is your best lever to improve it.`;
+  } else {
+    reason = `Weighing urgency and grade impact across all your courses, <strong>${a.course} (${dueStr})</strong> is where your next session will do the most good. ${Math.round(a.weight_pct)}% of the grade is on the line.`;
+  }
+
+  // Populate sheet
+  document.getElementById('aipick-title').textContent = a.title;
+  document.getElementById('aipick-reason').innerHTML  = reason;
+
+  // Meta tags
+  const urgTag  = days !== null && days < 0 ? `<span class="aipick-tag hot">⚠ Overdue</span>`
+    : days < 1 ? `<span class="aipick-tag hot">🔥 Due Today</span>`
+    : days < 2 ? `<span class="aipick-tag hot">⚡ Due Tomorrow</span>`
+    : `<span class="aipick-tag">📅 ${dueStr.charAt(0).toUpperCase() + dueStr.slice(1)}</span>`;
+  const wtTag   = `<span class="aipick-tag weight">⚖ ${Math.round(a.weight_pct)}% weight</span>`;
+  const crsTag  = `<span class="aipick-tag">📚 ${a.course}</span>`;
+  const grTag   = coursGrade ? `<span class="aipick-tag">${letterGrade} · ${coursGrade} currently</span>` : '';
+  document.getElementById('aipick-meta').innerHTML = urgTag + wtTag + crsTag + grTag;
+
+  // Show sheet
+  document.getElementById('aipick-overlay').classList.add('show');
+}
+
+function closeAIPick() {
+  document.getElementById('aipick-overlay').classList.remove('show');
+}
+
+function aiPickStartSession() {
+  if (!_aiPickAssignment) return;
+  closeAIPick();
+  showScreen(2);
+  setTimeout(() => {
+    const input = document.getElementById('pomo-goal');
+    if (input) input.value = _aiPickAssignment.title;
+    // Pre-select the matching chip
+    document.querySelectorAll('.qpick-chip').forEach(c => {
+      if (c.textContent.trim() === _aiPickAssignment.title) c.classList.add('selected');
+    });
+  }, 200);
+}
+
+// Close AI pick when clicking outside the sheet
+document.getElementById('aipick-overlay')?.addEventListener('click', function(e) {
+  if (e.target === this) closeAIPick();
+});
+
 // ── WEAK SPOTS ──────────────────────────────────────────
 let _wsPending = [];
 
@@ -7883,6 +8085,9 @@ function openPaywall(context) {
     if (context === 'session-limit') {
       heading.innerHTML = "You've hit today's<br>study limit.";
       sub.textContent   = "Free users get 3 sessions/day. Upgrade for unlimited.";
+    } else if (context === 'ai-pick') {
+      heading.innerHTML = "Let AI tell you what<br>to study right now.";
+      sub.textContent   = "Instant recommendations based on weight, urgency, and your grades.";
     } else if (context === 'assign-gate') {
       heading.innerHTML = "See every assignment<br>that matters.";
       sub.textContent   = "Free shows your top 5. Premium unlocks your full priority list.";
@@ -8193,6 +8398,19 @@ if ('serviceWorker' in navigator) {
 </div>
 
 <!-- ══ PAYWALL MODAL ════════════════════════════════════════ -->
+<!-- ── AI QUICK PICK SHEET ── -->
+<div id="aipick-overlay" onclick="e => { if(e.target===this) closeAIPick(); }">
+  <div id="aipick-sheet">
+    <div class="aipick-handle"></div>
+    <div class="aipick-pill">⚡ AI Recommendation</div>
+    <div class="aipick-assignment" id="aipick-title">—</div>
+    <div class="aipick-meta" id="aipick-meta"></div>
+    <div class="aipick-reason" id="aipick-reason"></div>
+    <button class="aipick-cta" id="aipick-cta" onclick="aiPickStartSession()">▶ Start Session on This →</button>
+    <button class="aipick-dismiss" onclick="closeAIPick()">Maybe later</button>
+  </div>
+</div>
+
 <div id="paywall-overlay" aria-modal="true" role="dialog">
   <div id="paywall-card">
     <div class="pw-pill">✦ Premium</div>
