@@ -4602,6 +4602,7 @@ async function loadUserData(uid) {
     if (d.name)                           localStorage.setItem('sq_name',           d.name);
     if (d.pomo_sessions    !== undefined) localStorage.setItem('sq_pomo_sessions',  String(d.pomo_sessions));
     if (d.manual_assignments)             localStorage.setItem('sq_manual',         JSON.stringify(d.manual_assignments));
+    if (d.tier)                           localStorage.setItem('sq_tier',           d.tier);
     return d;
   } catch(e) { return null; }
 }
@@ -5181,7 +5182,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // Load UI from localStorage instantly
     loadXPStreak(); updateDashTree(); syncTreeScreen();
     checkStreakRisk(); renderSessionLog();
-    updateNavAccount(user, 'free');
+    updateNavAccount(user, localStorage.getItem('sq_tier') || 'free');
 
     const token = localStorage.getItem('sq_token');
     const url   = localStorage.getItem('sq_url');
