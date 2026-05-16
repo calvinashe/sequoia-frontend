@@ -8031,8 +8031,15 @@ async function testPush() {
       body: JSON.stringify({ subscription: sub.toJSON() }),
     });
     const data = await res.json();
-    if (btn) { btn.textContent = data.ok ? '✅ Sent!' : '❌ Failed'; btn.disabled = false; setTimeout(() => { btn.textContent = 'Send test push'; }, 3000); }
+    if (data.ok) {
+      if (btn) { btn.textContent = '✅ Sent!'; btn.disabled = false; setTimeout(() => { btn.textContent = 'Send test push'; }, 3000); }
+    } else {
+      const errMsg = data.error || data.detail || 'unknown error';
+      if (btn) { btn.textContent = '❌ ' + errMsg.slice(0, 60); btn.disabled = false; setTimeout(() => { btn.textContent = 'Send test push'; }, 6000); }
+      console.error('Test push error:', data);
+    }
   } catch(e) {
+    if (btn) { btn.textContent = '❌ ' + e.message.slice(0, 60); btn.disabled = false; setTimeout(() => { btn.textContent = 'Send test push'; }, 6000); }
     console.warn('Test push failed:', e);
   }
 }
