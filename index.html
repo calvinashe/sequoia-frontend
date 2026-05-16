@@ -687,6 +687,39 @@ body {
 .a-row:last-child { border-bottom:none; }
 .a-row:hover { background:rgba(76,161,48,0.07); }
 @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── FREE TIER ASSIGNMENT GATE ───────────────────────────── */
+.assign-gate {
+  margin:4px 0 8px;
+  border-radius:16px;
+  overflow:hidden;
+  border:1px solid rgba(76,161,48,0.2);
+  background:linear-gradient(to bottom,transparent,rgba(28,58,28,0.98));
+  position:relative;
+}
+.assign-gate-blur {
+  pointer-events:none; user-select:none;
+  padding:0 10px;
+  filter:blur(3px); opacity:0.35;
+}
+.assign-gate-cta {
+  padding:16px 20px 18px;
+  text-align:center;
+}
+.assign-gate-count {
+  font-size:13px; font-weight:700; color:rgba(255,255,255,0.5);
+  margin-bottom:10px; letter-spacing:.02em;
+}
+.assign-gate-btn {
+  display:inline-block; padding:11px 24px;
+  background:linear-gradient(135deg,#4CA130,#2E6020);
+  color:#fff; font-family:'DM Sans',sans-serif;
+  font-size:14px; font-weight:700; border-radius:100px;
+  border:none; cursor:pointer; transition:all .2s;
+  box-shadow:0 4px 14px rgba(76,161,48,0.35);
+}
+.assign-gate-btn:hover { transform:translateY(-1px); box-shadow:0 6px 18px rgba(76,161,48,0.45); }
+[data-theme="light"] .assign-gate { background:linear-gradient(to bottom,transparent,rgba(248,246,239,0.98)); border-color:rgba(76,161,48,0.15); }
 .a-check {
   width:26px; height:26px; border-radius:50%;
   border:2px solid rgba(255,255,255,0.15); background:transparent;
@@ -5677,7 +5710,13 @@ function renderAssignments(list, _skipCal) {
     el.innerHTML = `<div class="empty-state"><div class="es-icon">${icon}</div><h3>${title}</h3><p>${sub}</p></div>`;
     return;
   }
-  el.innerHTML = fl.map((a, i) => {
+  const FREE_ASSIGN_LIMIT = 5;
+  const visibleList = (!isPremium() && fl.length > FREE_ASSIGN_LIMIT)
+    ? fl.slice(0, FREE_ASSIGN_LIMIT) : fl;
+  const lockedList  = (!isPremium() && fl.length > FREE_ASSIGN_LIMIT)
+    ? fl.slice(FREE_ASSIGN_LIMIT) : [];
+
+  function buildRow(a, i) {
     const done = completedIds.has(a.id);
     const w    = a.weight_pct || 0;
     let dueStr = 'No due date', urgStr = '', urgCls = '';
@@ -5704,7 +5743,23 @@ function renderAssignments(list, _skipCal) {
         ${urgStr ? `<span class="a-tag ${urgCls}">${urgStr}</span>` : ''}
       </div>
     </div>`;
-  }).join('');
+  }
+
+  let html = visibleList.map((a, i) => buildRow(a, i)).join('');
+
+  if (lockedList.length) {
+    // Ghost rows — blurred preview of what's locked
+    const ghostHtml = lockedList.slice(0, 3).map((a, i) => buildRow(a, i)).join('');
+    html += `<div class="assign-gate">
+      <div class="assign-gate-blur">${ghostHtml}</div>
+      <div class="assign-gate-cta">
+        <div class="assign-gate-count">+${lockedList.length} more assignment${lockedList.length > 1 ? 's' : ''} hidden</div>
+        <button class="assign-gate-btn" onclick="openPaywall('assign-gate')">Unlock All with Premium →</button>
+      </div>
+    </div>`;
+  }
+
+  el.innerHTML = html;
   renderFocusBanner();
   if (!_skipCal) renderCalendar(allAssignments); // skip calendar rebuild on filter-only changes
 }
@@ -6334,7 +6389,30 @@ let pomoRunning=false, pomoPhase='focus', pomoSecs=FOCUS_DUR, pomoAt=null,
 function phaseDur() { return pomoPhase==='focus' ? FOCUS_DUR : (pomoCycle===0 ? LONG_BREAK : BREAK_DUR); }
 function rem() { return pomoAt ? Math.max(phaseDur() - Math.floor((Date.now()-pomoAt)/1000), 0) : pomoSecs; }
 
+function _todaySessionCount() {
+  const today = new Date().toISOString().slice(0,10);
+  const raw   = JSON.parse(localStorage.getItem('sq_sessions_today') || '{"date":"","count":0}');
+  if (raw.date !== today) return 0;
+  return raw.count;
+}
+function _bumpTodaySessionCount() {
+  const today = new Date().toISOString().slice(0,10);
+  const raw   = JSON.parse(localStorage.getItem('sq_sessions_today') || '{"date":"","count":0}');
+  const count = raw.date === today ? raw.count + 1 : 1;
+  localStorage.setItem('sq_sessions_today', JSON.stringify({date:today, count}));
+}
+
+const FREE_SESSION_LIMIT = 3;
+
 function pomoToggle() {
+  // Gate: free users starting a new focus session past their daily limit
+  if (!pomoRunning && pomoPhase === 'focus' && !isPremium()) {
+    const todayCount = _todaySessionCount();
+    if (todayCount >= FREE_SESSION_LIMIT) {
+      openPaywall('session-limit');
+      return;
+    }
+  }
   if (pomoRunning) { pomoSecs=rem(); pomoAt=null; pomoRunning=false; clearInterval(pomoInt); }
   else { pomoAt=Date.now()-((phaseDur()-pomoSecs)*1000); pomoRunning=true; pomoInt=setInterval(pomoTick,500); }
   renderPomoUI();
@@ -6350,6 +6428,7 @@ function pomoTick() {
       logSession(goal,sessionXP);
       const n=parseInt(localStorage.getItem('sq_pomo_sessions')||'0')+1;
       localStorage.setItem('sq_pomo_sessions',n);
+      _bumpTodaySessionCount();
       pomoPhase='break'; pomoSecs=phaseDur(); pomoAt=Date.now();
       showWeakSpotPrompt();
       showSessionComplete(sessionXP);
@@ -7794,6 +7873,21 @@ function _useStreakFreeze() {
 
 function openPaywall(context) {
   _paywallContext = context || 'generic';
+  // Contextual copy
+  const heading = document.getElementById('pw-heading');
+  const sub     = document.getElementById('pw-sub');
+  if (heading && sub) {
+    if (context === 'session-limit') {
+      heading.innerHTML = "You've hit today's<br>study limit.";
+      sub.textContent   = "Free users get 3 sessions/day. Upgrade for unlimited.";
+    } else if (context === 'assign-gate') {
+      heading.innerHTML = "See every assignment<br>that matters.";
+      sub.textContent   = "Free shows your top 5. Premium unlocks your full priority list.";
+    } else {
+      heading.innerHTML = "Unlock your full<br>grove potential.";
+      sub.textContent   = "Every decoration, every feature. Cancel anytime.";
+    }
+  }
   document.getElementById('paywall-overlay').classList.add('show');
 }
 function closePaywall() {
@@ -8099,8 +8193,8 @@ if ('serviceWorker' in navigator) {
 <div id="paywall-overlay" aria-modal="true" role="dialog">
   <div id="paywall-card">
     <div class="pw-pill">✦ Premium</div>
-    <div class="pw-heading">Unlock your full<br>grove potential.</div>
-    <div class="pw-sub">Every decoration, every feature. Cancel anytime.</div>
+    <div class="pw-heading" id="pw-heading">Unlock your full<br>grove potential.</div>
+    <div class="pw-sub" id="pw-sub">Every decoration, every feature. Cancel anytime.</div>
     <div class="pw-price-row">
       <div class="pw-price">$7.99</div>
       <div class="pw-price-period">/ month</div>
