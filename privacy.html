@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — Sequoia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { height:100%; }
+body {
+  font-family:'DM Sans', sans-serif;
+  background:linear-gradient(160deg,#F4F0E8 0%,#EDE8DC 55%,#E6E0D4 100%);
+  min-height:100vh;
+  color:#1A2E1A;
+}
+body::before {
+  content:'';
+  position:fixed; inset:0; pointer-events:none; z-index:0;
+  background-image:radial-gradient(circle, rgba(30,61,30,0.05) 1px, transparent 1px);
+  background-size:28px 28px;
+}
+.wrap {
+  position:relative; z-index:1;
+  max-width:720px; margin:0 auto;
+  padding:48px 24px 80px;
+}
+.back-link {
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:13px; font-weight:600; color:rgba(30,61,30,0.5);
+  text-decoration:none; margin-bottom:40px;
+  transition:color .18s;
+}
+.back-link:hover { color:#2E6020; }
+.logo {
+  display:flex; align-items:center; gap:10px; margin-bottom:36px;
+}
+.logo-icon {
+  width:36px; height:36px; border-radius:11px;
+  background:linear-gradient(135deg,#2E6020,#4CA130);
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 4px 14px rgba(76,161,48,0.35);
+  flex-shrink:0;
+}
+.logo-word {
+  font-family:'Playfair Display',serif; font-size:22px;
+  font-weight:800; color:#1C3A1C; letter-spacing:-0.3px;
+}
+h1 {
+  font-family:'Playfair Display',serif;
+  font-size:clamp(28px,6vw,40px); font-weight:800;
+  color:#1C3A1C; line-height:1.15; letter-spacing:-0.5px;
+  margin-bottom:10px;
+}
+.meta {
+  font-size:13px; color:rgba(30,61,30,0.45); margin-bottom:48px;
+  padding-bottom:24px; border-bottom:1px solid rgba(30,61,30,0.1);
+}
+h2 {
+  font-family:'DM Sans',sans-serif; font-size:17px; font-weight:700;
+  color:#1C3A1C; margin:36px 0 10px;
+}
+h2:first-of-type { margin-top:0; }
+p {
+  font-size:15px; line-height:1.75; color:rgba(26,46,26,0.78);
+  margin-bottom:14px;
+}
+ul {
+  margin:0 0 14px 0; padding-left:20px;
+}
+li {
+  font-size:15px; line-height:1.75; color:rgba(26,46,26,0.78);
+  margin-bottom:6px;
+}
+.callout {
+  background:rgba(76,161,48,0.07); border:1px solid rgba(76,161,48,0.2);
+  border-radius:12px; padding:16px 18px; margin:20px 0;
+}
+.callout p { margin:0; color:rgba(26,46,26,0.85); }
+a { color:#2E6020; text-decoration:underline; }
+a:hover { color:#4CA130; }
+.footer {
+  margin-top:60px; padding-top:24px;
+  border-top:1px solid rgba(30,61,30,0.1);
+  font-size:13px; color:rgba(30,61,30,0.4);
+  display:flex; flex-wrap:wrap; gap:12px; align-items:center;
+  justify-content:space-between;
+}
+.footer a { color:rgba(30,61,30,0.5); text-decoration:none; }
+.footer a:hover { color:#2E6020; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <a class="back-link" href="index.html">← Back to Sequoia</a>
+
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 30 30" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+        <rect x="13" y="22" width="4" height="7" rx="1" fill="#FFFEF8" opacity="0.8"/>
+        <polygon points="15,4 8,14 22,14" fill="#FFFEF8" opacity="0.7"/>
+        <polygon points="15,9 7,19 23,19" fill="#FFFEF8" opacity="0.85"/>
+        <polygon points="15,14 6,23 24,23" fill="#FFFEF8"/>
+      </svg>
+    </div>
+    <span class="logo-word">Sequoia</span>
+  </div>
+
+  <h1>Privacy Policy</h1>
+  <p class="meta">Effective date: May 16, 2026 &nbsp;·&nbsp; Last updated: May 16, 2026</p>
+
+  <div class="callout">
+    <p><strong>Short version:</strong> Sequoia connects to your Canvas account using a read-only token you provide. We don't sell your data, we don't share it with advertisers, and your Canvas token never leaves your own device.</p>
+  </div>
+
+  <h2>1. Who We Are</h2>
+  <p>Sequoia ("we," "our," or "us") is a study productivity app that helps college students prioritize assignments by grade weight, track study sessions, and grow a virtual tree as they study. Sequoia is operated as an independent service. Questions? Email us at <a href="mailto:calvinashe@myyahoo.com">calvinashe@myyahoo.com</a>.</p>
+
+  <h2>2. Information We Collect</h2>
+
+  <h2>2a. Information You Provide</h2>
+  <ul>
+    <li><strong>Account information:</strong> When you create an account via email or Google Sign-In, we collect your name and email address, which are stored in Firebase Authentication (operated by Google).</li>
+    <li><strong>Canvas credentials:</strong> Your Canvas URL and personal API access token are stored <em>locally on your device</em> (localStorage). If you are signed in, an encrypted copy is also saved to your Firestore profile so you can access Sequoia from multiple devices. Your Canvas token is read-only — it allows Sequoia to read your assignments and grades but cannot submit work or change anything in Canvas.</li>
+    <li><strong>Payment information:</strong> Subscription payments are processed by Stripe. We never see or store your full card number — Stripe handles all payment data under their own privacy policy.</li>
+  </ul>
+
+  <h2>2b. Information Collected Automatically</h2>
+  <ul>
+    <li><strong>Study data:</strong> XP points, streaks, completed assignments, Pomodoro session counts, and tree level are stored in Firestore and locally so your progress syncs across devices.</li>
+    <li><strong>Push notification tokens:</strong> If you grant permission, your browser's push subscription endpoint is stored in Firestore so we can send study reminders. You can revoke this at any time from Settings.</li>
+    <li><strong>Usage analytics:</strong> We use PostHog (self-hosted or cloud) to collect anonymous product analytics such as which features are used and error rates. This data does not include personally identifiable information.</li>
+    <li><strong>Device and browser information:</strong> Standard web server logs may record your IP address, browser type, and page requests. These logs are not linked to your identity and are retained for 30 days.</li>
+  </ul>
+
+  <h2>3. How We Use Your Information</h2>
+  <ul>
+    <li>Authenticate you and sync your study data across devices</li>
+    <li>Fetch your Canvas assignments and course information to display inside Sequoia</li>
+    <li>Send push notifications you have opted in to (due-date reminders, streak alerts)</li>
+    <li>Process subscription payments via Stripe and manage your plan status</li>
+    <li>Improve Sequoia using aggregated, anonymized usage analytics</li>
+    <li>Respond to support requests you send to us</li>
+  </ul>
+
+  <h2>4. Data Sharing</h2>
+  <p>We do <strong>not</strong> sell, rent, or trade your personal information. We share data only with the following third-party services that are necessary to operate Sequoia:</p>
+  <ul>
+    <li><strong>Google Firebase</strong> (Authentication, Firestore database) — <a href="https://firebase.google.com/support/privacy" target="_blank">Firebase Privacy</a></li>
+    <li><strong>Stripe</strong> (payment processing) — <a href="https://stripe.com/privacy" target="_blank">Stripe Privacy</a></li>
+    <li><strong>Canvas LMS</strong> (your institution's Canvas instance) — data is fetched on your behalf using the token you provide; your institution's privacy policy applies to their system</li>
+    <li><strong>PostHog</strong> (product analytics, anonymized) — <a href="https://posthog.com/privacy" target="_blank">PostHog Privacy</a></li>
+    <li><strong>Render</strong> (backend hosting) — API requests pass through Render servers; no personal data is logged or stored by Render beyond standard access logs</li>
+  </ul>
+
+  <h2>5. Your Canvas Token — Special Notice</h2>
+  <div class="callout">
+    <p>Your Canvas personal access token gives read-only access to your Canvas account. Sequoia stores it in your browser's localStorage and, if you are signed in, in your encrypted Firestore document. It is <strong>never</strong> logged, transmitted to analytics services, or shared with anyone. We recommend generating a token specifically for Sequoia and revoking it from Canvas Settings if you ever stop using the app.</p>
+  </div>
+
+  <h2>6. Data Retention and Deletion</h2>
+  <p>Your account data is retained for as long as your account is active. You can request deletion of your account and all associated data at any time by emailing <a href="mailto:calvinashe@myyahoo.com">calvinashe@myyahoo.com</a>. We will process deletion requests within 30 days.</p>
+  <p>If you uninstall the Sequoia PWA or clear your browser storage, all locally stored data (Canvas token, XP, streaks) is immediately erased from your device. Firestore data is retained until you request account deletion.</p>
+
+  <h2>7. Children's Privacy</h2>
+  <p>Sequoia is intended for college students age 13 and older. We do not knowingly collect personal information from children under 13. If you believe a child under 13 has provided us with personal information, please contact us and we will delete it promptly.</p>
+
+  <h2>8. Security</h2>
+  <p>We take reasonable technical measures to protect your data, including TLS encryption in transit, Firebase's built-in Firestore security rules, and token-based authentication. No system is 100% secure; please protect your Sequoia account with a strong password and revoke your Canvas token if you suspect unauthorized access.</p>
+
+  <h2>9. International Users</h2>
+  <p>Sequoia is operated from the United States. If you access Sequoia from outside the US, your data may be transferred to and processed in the US. By using Sequoia, you consent to this transfer.</p>
+
+  <h2>10. Changes to This Policy</h2>
+  <p>We may update this Privacy Policy from time to time. The "Last updated" date at the top of this page will reflect any changes. Continued use of Sequoia after an update constitutes acceptance of the revised policy.</p>
+
+  <h2>11. Contact Us</h2>
+  <p>If you have any questions about this Privacy Policy or how we handle your data, please email us at <a href="mailto:calvinashe@myyahoo.com">calvinashe@myyahoo.com</a>.</p>
+
+  <div class="footer">
+    <span>© 2026 Sequoia. All rights reserved.</span>
+    <span>
+      <a href="privacy.html">Privacy Policy</a> &nbsp;·&nbsp;
+      <a href="terms.html">Terms of Service</a> &nbsp;·&nbsp;
+      <a href="index.html">Back to App</a>
+    </span>
+  </div>
+
+</div>
+</body>
+</html>
