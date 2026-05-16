@@ -5090,6 +5090,7 @@ async function connectCanvas() {
       closeOnboard();
       loadAssignments(token, url);
       loadCourses(token, url);
+      starterGrant('sq_grant_canvas', 100, '🌱 +100 XP — Canvas connected! Your Sequoia is alive.');
       setTimeout(tourShow, 1800); // let assignments render first
     }, 900);
 
@@ -5127,6 +5128,7 @@ function loadDemo() {
   updateDashTree();
   syncTreeScreen();
   closeOnboard();
+  starterGrant('sq_grant_demo', 75, '🌿 +75 XP — Welcome to Sequoia! Let\'s grow.');
   const demoName = document.getElementById('ob-name')?.value.trim() || 'Demo User';
   localStorage.setItem('sq_name', demoName);
   setGreeting(demoName);
@@ -5911,6 +5913,7 @@ function toggleDone(id, el, title, weight) {
   const xp = Math.round(50 * Math.max(1, weight / 10) * early);
   showXPBurst(xp, el);
   addXP(xp); updateStreak(); totalCompleted++;
+  starterGrant('sq_grant_first_done', 25, '✅ +25 XP — First assignment crushed! Keep the momentum.');
   document.getElementById('hstat-done').textContent = totalCompleted;
   showUndoToast(id, title, xp);
   setTimeout(() => { renderAssignments(allAssignments); updateDashTree(); buildQPick(); }, 600);
@@ -6060,6 +6063,19 @@ function addXP(amount) {
   // XP milestones
   const milestones = [100,500,1000,2500,5000,10000];
   milestones.forEach(m => { if (prevXP < m && xp >= m) addNotification('xp_milestone', `${m.toLocaleString()} XP reached! ⭐`, `You're on a roll. Every session adds up.`); });
+}
+
+// ── STARTER XP GRANTS ───────────────────────────────────
+// One-time XP rewards for key onboarding moments.
+// Each fires exactly once, guarded by a localStorage flag.
+function starterGrant(key, amount, message) {
+  if (localStorage.getItem(key)) return;   // already granted
+  localStorage.setItem(key, '1');
+  setTimeout(() => {
+    addXP(amount);
+    showXPBurst(amount);
+    showToast(message, 3500);
+  }, 800);  // slight delay so the UI has settled
 }
 
 function updateStreak() {
@@ -6554,6 +6570,7 @@ function pomoTick() {
       const sessionXP = Math.round(50 * mult);
       pomoCount++; pomoCycle=pomoCount%4; pomoXP+=sessionXP;
       addXP(sessionXP); updateStreak(); updateDashTree();
+      starterGrant('sq_grant_first_session', 50, '⏱ +50 XP — First focus session done! The habit starts here.');
       const goal=document.getElementById('pomo-goal').value.trim()||'Focus session';
       logSession(goal,sessionXP);
       const n=parseInt(localStorage.getItem('sq_pomo_sessions')||'0')+1;
