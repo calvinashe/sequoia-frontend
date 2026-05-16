@@ -6951,20 +6951,33 @@ function getAmbCtx() {
   return ambCtx;
 }
 
-// Infinite brown-noise generator — never loops, zero memory overhead.
-// ScriptProcessorNode fires onaudioprocess continuously, generating fresh samples each call.
+// ── Noise generators ─────────────────────────────────────
+// Brown noise: warm, low-frequency rumble. Good for focus.
 function createBrownNode(ctx) {
   const node = ctx.createScriptProcessor(4096, 0, 2);
-  let lastL = 0, lastR = 0;
+  let bL = 0, bR = 0;
   node.onaudioprocess = e => {
     const L = e.outputBuffer.getChannelData(0);
     const R = e.outputBuffer.getChannelData(1);
     for (let i = 0; i < L.length; i++) {
-      // Brownian integration: smooth, warm, no harshness
-      lastL = (lastL + 0.02 * (Math.random() * 2 - 1)) / 1.02;
-      lastR = (lastR + 0.02 * (Math.random() * 2 - 1)) / 1.02;
-      L[i] = lastL * 3.5;
-      R[i] = lastR * 3.5;
+      bL = (bL + 0.02 * (Math.random() * 2 - 1)) / 1.02;
+      bR = (bR + 0.02 * (Math.random() * 2 - 1)) / 1.02;
+      L[i] = Math.max(-1, Math.min(1, bL * 14));
+      R[i] = Math.max(-1, Math.min(1, bR * 14));
+    }
+  };
+  return node;
+}
+
+// White noise: flat spectrum. Best base for rain + forest filters.
+function createWhiteNode(ctx) {
+  const node = ctx.createScriptProcessor(4096, 0, 2);
+  node.onaudioprocess = e => {
+    const L = e.outputBuffer.getChannelData(0);
+    const R = e.outputBuffer.getChannelData(1);
+    for (let i = 0; i < L.length; i++) {
+      L[i] = Math.random() * 2 - 1;
+      R[i] = Math.random() * 2 - 1;
     }
   };
   return node;
@@ -7031,45 +7044,72 @@ function setAmbience(type) {
   const ctx = getAmbCtx();
   if (ctx.state === 'suspended') ctx.resume();
 
-  // One infinite brown-noise generator feeds all filter chains via Web Audio graph fan-out
-  const src = createBrownNode(ctx);
-
   if (type === 'white') {
-    // Soft focus: gentle low-pass + slight presence peak at 1.2 kHz
-    const lp = ctx.createBiquadFilter();
-    lp.type = 'lowpass'; lp.frequency.value = 6000; lp.Q.value = 0.5;
-    const pk = ctx.createBiquadFilter();
-    pk.type = 'peaking'; pk.frequency.value = 1200; pk.gain.value = 3; pk.Q.value = 1;
-    src.connect(pk); pk.connect(lp); lp.connect(ambMaster);
+    // ☁️ FOCUS: warm brown noise → gentle lowpass
+    // Brown noise is naturally soft and non-distracting — ideal for deep work.
+    const src  = createBrownNode(ctx);
+    const lp   = ctx.createBiquadFilter();
+    lp.type = 'lowpass'; lp.frequency.value = 3500; lp.Q.value = 0.7;
+    const gain = ctx.createGain(); gain.gain.value = 0.85;
+    src.connect(lp); lp.connect(gain); gain.connect(ambMaster);
+    ambSource = src;
 
   } else if (type === 'rain') {
-    // Two filter chains from the same source: low rumble + high sizzle
-    const low = ctx.createBiquadFilter();
-    low.type = 'bandpass'; low.frequency.value = 600; low.Q.value = 0.7;
-    const hi  = ctx.createBiquadFilter();
-    hi.type  = 'bandpass'; hi.frequency.value = 4000; hi.Q.value = 1.2;
-    const gLow = ctx.createGain(); gLow.gain.value = 0.6;
-    const gHi  = ctx.createGain(); gHi.gain.value  = 0.55;
-    // Fan out from single source — no second buffer needed
-    src.connect(low); low.connect(gLow); gLow.connect(ambMaster);
-    src.connect(hi);  hi.connect(gHi);   gHi.connect(ambMaster);
+    // 🌧️ RAIN: white noise → high-shelf hiss + low-shelf rumble + volume LFO (drops)
+    const src  = createWhiteNode(ctx);
 
-  } else if (type === 'forest') {
-    // Band-pass into low-pass, with a slow LFO sweep on the band-pass frequency
-    const bp = ctx.createBiquadFilter();
-    bp.type = 'bandpass'; bp.frequency.value = 800; bp.Q.value = 0.6;
-    const lp = ctx.createBiquadFilter();
-    lp.type = 'lowpass'; lp.frequency.value = 2200;
+    // High sizzle — rain on a surface
+    const hiShelf = ctx.createBiquadFilter();
+    hiShelf.type = 'highshelf'; hiShelf.frequency.value = 5000; hiShelf.gain.value = 6;
+    const hiGain  = ctx.createGain(); hiGain.gain.value = 0.35;
+
+    // Low rumble — distant thunder / pavement
+    const lp       = ctx.createBiquadFilter();
+    lp.type = 'lowpass'; lp.frequency.value = 350; lp.Q.value = 0.5;
+    const lowGain  = ctx.createGain(); lowGain.gain.value = 0.55;
+
+    // Slow amplitude LFO — mimics gusts and lulls in rain intensity
     const lfo  = ctx.createOscillator();
     const lfoG = ctx.createGain();
-    lfo.type = 'sine'; lfo.frequency.value = 0.08; // gust every ~12 s
-    lfoG.gain.value = 180;                          // ±180 Hz sweep
+    lfo.type = 'sine'; lfo.frequency.value = 0.12;  // ~8 s cycle
+    lfoG.gain.value = 0.15;
+    const lfoBase = ctx.createGain(); lfoBase.gain.value = 0.85;
+    lfo.connect(lfoG); lfoG.connect(lfoBase.gain);
+    lfo.start(); ambLfo = lfo;
+
+    src.connect(hiShelf); hiShelf.connect(hiGain); hiGain.connect(lfoBase); lfoBase.connect(ambMaster);
+    src.connect(lp);      lp.connect(lowGain);     lowGain.connect(ambMaster);
+    ambSource = src;
+
+  } else if (type === 'forest') {
+    // 🌲 FOREST: white noise → mid bandpass with fast-enough LFO for audible wind gusts
+    const src = createWhiteNode(ctx);
+
+    // Mid-range wind body
+    const bp  = ctx.createBiquadFilter();
+    bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = 0.5;
+    const lp  = ctx.createBiquadFilter();
+    lp.type = 'lowpass'; lp.frequency.value = 3000;
+    const masterGain = ctx.createGain(); masterGain.gain.value = 0.75;
+
+    // LFO for wind gusts — fast enough to hear within first few seconds
+    const lfo  = ctx.createOscillator();
+    const lfoG = ctx.createGain();
+    lfo.type = 'sine'; lfo.frequency.value = 0.25;  // ~4 s gust cycle (was 12 s)
+    lfoG.gain.value = 350;                           // sweeps bp ±350 Hz
     lfo.connect(lfoG); lfoG.connect(bp.frequency);
     lfo.start(); ambLfo = lfo;
-    src.connect(bp); bp.connect(lp); lp.connect(ambMaster);
+
+    // Second layer: subtle high rustling (leaves)
+    const rustleHP  = ctx.createBiquadFilter();
+    rustleHP.type = 'highpass'; rustleHP.frequency.value = 4000;
+    const rustleGain = ctx.createGain(); rustleGain.gain.value = 0.18;
+
+    src.connect(bp); bp.connect(lp); lp.connect(masterGain); masterGain.connect(ambMaster);
+    src.connect(rustleHP); rustleHP.connect(rustleGain); rustleGain.connect(ambMaster);
+    ambSource = src;
   }
 
-  ambSource = src;
   // Web Audio started synchronously — mark playing immediately
   _setAmbPlaying(type);
 }
