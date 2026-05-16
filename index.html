@@ -1204,6 +1204,13 @@ body {
   border-color:var(--g3); background:rgba(76,161,48,0.18); color:#FFFEF8;
   box-shadow:0 0 16px rgba(76,161,48,0.22), inset 0 1px 0 rgba(255,255,255,0.1);
 }
+@keyframes ambPulse {
+  0%,100% { box-shadow:0 0 10px rgba(76,161,48,0.25), inset 0 1px 0 rgba(255,255,255,0.1); }
+  50%      { box-shadow:0 0 22px rgba(76,161,48,0.55), inset 0 1px 0 rgba(255,255,255,0.1); }
+}
+.amb-btn.amb-playing {
+  animation: ambPulse 2s ease-in-out infinite;
+}
 .amb-vol-row { display:flex; align-items:center; justify-content:center; gap:10px; margin-top:14px; }
 .amb-vol-row label { font-size:11px; font-weight:600; color:rgba(255,255,255,0.3); }
 .amb-vol { width:110px; accent-color:var(--g3); cursor:pointer; }
@@ -5280,6 +5287,8 @@ function showScreen(i) {
   if (i === 3) { syncTreeScreen(); _sc2ForestEnter(); }
   else         { _sc2ForestLeave(); }
   if (i === 4) syncWrapUp();
+  // Auto-stop ambient sound when leaving Study screen
+  if (i !== 2 && ambActive !== 'none') stopAmbience();
 }
 
 // ── MY TREE FOREST ENVIRONMENT ───────────────────────────
@@ -6971,23 +6980,50 @@ function stopAmbNodes() {
   if (ambLfo) { try { ambLfo.stop?.(); ambLfo.disconnect?.(); } catch(e){} ambLfo = null; }
 }
 
+function stopAmbience() {
+  stopAmbNodes();
+  const lofiEl = document.getElementById('lofi-audio');
+  if (lofiEl && !lofiEl.paused) { lofiEl.pause(); lofiEl.currentTime = 0; }
+  document.querySelectorAll('.amb-btn').forEach(b => b.classList.remove('active', 'amb-playing'));
+  ambActive = 'none';
+  // Mark Off button as active
+  document.getElementById('amb-none')?.classList.add('active');
+}
+
+function _setAmbPlaying(type) {
+  document.querySelectorAll('.amb-btn').forEach(b => b.classList.remove('active', 'amb-playing'));
+  const btn = document.getElementById('amb-' + type);
+  if (btn) { btn.classList.add('active', 'amb-playing'); }
+}
+
 function setAmbience(type) {
+  // Toggle off if already active
+  if (ambActive === type) { stopAmbience(); return; }
+
   stopAmbNodes();
   // Stop lo-fi if switching away
   const lofiEl = document.getElementById('lofi-audio');
   if (lofiEl && !lofiEl.paused) { lofiEl.pause(); lofiEl.currentTime = 0; }
 
-  document.querySelectorAll('.amb-btn').forEach(b => b.classList.remove('active'));
+  if (type === 'none') { stopAmbience(); return; }
+  document.querySelectorAll('.amb-btn').forEach(b => b.classList.remove('active', 'amb-playing'));
   ambActive = type;
   document.getElementById('amb-' + type)?.classList.add('active');
-  if (type === 'none') return;
 
   // Lo-fi: HTML audio element, not Web Audio
   if (type === 'lofi') {
     const el = ensureLofiEl();
-    el.play().catch(() => {
+    el.play().then(() => {
+      _setAmbPlaying('lofi');
+    }).catch(() => {
+      // Autoplay blocked — show a retry hint on the button
       const btn = document.getElementById('amb-lofi');
-      if (btn) btn.title = 'Click again to start';
+      if (btn) { btn.title = 'Tap again to start'; }
+      // Try again on next user interaction
+      document.addEventListener('click', function retryLofi() {
+        ensureLofiEl().play().then(() => _setAmbPlaying('lofi')).catch(() => {});
+        document.removeEventListener('click', retryLofi);
+      }, { once: true });
     });
     return;
   }
@@ -7034,6 +7070,8 @@ function setAmbience(type) {
   }
 
   ambSource = src;
+  // Web Audio started synchronously — mark playing immediately
+  _setAmbPlaying(type);
 }
 
 function setAmbienceVol(val) {
@@ -7049,23 +7087,33 @@ function setAmbienceVol(val) {
 }
 
 // ── LO-FI (hidden <audio> element) ──────────────────────
-// Uses a free, royalty-free lo-fi stream. Falls back gracefully if unavailable.
+// Fallback chain of free lo-fi / chillhop radio streams.
+// Browser tries each <source> in order; first one that loads wins.
 let _lofiReady = false;
 function ensureLofiEl() {
   let el = document.getElementById('lofi-audio');
   if (el) return el;
   el = document.createElement('audio');
-  el.id   = 'lofi-audio';
-  el.loop = true;
-  // Free lo-fi stream from lofigirl.com public radio (HLS/MP3)
-  // Fallback chain: try multiple sources
+  el.id          = 'lofi-audio';
+  el.loop        = false;  // streams don't loop; they're continuous
+  el.crossOrigin = 'anonymous';
+  // Ordered by reliability — browser stops at first loadable source
   const sources = [
-    'https://streams.ilovemusic.de/iloveradio17.mp3',  // free lo-fi/chillhop station
+    { src: 'https://streams.ilovemusic.de/iloveradio17.mp3', type: 'audio/mpeg' }, // chillhop
+    { src: 'https://stream.zeno.fm/0r0xa792kwzuv',           type: 'audio/mpeg' }, // lofi hip-hop
+    { src: 'https://stream.zeno.fm/f3wvbbqmdg8uv',           type: 'audio/mpeg' }, // chill beats
   ];
-  sources.forEach(src => {
+  sources.forEach(({ src, type }) => {
     const s = document.createElement('source');
-    s.src = src; s.type = 'audio/mpeg';
+    s.src = src; s.type = type;
     el.appendChild(s);
+  });
+  // If all streams fail, show a toast
+  el.addEventListener('error', () => {
+    if (ambActive === 'lofi') {
+      showToast('🎵 Stream unavailable — try again later');
+      stopAmbience();
+    }
   });
   el.volume = (parseInt(document.getElementById('amb-vol')?.value || 40)) / 100;
   el.style.display = 'none';
