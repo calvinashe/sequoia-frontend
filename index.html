@@ -1909,6 +1909,98 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 ══════════════════════════════════════════════════════════ */
 .wu-wrap { max-width:900px; margin:0 auto; padding:12px 20px 48px; }
 
+/* ══════════════════════════════════════════════════════════
+   SCREEN 5 — FRIENDS & LEADERBOARD
+══════════════════════════════════════════════════════════ */
+.fr-wrap { max-width:520px; margin:0 auto; padding:16px 16px 90px; }
+.fr-hero {
+  background:linear-gradient(155deg,#0B1C0E 0%,#091608 60%,#070F05 100%);
+  border-radius:20px; padding:20px; margin-bottom:14px;
+  box-shadow:0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(76,161,48,0.12);
+  display:flex; align-items:center; gap:16px;
+}
+.fr-hero-tree { font-size:48px; line-height:1; flex-shrink:0; }
+.fr-hero-info { flex:1; }
+.fr-hero-name { font-size:17px; font-weight:800; color:#FFFEF8; font-family:'Playfair Display',serif; }
+.fr-hero-xp   { font-size:13px; color:var(--g4); font-weight:700; margin-top:2px; }
+.fr-hero-rank { font-size:11px; color:rgba(255,255,255,0.35); margin-top:3px; }
+.fr-code-pill {
+  display:flex; align-items:center; gap:6px;
+  background:rgba(76,161,48,0.12); border:1px solid rgba(76,161,48,0.25);
+  border-radius:10px; padding:7px 12px; cursor:pointer; transition:background .18s;
+  margin-top:10px; width:fit-content;
+}
+.fr-code-pill:hover { background:rgba(76,161,48,0.2); }
+.fr-code-label { font-size:10px; color:rgba(255,255,255,0.35); font-weight:700; text-transform:uppercase; letter-spacing:.4px; }
+.fr-code-val   { font-size:13px; font-weight:800; color:var(--g3); letter-spacing:1.5px; font-family:'DM Mono',monospace; }
+.fr-code-copy  { font-size:12px; color:rgba(255,255,255,0.3); }
+
+/* Podium */
+.fr-podium { display:flex; align-items:flex-end; justify-content:center; gap:8px; margin-bottom:16px; }
+.fr-pod {
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  background:linear-gradient(165deg,#0D1F10 0%,#081008 100%);
+  border:1px solid rgba(76,161,48,0.1); border-radius:16px;
+  padding:14px 10px 12px; flex:1; max-width:120px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.4);
+}
+.fr-pod.rank-1 { border-color:rgba(255,215,0,0.3); background:linear-gradient(165deg,#161208 0%,#0A0D06 100%); padding-top:20px; }
+.fr-pod.rank-2 { border-color:rgba(192,192,192,0.2); }
+.fr-pod.rank-3 { border-color:rgba(205,127,50,0.2); }
+.fr-pod-medal { font-size:18px; line-height:1; }
+.fr-pod-tree  { font-size:30px; line-height:1; margin:2px 0; }
+.fr-pod-name  { font-size:11px; font-weight:700; color:rgba(255,255,255,0.7); text-align:center; max-width:90px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.fr-pod-xp    { font-size:10px; color:rgba(255,255,255,0.35); font-weight:600; }
+
+/* Leaderboard list */
+.fr-section-title { font-size:11px; font-weight:700; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:.5px; margin:16px 0 8px; }
+.fr-card {
+  background:linear-gradient(165deg,#0B1C0E 0%,#070F05 100%);
+  border:1px solid rgba(76,161,48,0.08); border-radius:16px; overflow:hidden;
+  box-shadow:0 8px 24px rgba(0,0,0,0.4);
+}
+.fr-row {
+  display:flex; align-items:center; gap:12px; padding:13px 16px;
+  border-bottom:1px solid rgba(255,255,255,0.05); transition:background .15s;
+}
+.fr-row:last-child { border-bottom:none; }
+.fr-row.me { background:rgba(76,161,48,0.07); }
+.fr-rank-num { font-size:13px; font-weight:800; color:rgba(255,255,255,0.25); width:18px; text-align:center; flex-shrink:0; }
+.fr-row-tree { font-size:22px; flex-shrink:0; }
+.fr-row-info { flex:1; min-width:0; }
+.fr-row-name { font-size:13px; font-weight:700; color:rgba(255,255,255,0.82); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.fr-row-sub  { font-size:11px; color:rgba(255,255,255,0.3); margin-top:1px; }
+.fr-row-xp   { font-size:13px; font-weight:800; color:var(--g4); flex-shrink:0; }
+.fr-row-streak { font-size:11px; color:rgba(255,255,255,0.3); flex-shrink:0; }
+.fr-me-chip { font-size:9px; font-weight:700; background:rgba(76,161,48,0.2); color:var(--g3); border-radius:4px; padding:2px 5px; margin-left:5px; }
+
+/* Add friend */
+.fr-add-card {
+  background:linear-gradient(165deg,#0B1C0E 0%,#070F05 100%);
+  border:1px solid rgba(76,161,48,0.1); border-radius:16px;
+  padding:18px 16px; box-shadow:0 8px 24px rgba(0,0,0,0.35);
+}
+.fr-add-title { font-size:14px; font-weight:800; color:rgba(255,255,255,0.75); margin-bottom:4px; }
+.fr-add-sub   { font-size:12px; color:rgba(255,255,255,0.35); margin-bottom:12px; line-height:1.4; }
+.fr-add-row   { display:flex; gap:8px; }
+.fr-add-input {
+  flex:1; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12);
+  border-radius:10px; padding:10px 14px; color:#fff; font-size:13px; font-weight:600;
+  font-family:'DM Mono',monospace; letter-spacing:1.5px; text-transform:uppercase;
+  font-family:'DM Sans',sans-serif;
+}
+.fr-add-input::placeholder { color:rgba(255,255,255,0.2); font-family:'DM Sans',sans-serif; letter-spacing:0; }
+.fr-add-input:focus { outline:none; border-color:rgba(76,161,48,0.5); background:rgba(76,161,48,0.08); }
+.fr-add-btn {
+  background:var(--g3); color:#fff; border:none; border-radius:10px;
+  padding:10px 16px; font-size:13px; font-weight:700; cursor:pointer;
+  font-family:'DM Sans',sans-serif; transition:opacity .18s; flex-shrink:0;
+}
+.fr-add-btn:hover { opacity:.85; }
+.fr-add-btn:disabled { opacity:.4; cursor:default; }
+.fr-empty { text-align:center; padding:32px 16px; color:rgba(255,255,255,0.3); font-size:13px; line-height:1.6; }
+.fr-loading { text-align:center; padding:24px; color:rgba(255,255,255,0.3); font-size:13px; }
+
 /* Forest scene */
 .wu-scene {
   position:relative; width:100%; height:400px; border-radius:24px; overflow:hidden;
@@ -3665,10 +3757,11 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
     <span class="nav-wordmark">Sequoia</span>
   </div>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showScreen(0)">Dashboard</button>
-    <button class="nav-tab" onclick="showScreen(1)">Calendar</button>
-    <button class="nav-tab" onclick="showScreen(2)">Study</button>
-    <button class="nav-tab" onclick="showScreen(3)">My Tree</button>
+    <button class="nav-tab active" data-screen="0" onclick="showScreen(0)">Dashboard</button>
+    <button class="nav-tab" data-screen="1" onclick="showScreen(1)">Calendar</button>
+    <button class="nav-tab" data-screen="2" onclick="showScreen(2)">Study</button>
+    <button class="nav-tab" data-screen="3" onclick="showScreen(3)">My Tree</button>
+    <button class="nav-tab" data-screen="5" onclick="showScreen(5)">Friends</button>
   </div>
   <div class="nav-right">
     <span class="nav-xp" id="nav-xp">0 XP</span>
@@ -4730,6 +4823,52 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
 </div>
 
 <!-- ════════════════════════════════════════════════════════
+     SCREEN 5 — FRIENDS & LEADERBOARD
+════════════════════════════════════════════════════════ -->
+<div class="screen" id="sc-friends">
+  <div class="fr-wrap">
+
+    <!-- My hero card -->
+    <div class="fr-hero" id="fr-hero">
+      <div class="fr-hero-tree" id="fr-hero-tree">🌱</div>
+      <div class="fr-hero-info">
+        <div class="fr-hero-name" id="fr-hero-name">Loading…</div>
+        <div class="fr-hero-xp"  id="fr-hero-xp">— XP</div>
+        <div class="fr-hero-rank" id="fr-hero-rank">Rank — among friends</div>
+        <div class="fr-code-pill" onclick="copyFriendCode()" title="Copy your friend code">
+          <span class="fr-code-label">Your code</span>
+          <span class="fr-code-val" id="fr-my-code">——</span>
+          <span class="fr-code-copy">⎘</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Podium (top 3) -->
+    <div class="fr-podium" id="fr-podium" style="display:none"></div>
+
+    <!-- Full leaderboard -->
+    <div class="fr-section-title" id="fr-lb-title" style="display:none">Friends · This Semester</div>
+    <div class="fr-card" id="fr-list">
+      <div class="fr-loading">Loading friends…</div>
+    </div>
+
+    <!-- Add a friend -->
+    <div class="fr-section-title">Add a Friend</div>
+    <div class="fr-add-card">
+      <div class="fr-add-title">Enter their friend code</div>
+      <div class="fr-add-sub">Share your code above and ask your friend to enter it here — you'll both appear on each other's leaderboard.</div>
+      <div class="fr-add-row">
+        <input class="fr-add-input" id="fr-add-input" type="text" maxlength="6" placeholder="ABC123"
+          oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')">
+        <button class="fr-add-btn" id="fr-add-btn" onclick="addFriend()">Add</button>
+      </div>
+      <div id="fr-add-msg" style="font-size:11px;margin-top:8px;color:rgba(255,255,255,0.4);min-height:16px"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
      JAVASCRIPT
 ════════════════════════════════════════════════════════ -->
 <script>
@@ -5389,6 +5528,8 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     // Keep timezone offset fresh on every login (user may travel or change device)
     saveUserData({ tz_offset: -new Date().getTimezoneOffset() });
+    // Sync public leaderboard profile (fire-and-forget)
+    setTimeout(() => _upsertPublicProfile(), 2000);
     initPushBtn(); // badge count is now fetched inside loadUserData (parallel query)
   });
 
@@ -5441,17 +5582,19 @@ function showScreen(i) {
       }
     }
   });
-  _navTabBtns.forEach((b, j) => b.classList.toggle('active', j === i));
-  _navBtabs.forEach((b, j)   => b.classList.toggle('active', j === i));
+  // Use data-screen attribute for nav matching (decoupled from DOM position)
+  _navTabBtns.forEach(b => b.classList.toggle('active', parseInt(b.dataset.screen) === i));
+  _navBtabs.forEach(b   => b.classList.toggle('active', parseInt(b.dataset.screen) === i));
   window.scrollTo(0, 0);
   if (i === 1 && allAssignments.length) renderCalendar(allAssignments);
   if (i === 3) { syncTreeScreen(); _sc2ForestEnter(); }
   else         { _sc2ForestLeave(); }
   if (i === 4) syncWrapUp();
+  if (i === 5) loadFriendsScreen();
   // Auto-stop ambient sound when leaving Study screen
   if (i !== 2 && ambActive !== 'none') stopAmbience();
   // Track screen view
-  const screenNames = ['dashboard','calendar','study','my_tree','wrap_up'];
+  const screenNames = ['dashboard','calendar','study','my_tree','wrap_up','friends'];
   track('screen_viewed', { screen: screenNames[i] || String(i) });
 }
 
@@ -6455,6 +6598,9 @@ function addXP(amount) {
   // XP milestones
   const milestones = [100,500,1000,2500,5000,10000];
   milestones.forEach(m => { if (prevXP < m && xp >= m) addNotification('xp_milestone', `${m.toLocaleString()} XP reached! ⭐`, `You're on a roll. Every session adds up.`); });
+  // Debounced public profile sync (so leaderboard stays fresh after study sessions)
+  clearTimeout(addXP._syncTimer);
+  addXP._syncTimer = setTimeout(() => _upsertPublicProfile(), 5000);
 }
 
 // ── STARTER XP GRANTS ───────────────────────────────────
@@ -8756,6 +8902,182 @@ function _useStreakRepair() {
   track('streak_repair_used', { restored_to: oldStreak });
 }
 
+// ── FRIENDS & LEADERBOARD ────────────────────────────────
+const STAGE_EMOJI = ['🌱','🌿','🌳','🌲'];
+
+function _friendCode(uid) {
+  // Deterministic 6-char code from UID (uppercase alphanumeric)
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars[uid.charCodeAt(i % uid.length) % chars.length];
+  }
+  return code;
+}
+
+function _stageEmoji(xp) {
+  if (xp >= 9000) return STAGE_EMOJI[3];
+  if (xp >= 3000) return STAGE_EMOJI[2];
+  if (xp >= 1200) return STAGE_EMOJI[1];
+  return STAGE_EMOJI[0];
+}
+
+async function _upsertPublicProfile() {
+  if (!currentUser) return;
+  const uid  = currentUser.uid;
+  const code = _friendCode(uid);
+  const xp   = getXP(), streak = getStreak();
+  const name = localStorage.getItem('sq_name') || 'Sequoia Student';
+  const lvl  = levelFor(xp);
+  try {
+    await db.collection('public_profiles').doc(uid).set({
+      name, xp, streak, level: lvl, friendCode: code,
+      stage: _stageEmoji(xp), updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    // Store code on user doc too for lookup
+    await db.collection('users').doc(uid).set({ friendCode: code }, { merge: true });
+  } catch(e) { /* non-critical */ }
+}
+
+let _frLoaded = false;
+async function loadFriendsScreen() {
+  if (!currentUser) return;
+  const uid  = currentUser.uid;
+  const code = _friendCode(uid);
+
+  // Update my hero card
+  const xp     = getXP(), streak = getStreak();
+  const name   = localStorage.getItem('sq_name') || 'Sequoia Student';
+  const lvl    = levelFor(xp);
+  document.getElementById('fr-hero-name').textContent = name;
+  document.getElementById('fr-hero-xp').textContent   = xp.toLocaleString() + ' XP · Lv ' + lvl;
+  document.getElementById('fr-my-code').textContent   = code;
+  document.getElementById('fr-hero-tree').textContent = _stageEmoji(xp);
+
+  // Push my public profile (keeps it fresh)
+  _upsertPublicProfile();
+
+  // Load friend list from Firestore
+  const listEl   = document.getElementById('fr-list');
+  const podEl    = document.getElementById('fr-podium');
+  const titleEl  = document.getElementById('fr-lb-title');
+  listEl.innerHTML = '<div class="fr-loading">Loading leaderboard…</div>';
+
+  let friends = [];
+  try {
+    const userDoc = await db.collection('users').doc(uid).get({ source: 'server' });
+    friends = (userDoc.exists ? userDoc.data().friends : null) || [];
+  } catch(e) { friends = []; }
+
+  // Build leaderboard: me + friends
+  const uids = [uid, ...friends.filter(f => f !== uid)];
+  const profiles = [];
+  await Promise.all(uids.map(async id => {
+    try {
+      const d = await db.collection('public_profiles').doc(id).get();
+      if (d.exists) profiles.push({ uid: id, ...d.data() });
+    } catch(e) {}
+  }));
+
+  // Sort by XP descending
+  profiles.sort((a, b) => (b.xp || 0) - (a.xp || 0));
+  const myRank = profiles.findIndex(p => p.uid === uid) + 1;
+  document.getElementById('fr-hero-rank').textContent =
+    profiles.length > 1 ? `#${myRank} of ${profiles.length} on leaderboard` : 'Add friends to see your rank';
+
+  if (profiles.length <= 1) {
+    listEl.innerHTML = `<div class="fr-empty">No friends yet 🌱<br>Share your code <strong>${code}</strong> to get started!</div>`;
+    podEl.style.display = 'none';
+    if (titleEl) titleEl.style.display = 'none';
+    return;
+  }
+
+  if (titleEl) titleEl.style.display = 'block';
+
+  // Podium (top 3)
+  const medals = ['🥇','🥈','🥉'];
+  const rankCls = ['rank-1','rank-2','rank-3'];
+  const top3 = profiles.slice(0, 3);
+  const podOrder = top3.length >= 3 ? [top3[1], top3[0], top3[2]] : top3.length === 2 ? [top3[0], top3[1]] : [top3[0]];
+  const podRanks  = top3.length >= 3 ? [1, 0, 2] : [0, 1];
+  podEl.style.display = 'flex';
+  podEl.innerHTML = podOrder.map((p, pi) => {
+    const origRank = profiles.indexOf(p);
+    const isMe = p.uid === uid;
+    return `<div class="fr-pod ${rankCls[origRank] || ''}">
+      <span class="fr-pod-medal">${medals[origRank] || ''}</span>
+      <span class="fr-pod-tree">${p.stage || '🌱'}</span>
+      <span class="fr-pod-name">${esc(p.name || 'Friend')}${isMe ? ' ✦' : ''}</span>
+      <span class="fr-pod-xp">${(p.xp || 0).toLocaleString()} XP</span>
+    </div>`;
+  }).join('');
+
+  // Full list
+  listEl.innerHTML = profiles.map((p, idx) => {
+    const isMe = p.uid === uid;
+    return `<div class="fr-row${isMe ? ' me' : ''}">
+      <span class="fr-rank-num">${idx + 1}</span>
+      <span class="fr-row-tree">${p.stage || '🌱'}</span>
+      <div class="fr-row-info">
+        <div class="fr-row-name">${esc(p.name || 'Friend')}${isMe ? '<span class="fr-me-chip">YOU</span>' : ''}</div>
+        <div class="fr-row-sub">Lv ${p.level || 1} · 🔥 ${p.streak || 0}-day streak</div>
+      </div>
+      <div class="fr-row-xp">${(p.xp || 0).toLocaleString()}</div>
+    </div>`;
+  }).join('');
+
+  _frLoaded = true;
+}
+
+async function addFriend() {
+  if (!currentUser) return;
+  const input = document.getElementById('fr-add-input');
+  const msg   = document.getElementById('fr-add-msg');
+  const btn   = document.getElementById('fr-add-btn');
+  const code  = (input.value || '').trim().toUpperCase();
+  if (code.length !== 6) { msg.textContent = 'Enter a 6-character code.'; msg.style.color = '#FF9878'; return; }
+
+  const myCode = _friendCode(currentUser.uid);
+  if (code === myCode) { msg.textContent = "That's your own code!"; msg.style.color = '#FF9878'; return; }
+
+  btn.disabled = true;
+  msg.textContent = 'Searching…'; msg.style.color = 'rgba(255,255,255,0.4)';
+
+  try {
+    // Find user with this friend code
+    const snap = await db.collection('public_profiles').where('friendCode', '==', code).limit(1).get();
+    if (snap.empty) {
+      msg.textContent = 'Code not found. Double-check and try again.'; msg.style.color = '#FF9878';
+      btn.disabled = false; return;
+    }
+    const friendUid = snap.docs[0].id;
+    const friendName = snap.docs[0].data().name || 'your friend';
+
+    // Add to my friends array (and them to mine - best effort)
+    const uid = currentUser.uid;
+    await db.collection('users').doc(uid).set(
+      { friends: firebase.firestore.FieldValue.arrayUnion(friendUid) }, { merge: true }
+    );
+    db.collection('users').doc(friendUid).set(
+      { friends: firebase.firestore.FieldValue.arrayUnion(uid) }, { merge: true }
+    ).catch(() => {});
+
+    msg.textContent = `Added ${friendName}! 🌲`; msg.style.color = '#7ED458';
+    input.value = '';
+    track('friend_added');
+    setTimeout(() => loadFriendsScreen(), 800);
+  } catch(e) {
+    msg.textContent = 'Something went wrong. Try again.'; msg.style.color = '#FF9878';
+  }
+  btn.disabled = false;
+}
+
+function copyFriendCode() {
+  if (!currentUser) return;
+  const code = _friendCode(currentUser.uid);
+  navigator.clipboard.writeText(code).then(() => showToast('Friend code copied! 🌲', 2500));
+}
+
 function openPaywall(context) {
   _paywallContext = context || 'generic';
   track('paywall_opened', { context: _paywallContext });
@@ -8912,10 +9234,11 @@ if ('serviceWorker' in navigator) {
 
 <!-- ── BOTTOM NAV (mobile) ── -->
 <div class="bottom-nav" id="bottom-nav">
-  <button class="btab active" id="btab-0" onclick="showScreen(0)"><span class="btab-icon">🏠</span><span class="btab-label">Home</span></button>
-  <button class="btab" id="btab-1" onclick="showScreen(1)"><span class="btab-icon">📅</span><span class="btab-label">Calendar</span></button>
-  <button class="btab" id="btab-2" onclick="showScreen(2)"><span class="btab-icon">⏱</span><span class="btab-label">Study</span></button>
-  <button class="btab" id="btab-3" onclick="showScreen(3)"><span class="btab-icon">🌲</span><span class="btab-label">My Tree</span></button>
+  <button class="btab active" id="btab-0" data-screen="0" onclick="showScreen(0)"><span class="btab-icon">🏠</span><span class="btab-label">Home</span></button>
+  <button class="btab" id="btab-1" data-screen="1" onclick="showScreen(1)"><span class="btab-icon">📅</span><span class="btab-label">Calendar</span></button>
+  <button class="btab" id="btab-2" data-screen="2" onclick="showScreen(2)"><span class="btab-icon">⏱</span><span class="btab-label">Study</span></button>
+  <button class="btab" id="btab-3" data-screen="3" onclick="showScreen(3)"><span class="btab-icon">🌲</span><span class="btab-label">My Tree</span></button>
+  <button class="btab" id="btab-5" data-screen="5" onclick="showScreen(5)"><span class="btab-icon">👥</span><span class="btab-label">Friends</span></button>
 </div>
 
 <!-- ── SETTINGS OVERLAY ── -->
