@@ -4467,8 +4467,8 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
       </div>
     </div>
 
-    <!-- STREAK FREEZE -->
-    <div class="streak-freeze-wrap" style="padding:0 16px 16px;">
+    <!-- STREAK FREEZE + REPAIR -->
+    <div class="streak-freeze-wrap" style="padding:0 16px 16px;display:flex;flex-direction:column;gap:8px;">
       <button id="streak-freeze-btn"
         onclick="isPremium() ? _useStreakFreeze() : openPaywall('streak-freeze')"
         style="width:100%;padding:13px 18px;border-radius:16px;
@@ -4479,6 +4479,18 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         display:flex;align-items:center;justify-content:center;gap:8px;
         transition:all .2s;">
         🧊 Streak Freeze <span style="font-size:10px;opacity:.6;margin-left:4px">— Premium</span>
+      </button>
+      <button id="streak-repair-btn"
+        onclick="isPremium() ? _useStreakRepair() : openPaywall('streak-repair')"
+        style="display:none;width:100%;padding:13px 18px;border-radius:16px;
+        border:1px solid rgba(255,180,80,0.28);
+        background:linear-gradient(135deg,rgba(220,140,40,0.13),rgba(255,180,80,0.07));
+        color:rgba(255,200,100,0.9);font-family:'DM Sans',sans-serif;
+        font-size:14px;font-weight:600;cursor:pointer;
+        flex-direction:column;align-items:center;justify-content:center;gap:2px;
+        transition:all .2s;">
+        <span>🔧 Repair Broken Streak</span>
+        <span id="streak-repair-sub" style="font-size:11px;opacity:.6;font-weight:500"></span>
       </button>
     </div>
 
@@ -6143,6 +6155,7 @@ function loadXPStreak() {
   document.getElementById('nav-streak').textContent   = '🔥 ' + streak;
   document.getElementById('hstat-streak').textContent = streak;
   document.getElementById('hstat-done').textContent   = totalCompleted;
+  _syncStreakRepairBtn();
 }
 
 function getStageIndex(xp) {
@@ -6298,13 +6311,21 @@ function updateStreak() {
   let streak  = getStreak();
   if (last === today) { /* no change */ }
   else if (last === prevDay()) streak++;
-  else streak = 1;
+  else {
+    // Streak is breaking — save it before resetting so user can repair
+    if (streak > 2) {
+      localStorage.setItem('sq_streak_before_break', String(streak));
+      localStorage.setItem('sq_streak_break_date', today);
+    }
+    streak = 1;
+  }
   localStorage.setItem('sq_streak', streak);
   localStorage.setItem('sq_last_study', today);
   saveUserData({ streak, last_study: today });
   document.getElementById('nav-streak').textContent     = '🔥 ' + streak;
   document.getElementById('hstat-streak').textContent   = streak;
-  checkStreakRisk(); // immediately hide at-risk chip now that user has studied
+  checkStreakRisk();
+  _syncStreakRepairBtn();
 }
 
 function prevDay() {
@@ -8518,12 +8539,56 @@ function _useStreakFreeze() {
     return;
   }
   localStorage.setItem('sq_freeze_date', today);
-  // Mark today as studied so streak doesn't break
   const history = JSON.parse(localStorage.getItem('sq_study_history') || '{}');
   history[today] = (history[today] || 0) + 1;
   localStorage.setItem('sq_study_history', JSON.stringify(history));
   _syncPremiumUI();
   showToast('🧊 Streak frozen! Your streak is safe today.');
+}
+
+// ── STREAK REPAIR ────────────────────────────────────────
+function _syncStreakRepairBtn() {
+  const btn = document.getElementById('streak-repair-btn');
+  if (!btn) return;
+  const oldStreak  = parseInt(localStorage.getItem('sq_streak_before_break') || '0');
+  const breakDate  = localStorage.getItem('sq_streak_break_date') || '';
+  const thisMonth  = new Date().toISOString().slice(0, 7);
+  const usedMonth  = localStorage.getItem('sq_repair_used_month') || '';
+  const alreadyUsed = usedMonth === thisMonth;
+  const currentStreak = getStreak();
+
+  // Show if: had a meaningful streak that broke, current streak is small, not used this month
+  const shouldShow = oldStreak > 2 && currentStreak <= oldStreak && breakDate && !alreadyUsed;
+  btn.style.display = shouldShow ? 'flex' : 'none';
+
+  if (shouldShow) {
+    const sub = document.getElementById('streak-repair-sub');
+    if (sub) sub.textContent = `Restore your ${oldStreak}-day streak · 1 use per month`;
+  }
+}
+
+function _useStreakRepair() {
+  const oldStreak = parseInt(localStorage.getItem('sq_streak_before_break') || '0');
+  if (!oldStreak) { showToast('No broken streak to repair.'); return; }
+  const thisMonth = new Date().toISOString().slice(0, 7);
+  if (localStorage.getItem('sq_repair_used_month') === thisMonth) {
+    showToast('Streak repair already used this month.'); return;
+  }
+
+  // Restore streak
+  localStorage.setItem('sq_streak', String(oldStreak));
+  localStorage.setItem('sq_repair_used_month', thisMonth);
+  localStorage.removeItem('sq_streak_before_break');
+  localStorage.removeItem('sq_streak_break_date');
+  saveUserData({ streak: oldStreak });
+
+  // Update UI
+  document.getElementById('nav-streak').textContent   = '🔥 ' + oldStreak;
+  document.getElementById('hstat-streak').textContent = oldStreak;
+  _syncStreakRepairBtn();
+  loadXPStreak(); updateDashTree(); syncTreeScreen();
+  showToast(`🔥 ${oldStreak}-day streak restored!`, 3500);
+  track('streak_repair_used', { restored_to: oldStreak });
 }
 
 function openPaywall(context) {
