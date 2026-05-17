@@ -4896,7 +4896,10 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
     <div class="deco-wrap">
       <div class="deco-header">
         <span class="deco-title">Decorations</span>
-        <span class="deco-unlocked-count" id="deco-unlocked-count">0 / 6 earned</span>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+          <span class="deco-unlocked-count" id="deco-unlocked-count">0 / 6 earned</span>
+          <span class="deco-leaves-bal" style="font-size:11px;font-weight:700;color:rgba(80,180,80,0.75)">🍃 0</span>
+        </div>
       </div>
       <div class="deco-tabs" id="deco-tabs">
         <button class="deco-tab active" data-tab="all"      onclick="setDecoTab('all')">All</button>
@@ -5226,6 +5229,7 @@ async function loadUserData(uid) {
     if (d.manual_assignments)             localStorage.setItem('sq_manual',         JSON.stringify(d.manual_assignments));
     if (d.tier)                           localStorage.setItem('sq_tier',           d.tier);
     if (d.purchasedDecos)                 localStorage.setItem('sq_purchased_decos',JSON.stringify(d.purchasedDecos));
+    if (d.leaves !== undefined)           localStorage.setItem('sq_leaves',          String(d.leaves));
     // Fetch notification badge separately so it can't crash the user data load
     userRef.collection('notifications').where('read', '==', false).get()
       .then(snap => _setBadge(snap.size)).catch(() => {});
@@ -6892,6 +6896,35 @@ function toggleDone(id, el, title, weight) {
 function getXP()     { return parseInt(localStorage.getItem('sq_xp') || '0'); }
 function getStreak() { return parseInt(localStorage.getItem('sq_streak') || '0'); }
 
+// ── LEAVES (spendable cosmetic currency) ────────────────────────────────────
+// Leaves are earned 1:1 alongside XP but can be spent without affecting level.
+// XP is permanent and determines level; Leaves are the spend-only balance.
+function getLeaves() {
+  const stored = localStorage.getItem('sq_leaves');
+  if (stored !== null) return parseInt(stored) || 0;
+  // First access: seed leaves to current XP so existing users start with a balance
+  const seed = getXP();
+  localStorage.setItem('sq_leaves', String(seed));
+  return seed;
+}
+function addLeaves(amount) {
+  const bal = getLeaves() + amount;
+  localStorage.setItem('sq_leaves', String(bal));
+  saveUserData({ leaves: bal });
+  _renderLeavesBalance();
+}
+function spendLeaves(amount) {
+  const bal = Math.max(0, getLeaves() - amount);
+  localStorage.setItem('sq_leaves', String(bal));
+  saveUserData({ leaves: bal });
+  _renderLeavesBalance();
+}
+function _renderLeavesBalance() {
+  document.querySelectorAll('.deco-leaves-bal').forEach(el => {
+    el.textContent = '🍃 ' + getLeaves().toLocaleString();
+  });
+}
+
 function loadXPStreak() {
   const xp = getXP(), streak = getStreak();
   document.getElementById('nav-xp').textContent       = xp.toLocaleString() + ' XP';
@@ -7021,6 +7054,7 @@ function addXP(amount) {
   const prevStage = getStageIndex(prevXP);
   const xp        = prevXP + amount;
   localStorage.setItem('sq_xp', xp);
+  addLeaves(amount); // leaves earned 1:1 with XP, but are spendable
   saveUserData({ xp });
   document.getElementById('nav-xp').textContent     = xp.toLocaleString() + ' XP';
   document.getElementById('dash-xp-amt').textContent = xp.toLocaleString() + ' XP';
@@ -7144,9 +7178,9 @@ const DECORATIONS = [
   { id:'snow',        name:'Snow',          emoji:'❄️', cat:'seasonal', season:'Winter', desc:'Winter wonderland' },
   { id:'autumn',      name:'Autumn Leaves', emoji:'🍂', cat:'seasonal', season:'Fall',   desc:'Warm colors swirl' },
   { id:'spring',      name:'Spring Bloom',  emoji:'🌼', cat:'seasonal', season:'Spring', desc:'Wild flowers bloom' },
-  { id:'fairy_lights',name:'Fairy Lights',  emoji:'🪄', cat:'shop', price:0.99, xpCost:500, desc:'Magic shimmers everywhere' },
-  { id:'campfire',    name:'Campfire',      emoji:'🔥', cat:'shop', price:1.99, xpCost:800, desc:'Warmth at your roots' },
-  { id:'rainbow',     name:'Rainbow',       emoji:'🌈', cat:'shop', price:1.49, xpCost:600, desc:'Arcs over your canopy' },
+  { id:'fairy_lights',name:'Fairy Lights',  emoji:'🪄', cat:'shop', price:0.99, leafCost:500, desc:'Magic shimmers everywhere' },
+  { id:'campfire',    name:'Campfire',      emoji:'🔥', cat:'shop', price:1.99, leafCost:800, desc:'Warmth at your roots' },
+  { id:'rainbow',     name:'Rainbow',       emoji:'🌈', cat:'shop', price:1.49, leafCost:600, desc:'Arcs over your canopy' },
 ];
 
 let _decoTab = 'all';
@@ -7192,6 +7226,8 @@ function renderDecorations() {
   const equipped = getEquipped();
   const grid     = document.getElementById('deco-grid');
   if (!grid) return;
+
+  _renderLeavesBalance(); // keep leaf counter fresh
 
   // update count badge
   const levelDecos   = DECORATIONS.filter(d => d.cat === 'level');
@@ -7247,7 +7283,7 @@ function renderDecorations() {
         }
       } else {
         cellClass += ' deco-purchasable';
-        badgeHTML = `<span class="deco-cell-badge dbadge-xp">${d.xpCost} XP</span>`;
+        badgeHTML = `<span class="deco-cell-badge dbadge-xp">${d.leafCost} 🍃</span>`;
         clickAttr = `onclick="openDecoShop('${d.id}')"`;
       }
     } else if (d.cat === 'seasonal') {
@@ -7308,17 +7344,17 @@ function openDecoShop(id) {
   const d    = DECORATIONS.find(x => x.id === id);
   if (!d) return;
   _decoShopId = id;
-  const xp   = getXP();
-  const canAfford = xp >= d.xpCost;
+  const leaves    = getLeaves();
+  const canAfford = leaves >= d.leafCost;
 
   document.getElementById('dsm-emoji').textContent   = d.emoji;
   document.getElementById('dsm-name').textContent    = d.name;
   document.getElementById('dsm-desc').textContent    = d.desc;
-  document.getElementById('dsm-cost-xp').textContent = d.xpCost + ' XP';
-  document.getElementById('dsm-balance').textContent = 'You have ' + xp.toLocaleString() + ' XP';
+  document.getElementById('dsm-cost-xp').textContent = d.leafCost + ' 🍃';
+  document.getElementById('dsm-balance').textContent = 'You have ' + leaves.toLocaleString() + ' 🍃';
 
   const btn = document.getElementById('dsm-buy-btn');
-  btn.textContent = canAfford ? `Unlock for ${d.xpCost} XP` : `Need ${(d.xpCost - xp).toLocaleString()} more XP`;
+  btn.textContent = canAfford ? `Unlock for ${d.leafCost} 🍃` : `Need ${(d.leafCost - leaves).toLocaleString()} more 🍃`;
   btn.disabled    = !canAfford;
 
   document.getElementById('deco-shop-modal').classList.add('show');
@@ -7331,14 +7367,13 @@ function closeDecoShopModal() {
 
 function confirmDecoXPBuy() {
   if (!_decoShopId) return;
-  const d  = DECORATIONS.find(x => x.id === _decoShopId);
-  if (!d)  return;
-  const xp = getXP();
-  if (xp < d.xpCost) { showToast('Not enough XP!'); return; }
+  const d      = DECORATIONS.find(x => x.id === _decoShopId);
+  if (!d)      return;
+  const leaves = getLeaves();
+  if (leaves < d.leafCost) { showToast('Not enough 🍃 leaves!'); return; }
 
-  // Deduct XP
-  const newXP = xp - d.xpCost;
-  localStorage.setItem('sq_xp', String(newXP));
+  // Spend leaves (XP and level are untouched)
+  spendLeaves(d.leafCost);
 
   // Save purchase
   const purchased = getPurchasedDecos();
@@ -7355,9 +7390,8 @@ function confirmDecoXPBuy() {
   closeDecoShopModal();
   renderDecorations();
   updateHeroDecorations();
-  loadXPStreak(); // refresh XP counter in nav + tree screen
-  showToast(`${d.emoji} ${d.name} unlocked! −${d.xpCost} XP`);
-  track('deco_purchased_xp', { id: d.id, xpCost: d.xpCost });
+  showToast(`${d.emoji} ${d.name} unlocked! −${d.leafCost} 🍃`);
+  track('deco_purchased_leaves', { id: d.id, leafCost: d.leafCost });
 }
 
 function updateHeroDecorations() {
@@ -10237,8 +10271,8 @@ if ('serviceWorker' in navigator) {
     <div class="dsm-name" id="dsm-name">Fairy Lights</div>
     <div class="dsm-desc" id="dsm-desc">Magic shimmers everywhere</div>
     <div class="dsm-cost-row">
-      <div class="dsm-cost-xp" id="dsm-cost-xp">500 XP</div>
-      <div class="dsm-cost-label">to unlock forever<strong id="dsm-balance">You have 0 XP</strong></div>
+      <div class="dsm-cost-xp" id="dsm-cost-xp">500 🍃</div>
+      <div class="dsm-cost-label">leaves to unlock forever<strong id="dsm-balance">You have 0 🍃</strong></div>
     </div>
     <button class="dsm-btn-buy" id="dsm-buy-btn" onclick="confirmDecoXPBuy()">Unlock forever</button>
     <button class="dsm-btn-cancel" onclick="closeDecoShopModal()">Maybe later</button>
