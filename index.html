@@ -8108,7 +8108,7 @@ async function togglePushNotifs() {
     return;
   }
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    alert('Push notifications require Chrome on Android or a desktop browser.');
+    showToast('Push notifications require Chrome on Android or a desktop browser.');
     return;
   }
   try {
@@ -8139,10 +8139,10 @@ async function enablePushNotifs() {
     return;
   }
   if (!('PushManager' in window)) {
-    alert('Push notifications require Chrome on Android or a desktop browser.');
+    showToast('Push notifications require Chrome on Android or a desktop browser.');
     return;
   }
-  if (!currentUser) { alert('Sign in to enable push notifications.'); return; }
+  if (!currentUser) { showToast('Sign in to enable push notifications.'); return; }
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') return;
   try {
@@ -8164,7 +8164,7 @@ async function enablePushNotifs() {
     addNotification('system', 'Push notifications enabled 🎉', 'You\'ll get streak reminders and due date alerts even when the app is closed.');
   } catch(e) {
     console.warn('Push subscribe failed:', e);
-    alert('Could not enable push notifications: ' + e.message);
+    showToast('Could not enable push notifications: ' + e.message);
   }
 }
 
@@ -8191,12 +8191,12 @@ function _showIOSNotifGuide() {
 }
 
 async function testPush() {
-  if (!currentUser) { alert('Sign in first.'); return; }
-  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') { alert('Enable push notifications first.'); return; }
+  if (!currentUser) { showToast('Sign in first.'); return; }
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') { showToast('Enable push notifications first.'); return; }
   try {
     const reg = await navigator.serviceWorker.ready;
     const sub = await reg.pushManager.getSubscription();
-    if (!sub) { alert('No subscription found — click Enable push notifications first.'); return; }
+    if (!sub) { showToast('No subscription found — click Enable push notifications first.'); return; }
     const btn = document.getElementById('notif-test-btn');
     if (btn) { btn.textContent = 'Sending…'; btn.disabled = true; }
     const idToken = await currentUser.getIdToken();
@@ -8401,12 +8401,12 @@ async function startCheckout() {
       track('checkout_started', { context: _paywallContext });
       window.location.href = data.url;
     } else {
-      alert('Could not start checkout: ' + (data.error || 'Unknown error'));
+      showToast('Could not start checkout: ' + (data.error || 'Unknown error'));
       btn.textContent = orig;
       btn.disabled    = false;
     }
   } catch (e) {
-    alert('Network error. Please try again.');
+    showToast('Network error. Please try again.');
     btn.textContent = orig;
     btn.disabled    = false;
   }
@@ -8425,9 +8425,9 @@ async function openCustomerPortal() {
     });
     const data = await res.json();
     if (data.ok && data.url) window.location.href = data.url;
-    else alert('Could not open billing portal: ' + (data.error || 'Unknown error'));
+    else showToast('Could not open billing portal: ' + (data.error || 'Unknown error'));
   } catch (e) {
-    alert('Network error. Please try again.');
+    showToast('Network error. Please try again.');
   } finally {
     if (btn) { btn.textContent = orig; btn.disabled = false; }
   }
