@@ -1017,6 +1017,49 @@ input.g-slider::-moz-range-thumb {
 .course-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
 .courses-divider { height:1px; background:var(--border); margin:8px 16px; }
 .courses-bottom { padding:10px 12px 14px; }
+/* ── GPA Calculator ── */
+.gpa-toggle-btn {
+  display:flex; align-items:center; justify-content:space-between;
+  width:100%; padding:11px 18px; cursor:pointer; border:none;
+  background:rgba(76,161,48,0.06); border-top:1px solid rgba(76,161,48,0.12);
+  font-family:'DM Sans',sans-serif; transition:background .18s;
+}
+.gpa-toggle-btn:hover { background:rgba(76,161,48,0.1); }
+.gpa-toggle-label { font-size:12px; font-weight:700; color:rgba(255,255,255,0.55); letter-spacing:.2px; }
+.gpa-toggle-arrow { font-size:12px; color:rgba(255,255,255,0.3); transition:transform .2s; }
+.gpa-toggle-btn.open .gpa-toggle-arrow { transform:rotate(180deg); }
+.gpa-panel { display:none; padding:14px 18px 18px; border-top:1px solid rgba(255,255,255,0.05); }
+.gpa-panel.show { display:block; }
+.gpa-result-card {
+  display:flex; align-items:center; justify-content:space-between;
+  background:rgba(76,161,48,0.09); border:1px solid rgba(76,161,48,0.22);
+  border-radius:14px; padding:14px 18px; margin-bottom:14px;
+}
+.gpa-result-left { display:flex; flex-direction:column; gap:2px; }
+.gpa-result-label { font-size:10px; color:rgba(255,255,255,0.35); font-weight:700; letter-spacing:.5px; text-transform:uppercase; }
+.gpa-result-val { font-size:30px; font-weight:800; color:#7ED458; line-height:1; font-family:'Playfair Display',serif; }
+.gpa-result-right { text-align:right; }
+.gpa-result-letter { font-size:24px; font-weight:800; color:rgba(255,255,255,0.8); }
+.gpa-result-credits { font-size:11px; color:rgba(255,255,255,0.32); margin-top:2px; }
+.gpa-hint { font-size:11px; color:rgba(255,255,255,0.3); margin-bottom:10px; line-height:1.4; }
+.gpa-row {
+  display:flex; align-items:center; gap:8px; padding:7px 0;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.gpa-row:last-child { border-bottom:none; }
+.gpa-row-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.gpa-row-name { font-size:12px; font-weight:600; color:rgba(255,255,255,0.7); flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.gpa-row-pct { font-size:12px; font-weight:700; color:rgba(255,255,255,0.5); width:36px; text-align:right; flex-shrink:0; }
+.gpa-credits-label { font-size:10px; color:rgba(255,255,255,0.3); flex-shrink:0; }
+.gpa-credits-input {
+  width:38px; text-align:center; font-size:12px; font-weight:700;
+  background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12);
+  border-radius:6px; color:rgba(255,255,255,0.75); padding:4px 0;
+  font-family:'DM Sans',sans-serif; -moz-appearance:textfield;
+}
+.gpa-credits-input::-webkit-outer-spin-button,
+.gpa-credits-input::-webkit-inner-spin-button { -webkit-appearance:none; }
+.gpa-credits-input:focus { outline:none; border-color:rgba(76,161,48,0.5); background:rgba(76,161,48,0.08); }
 
 /* ══════════════════════════════════════════════════════════
    SCREEN 2 — STUDY (POMODORO)
@@ -3858,6 +3901,25 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
           <div class="loading-state" style="font-size:12px">Loading grades…</div>
         </div>
         <div class="grades-footer" id="grades-footer">Connect Canvas to see live grade forecasts</div>
+        <!-- GPA Calculator toggle -->
+        <button class="gpa-toggle-btn" id="gpa-toggle-btn" onclick="toggleGPACalc()">
+          <span class="gpa-toggle-label">∑ GPA Calculator</span>
+          <span class="gpa-toggle-arrow">▾</span>
+        </button>
+        <div class="gpa-panel" id="gpa-panel">
+          <div class="gpa-result-card" id="gpa-result-card">
+            <div class="gpa-result-left">
+              <span class="gpa-result-label">Weighted GPA</span>
+              <span class="gpa-result-val" id="gpa-val">—</span>
+            </div>
+            <div class="gpa-result-right">
+              <div class="gpa-result-letter" id="gpa-letter">—</div>
+              <div class="gpa-result-credits" id="gpa-credits-total"></div>
+            </div>
+          </div>
+          <p class="gpa-hint">Set credit hours per course to calculate your semester GPA. Edit a course's grade directly to run what-if scenarios.</p>
+          <div id="gpa-rows"></div>
+        </div>
       </div>
     </div>
 
@@ -5804,6 +5866,109 @@ function renderGrades(grades) {
     });
   }));
   renderFocusBanner();
+  // Re-populate GPA rows if panel is open
+  if (document.getElementById('gpa-panel')?.classList.contains('show')) renderGPARows();
+}
+
+// ── GPA CALCULATOR ──────────────────────────────────────
+function toggleGPACalc() {
+  const panel = document.getElementById('gpa-panel');
+  const btn   = document.getElementById('gpa-toggle-btn');
+  if (!panel || !btn) return;
+  const opening = !panel.classList.contains('show');
+  panel.classList.toggle('show', opening);
+  btn.classList.toggle('open', opening);
+  if (opening) renderGPARows();
+}
+
+function _pctToGPAPoints(pct) {
+  if (pct >= 97) return 4.0;
+  if (pct >= 93) return 4.0;
+  if (pct >= 90) return 3.7;
+  if (pct >= 87) return 3.3;
+  if (pct >= 83) return 3.0;
+  if (pct >= 80) return 2.7;
+  if (pct >= 77) return 2.3;
+  if (pct >= 73) return 2.0;
+  if (pct >= 70) return 1.7;
+  if (pct >= 67) return 1.3;
+  if (pct >= 63) return 1.0;
+  if (pct >= 60) return 0.7;
+  return 0.0;
+}
+
+function _gpaToLetter(gpa) {
+  if (gpa >= 3.85) return 'A';
+  if (gpa >= 3.5)  return 'A−';
+  if (gpa >= 3.15) return 'B+';
+  if (gpa >= 2.85) return 'B';
+  if (gpa >= 2.5)  return 'B−';
+  if (gpa >= 2.15) return 'C+';
+  if (gpa >= 1.85) return 'C';
+  if (gpa >= 1.5)  return 'C−';
+  if (gpa >= 1.15) return 'D+';
+  if (gpa >= 0.85) return 'D';
+  return 'F';
+}
+
+function renderGPARows() {
+  const grades = window._lastGrades || [];
+  const rows   = document.getElementById('gpa-rows');
+  if (!rows) return;
+  if (!grades.length) {
+    rows.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,0.3);text-align:center;padding:8px 0">Connect Canvas to calculate GPA</div>';
+    return;
+  }
+  rows.innerHTML = grades.slice(0, 7).map((c, i) => {
+    const pct = c.current !== null && c.current !== undefined ? Math.round(c.current) : null;
+    return `<div class="gpa-row" id="gpa-row-${i}">
+      <div class="gpa-row-dot" style="background:${c.color || '#4CA130'}"></div>
+      <span class="gpa-row-name" title="${esc(c.name)}">${esc(c.name)}</span>
+      <input type="number" class="gpa-credits-input" id="gpa-credits-${i}"
+        value="3" min="0" max="6" step="0.5"
+        oninput="calcGPA()" title="Credit hours">
+      <span class="gpa-credits-label">cr</span>
+      <input type="number" class="gpa-credits-input" id="gpa-grade-${i}"
+        value="${pct !== null ? pct : ''}" min="0" max="100"
+        placeholder="${pct !== null ? pct : '—'}"
+        oninput="calcGPA()" title="Grade %" style="width:44px">
+      <span class="gpa-credits-label">%</span>
+    </div>`;
+  }).join('');
+  calcGPA();
+}
+
+function calcGPA() {
+  const grades = window._lastGrades || [];
+  let totalPoints = 0, totalCredits = 0;
+  grades.slice(0, 7).forEach((c, i) => {
+    const credEl  = document.getElementById('gpa-credits-' + i);
+    const gradeEl = document.getElementById('gpa-grade-' + i);
+    if (!credEl || !gradeEl) return;
+    const credits = parseFloat(credEl.value) || 0;
+    const pct     = parseFloat(gradeEl.value);
+    if (credits <= 0 || isNaN(pct)) return;
+    totalPoints  += _pctToGPAPoints(pct) * credits;
+    totalCredits += credits;
+  });
+  const valEl     = document.getElementById('gpa-val');
+  const letterEl  = document.getElementById('gpa-letter');
+  const credTotEl = document.getElementById('gpa-credits-total');
+  if (!valEl || !letterEl) return;
+  if (totalCredits === 0) {
+    valEl.textContent    = '—';
+    letterEl.textContent = '—';
+    if (credTotEl) credTotEl.textContent = '';
+    return;
+  }
+  const gpa = totalPoints / totalCredits;
+  valEl.textContent    = gpa.toFixed(2);
+  letterEl.textContent = _gpaToLetter(gpa);
+  if (credTotEl) credTotEl.textContent = totalCredits + ' credit hrs';
+  // Color the GPA value
+  const color = gpa >= 3.5 ? '#7ED458' : gpa >= 2.5 ? '#7AB8E8' : gpa >= 1.5 ? '#F5C87A' : '#FF9878';
+  valEl.style.color    = color;
+  letterEl.style.color = color;
 }
 
 // ── CALENDAR HEATMAP ────────────────────────────────────
