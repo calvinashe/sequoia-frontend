@@ -3023,8 +3023,10 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 .deco-cell.deco-shop {
   border-color:rgba(212,136,43,0.3);
   background:linear-gradient(145deg,#1C1408,#1E1A0A);
-  cursor:default;
 }
+.deco-cell.deco-purchasable { cursor:pointer; }
+.deco-cell.deco-purchasable:hover  { border-color:rgba(147,112,219,0.55); }
+.deco-cell.deco-purchasable:active { transform:scale(0.96); }
 .deco-cell.deco-shop:hover {
   border-color:rgba(212,136,43,0.55);
 }
@@ -3045,6 +3047,75 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 .dbadge-price  { background:rgba(212,136,43,0.22); color:#D4882B; border:1px solid rgba(212,136,43,0.4); }
 .dbadge-season { background:rgba(130,204,255,0.14); color:#82CCFF; border:1px solid rgba(130,204,255,0.3); }
 .dbadge-level  { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.4); }
+.dbadge-xp     { background:rgba(147,112,219,0.22); color:#B89EFF; border:1px solid rgba(147,112,219,0.4); }
+.dbadge-owned  { background:rgba(76,161,48,0.18); color:var(--g3); border:1px solid rgba(76,161,48,0.3); }
+
+/* ── DECO SHOP MODAL ───────────────────────────────────────── */
+#deco-shop-modal {
+  position:fixed; inset:0; z-index:8000;
+  background:rgba(0,0,0,0); pointer-events:none;
+  display:flex; align-items:flex-end; justify-content:center;
+  transition:background .25s;
+}
+#deco-shop-modal.show {
+  background:rgba(0,0,0,0.65); pointer-events:auto;
+}
+#deco-shop-modal .dsm-card {
+  width:100%; max-width:440px;
+  background:linear-gradient(180deg,#152518,#0E1D10);
+  border:1px solid rgba(76,161,48,0.2);
+  border-bottom:none;
+  border-radius:20px 20px 0 0;
+  padding:28px 24px calc(28px + env(safe-area-inset-bottom,0px));
+  transform:translateY(100%);
+  transition:transform .3s cubic-bezier(.22,.68,0,1.2);
+  text-align:center;
+}
+#deco-shop-modal.show .dsm-card { transform:translateY(0); }
+.dsm-emoji   { font-size:48px; line-height:1; margin-bottom:10px; display:block; }
+.dsm-name    { font-size:20px; font-weight:800; color:#fff; margin-bottom:4px; }
+.dsm-desc    { font-size:13px; color:rgba(255,255,255,0.5); margin-bottom:20px; }
+.dsm-cost-row {
+  display:flex; align-items:center; justify-content:center; gap:12px;
+  background:rgba(147,112,219,0.1); border:1px solid rgba(147,112,219,0.25);
+  border-radius:12px; padding:12px 16px; margin-bottom:20px;
+}
+.dsm-cost-xp { font-size:22px; font-weight:800; color:#B89EFF; }
+.dsm-cost-label { font-size:12px; color:rgba(255,255,255,0.4); line-height:1.4; text-align:left; }
+.dsm-cost-label strong { display:block; color:rgba(255,255,255,0.75); font-size:13px; }
+.dsm-btn-buy {
+  width:100%; padding:15px; border-radius:12px; border:none; cursor:pointer;
+  background:linear-gradient(135deg,#9370DB,#7B52CC);
+  color:#fff; font-size:15px; font-weight:800;
+  margin-bottom:10px; letter-spacing:.02em;
+  transition:opacity .15s;
+}
+.dsm-btn-buy:disabled { opacity:.45; cursor:not-allowed; }
+.dsm-btn-buy:not(:disabled):active { opacity:.8; }
+.dsm-btn-cancel {
+  width:100%; padding:12px; border-radius:12px; border:1px solid rgba(255,255,255,0.1);
+  background:transparent; color:rgba(255,255,255,0.45); font-size:14px; cursor:pointer;
+  margin-bottom:14px;
+}
+.dsm-alt {
+  font-size:11px; color:rgba(255,255,255,0.3); line-height:1.5;
+}
+.dsm-alt button {
+  background:none; border:none; color:rgba(76,161,48,0.8);
+  font-size:inherit; cursor:pointer; padding:0; text-decoration:underline;
+}
+.deco-cell.deco-purchasable { cursor:pointer; }
+.deco-cell.deco-purchasable:active { transform:scale(0.96); }
+[data-theme="light"] #deco-shop-modal .dsm-card {
+  background:linear-gradient(180deg,#EFF6EC,#E4F0E0);
+  border-color:rgba(76,161,48,0.25);
+}
+[data-theme="light"] .dsm-cost-row { background:rgba(147,112,219,0.07); }
+[data-theme="light"] .dsm-name { color:#1A2E1A; }
+[data-theme="light"] .dsm-desc { color:rgba(0,0,0,0.45); }
+[data-theme="light"] .dsm-cost-label strong { color:rgba(0,0,0,0.7); }
+[data-theme="light"] .dsm-btn-cancel { border-color:rgba(0,0,0,0.15); color:rgba(0,0,0,0.4); }
+[data-theme="light"] .dsm-alt { color:rgba(0,0,0,0.35); }
 .deco-empty    {
   grid-column:1/-1; text-align:center; padding:28px 0;
   font-size:13px; color:rgba(255,255,255,0.3);
@@ -5154,6 +5225,7 @@ async function loadUserData(uid) {
     if (d.pomo_sessions    !== undefined) localStorage.setItem('sq_pomo_sessions',  String(d.pomo_sessions));
     if (d.manual_assignments)             localStorage.setItem('sq_manual',         JSON.stringify(d.manual_assignments));
     if (d.tier)                           localStorage.setItem('sq_tier',           d.tier);
+    if (d.purchasedDecos)                 localStorage.setItem('sq_purchased_decos',JSON.stringify(d.purchasedDecos));
     // Fetch notification badge separately so it can't crash the user data load
     userRef.collection('notifications').where('read', '==', false).get()
       .then(snap => _setBadge(snap.size)).catch(() => {});
@@ -5904,6 +5976,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('add-assign-overlay').classList.contains('show')) { closeAddAssign(); return; }
     if (document.getElementById('assign-detail').classList.contains('show'))      { closeAssignDetail(); return; }
     if (document.getElementById('settings-overlay').classList.contains('show'))   { closeSettings(); return; }
+    if (document.getElementById('deco-shop-modal').classList.contains('show'))    { closeDecoShopModal(); return; }
   });
 });
 
@@ -7071,9 +7144,9 @@ const DECORATIONS = [
   { id:'snow',        name:'Snow',          emoji:'❄️', cat:'seasonal', season:'Winter', desc:'Winter wonderland' },
   { id:'autumn',      name:'Autumn Leaves', emoji:'🍂', cat:'seasonal', season:'Fall',   desc:'Warm colors swirl' },
   { id:'spring',      name:'Spring Bloom',  emoji:'🌼', cat:'seasonal', season:'Spring', desc:'Wild flowers bloom' },
-  { id:'fairy_lights',name:'Fairy Lights',  emoji:'🪄', cat:'shop',     price:0.99, desc:'Magic shimmers everywhere' },
-  { id:'campfire',    name:'Campfire',      emoji:'🔥', cat:'shop',     price:1.99, desc:'Warmth at your roots' },
-  { id:'rainbow',     name:'Rainbow',       emoji:'🌈', cat:'shop',     price:1.49, desc:'Arcs over your canopy' },
+  { id:'fairy_lights',name:'Fairy Lights',  emoji:'🪄', cat:'shop', price:0.99, xpCost:500, desc:'Magic shimmers everywhere' },
+  { id:'campfire',    name:'Campfire',      emoji:'🔥', cat:'shop', price:1.99, xpCost:800, desc:'Warmth at your roots' },
+  { id:'rainbow',     name:'Rainbow',       emoji:'🌈', cat:'shop', price:1.49, xpCost:600, desc:'Arcs over your canopy' },
 ];
 
 let _decoTab = 'all';
@@ -7081,10 +7154,29 @@ let _decoTab = 'all';
 function getEquipped() {
   try { return JSON.parse(localStorage.getItem('sq_equipped') || '[]'); } catch(e) { return []; }
 }
+function getPurchasedDecos() {
+  try { return JSON.parse(localStorage.getItem('sq_purchased_decos') || '[]'); } catch(e) { return []; }
+}
+function savePurchasedDecos(arr) {
+  localStorage.setItem('sq_purchased_decos', JSON.stringify(arr));
+  // also persist to Firestore if signed in
+  if (currentUser) {
+    db.collection('users').doc(currentUser.uid).set({ purchasedDecos: arr }, { merge: true }).catch(() => {});
+  }
+}
+function _isDecoSeason(d) {
+  const m = new Date().getMonth() + 1; // 1-12
+  if (d.season === 'Winter') return m === 12 || m <= 2;
+  if (d.season === 'Fall')   return m >= 9  && m <= 11;
+  if (d.season === 'Spring') return m >= 3  && m <= 5;
+  return false;
+}
 
 function isDecoUnlocked(d, lv) {
-  if (d.cat === 'level') return lv >= d.unlockLevel;
-  return false; // seasonal & shop: not unlocked by default
+  if (d.cat === 'level')    return lv >= d.unlockLevel;
+  if (d.cat === 'seasonal') return isPremium() || _isDecoSeason(d);
+  if (d.cat === 'shop')     return isPremium() || getPurchasedDecos().includes(d.id);
+  return false;
 }
 
 function setDecoTab(tab) {
@@ -7141,16 +7233,44 @@ function renderDecorations() {
     let badgeHTML = '';
     let clickAttr = '';
 
-    if (needsPremium) {
+    if (d.cat === 'shop') {
+      // ── Shop items: premium = free, else spend XP ──────────
+      const purchased = getPurchasedDecos().includes(d.id);
+      if (purchased || isPremium()) {
+        if (isOn) {
+          cellClass += ' deco-equipped';
+          badgeHTML = `<span class="deco-cell-badge dbadge-on">ON</span>`;
+          clickAttr = `onclick="toggleDecoration('${d.id}')"`;
+        } else {
+          badgeHTML = `<span class="deco-cell-badge ${isPremium() ? 'dbadge-level' : 'dbadge-owned'}">${isPremium() ? '✦ Pro' : '✓ Owned'}</span>`;
+          clickAttr = `onclick="toggleDecoration('${d.id}')"`;
+        }
+      } else {
+        cellClass += ' deco-purchasable';
+        badgeHTML = `<span class="deco-cell-badge dbadge-xp">${d.xpCost} XP</span>`;
+        clickAttr = `onclick="openDecoShop('${d.id}')"`;
+      }
+    } else if (d.cat === 'seasonal') {
+      // ── Seasonal: available in-season for all, premium year-round ──
+      const inSeason = _isDecoSeason(d);
+      if (isPremium() || inSeason) {
+        if (isOn) {
+          cellClass += ' deco-equipped';
+          badgeHTML = `<span class="deco-cell-badge dbadge-on">ON</span>`;
+          clickAttr = `onclick="toggleDecoration('${d.id}')"`;
+        } else {
+          badgeHTML = `<span class="deco-cell-badge dbadge-season">${d.season}${inSeason ? ' 🌿' : ''}</span>`;
+          clickAttr = `onclick="toggleDecoration('${d.id}')"`;
+        }
+      } else {
+        cellClass += ' deco-locked';
+        badgeHTML = `<span class="deco-cell-badge dbadge-level">✦ Pro</span>`;
+        clickAttr = `onclick="openPaywall('decoration-seasonal-${d.id}')"`;
+      }
+    } else if (needsPremium) {
       cellClass += ' deco-locked';
       badgeHTML  = `<span class="deco-cell-badge dbadge-level">✦ Pro</span>`;
       clickAttr  = `onclick="openPaywall('decoration-${d.id}')"`;
-    } else if (d.cat === 'shop') {
-      cellClass += ' deco-shop';
-      badgeHTML = `<span class="deco-cell-badge dbadge-price">$${d.price.toFixed(2)}</span>`;
-    } else if (d.cat === 'seasonal') {
-      cellClass += ' deco-seasonal';
-      badgeHTML = `<span class="deco-cell-badge dbadge-season">${d.season}</span>`;
     } else if (!unlocked) {
       cellClass += ' deco-locked';
       badgeHTML = `<span class="deco-cell-badge dbadge-level">Lv ${d.unlockLevel}</span>`;
@@ -7179,6 +7299,65 @@ function toggleDecoration(id) {
   localStorage.setItem('sq_equipped', JSON.stringify(equipped));
   renderDecorations();
   updateHeroDecorations();
+}
+
+// ── DECO SHOP — XP purchase flow ──────────────────────────────────────────
+let _decoShopId = null;
+
+function openDecoShop(id) {
+  const d    = DECORATIONS.find(x => x.id === id);
+  if (!d) return;
+  _decoShopId = id;
+  const xp   = getXP();
+  const canAfford = xp >= d.xpCost;
+
+  document.getElementById('dsm-emoji').textContent   = d.emoji;
+  document.getElementById('dsm-name').textContent    = d.name;
+  document.getElementById('dsm-desc').textContent    = d.desc;
+  document.getElementById('dsm-cost-xp').textContent = d.xpCost + ' XP';
+  document.getElementById('dsm-balance').textContent = 'You have ' + xp.toLocaleString() + ' XP';
+
+  const btn = document.getElementById('dsm-buy-btn');
+  btn.textContent = canAfford ? `Unlock for ${d.xpCost} XP` : `Need ${(d.xpCost - xp).toLocaleString()} more XP`;
+  btn.disabled    = !canAfford;
+
+  document.getElementById('deco-shop-modal').classList.add('show');
+}
+
+function closeDecoShopModal() {
+  document.getElementById('deco-shop-modal').classList.remove('show');
+  _decoShopId = null;
+}
+
+function confirmDecoXPBuy() {
+  if (!_decoShopId) return;
+  const d  = DECORATIONS.find(x => x.id === _decoShopId);
+  if (!d)  return;
+  const xp = getXP();
+  if (xp < d.xpCost) { showToast('Not enough XP!'); return; }
+
+  // Deduct XP
+  const newXP = xp - d.xpCost;
+  localStorage.setItem('sq_xp', String(newXP));
+
+  // Save purchase
+  const purchased = getPurchasedDecos();
+  if (!purchased.includes(d.id)) purchased.push(d.id);
+  savePurchasedDecos(purchased);
+
+  // Auto-equip it
+  const equipped = getEquipped();
+  if (!equipped.includes(d.id)) {
+    equipped.push(d.id);
+    localStorage.setItem('sq_equipped', JSON.stringify(equipped));
+  }
+
+  closeDecoShopModal();
+  renderDecorations();
+  updateHeroDecorations();
+  loadXPStreak(); // refresh XP counter in nav + tree screen
+  showToast(`${d.emoji} ${d.name} unlocked! −${d.xpCost} XP`);
+  track('deco_purchased_xp', { id: d.id, xpCost: d.xpCost });
 }
 
 function updateHeroDecorations() {
@@ -10048,6 +10227,22 @@ if ('serviceWorker' in navigator) {
 
     <button class="tour-next-btn" id="tour-next-btn" onclick="tourNext()">Next →</button>
     <button class="tour-skip-btn" onclick="tourDismiss()">Skip intro</button>
+  </div>
+</div>
+
+<!-- DECO SHOP MODAL -->
+<div id="deco-shop-modal" aria-modal="true" role="dialog" onclick="if(event.target===this)closeDecoShopModal()">
+  <div class="dsm-card">
+    <span class="dsm-emoji" id="dsm-emoji">🪄</span>
+    <div class="dsm-name" id="dsm-name">Fairy Lights</div>
+    <div class="dsm-desc" id="dsm-desc">Magic shimmers everywhere</div>
+    <div class="dsm-cost-row">
+      <div class="dsm-cost-xp" id="dsm-cost-xp">500 XP</div>
+      <div class="dsm-cost-label">to unlock forever<strong id="dsm-balance">You have 0 XP</strong></div>
+    </div>
+    <button class="dsm-btn-buy" id="dsm-buy-btn" onclick="confirmDecoXPBuy()">Unlock forever</button>
+    <button class="dsm-btn-cancel" onclick="closeDecoShopModal()">Maybe later</button>
+    <div class="dsm-alt">Want all cosmetics free? <button onclick="closeDecoShopModal();openPaywall('deco-shop')">Upgrade to Premium →</button></div>
   </div>
 </div>
 
