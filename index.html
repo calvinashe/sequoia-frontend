@@ -2001,6 +2001,105 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 .fr-empty { text-align:center; padding:32px 16px; color:rgba(255,255,255,0.3); font-size:13px; line-height:1.6; }
 .fr-loading { text-align:center; padding:24px; color:rgba(255,255,255,0.3); font-size:13px; }
 
+/* ══════════════════════════════════════════════════════════
+   AI WEEKLY SCHEDULE OVERLAY
+══════════════════════════════════════════════════════════ */
+#sched-overlay {
+  display:none; position:fixed; inset:0; z-index:200;
+  background:rgba(4,10,4,0.92); backdrop-filter:blur(12px);
+  overflow-y:auto; padding:env(safe-area-inset-top,0) 0 0;
+}
+#sched-overlay.show { display:block; }
+.sched-panel {
+  max-width:540px; margin:0 auto; padding:20px 16px 90px;
+  animation:schedIn .32s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes schedIn { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:none} }
+.sched-header {
+  display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;
+}
+.sched-title { font-family:'Playfair Display',serif; font-size:22px; font-weight:800; color:#FFFEF8; }
+.sched-close {
+  background:rgba(255,255,255,0.08); border:none; color:rgba(255,255,255,0.5);
+  width:34px; height:34px; border-radius:50%; font-size:16px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition:background .15s;
+}
+.sched-close:hover { background:rgba(255,255,255,0.14); }
+
+/* Availability grid */
+.sched-avail-title { font-size:11px; font-weight:700; color:rgba(255,255,255,0.35); text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px; }
+.sched-avail-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:16px; }
+.sched-day-col { display:flex; flex-direction:column; align-items:center; gap:5px; }
+.sched-day-lbl { font-size:10px; font-weight:700; color:rgba(255,255,255,0.35); }
+.sched-hrs-input {
+  width:100%; text-align:center; font-size:12px; font-weight:700;
+  background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px; color:rgba(255,255,255,0.75); padding:6px 0;
+  font-family:'DM Sans',sans-serif; -moz-appearance:textfield;
+}
+.sched-hrs-input::-webkit-outer-spin-button,
+.sched-hrs-input::-webkit-inner-spin-button { -webkit-appearance:none; }
+.sched-hrs-input:focus { outline:none; border-color:rgba(76,161,48,0.5); background:rgba(76,161,48,0.08); }
+
+/* Session length & generate */
+.sched-opts { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+.sched-opt-label { font-size:12px; color:rgba(255,255,255,0.4); flex-shrink:0; }
+.sched-session-sel {
+  flex:1; font-size:12px; font-weight:700; background:rgba(255,255,255,0.07);
+  border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:rgba(255,255,255,0.7);
+  padding:7px 10px; font-family:'DM Sans',sans-serif; cursor:pointer;
+}
+.sched-gen-btn {
+  flex:2; background:var(--g3); color:#fff; border:none; border-radius:10px;
+  padding:10px 18px; font-size:13px; font-weight:700; cursor:pointer;
+  font-family:'DM Sans',sans-serif; transition:opacity .18s; white-space:nowrap;
+}
+.sched-gen-btn:hover { opacity:.88; }
+.sched-gen-btn:disabled { opacity:.4; cursor:default; }
+
+/* Summary pill */
+.sched-summary {
+  font-size:11px; font-weight:600; color:var(--g4);
+  background:rgba(76,161,48,0.1); border:1px solid rgba(76,161,48,0.2);
+  border-radius:8px; padding:7px 12px; margin-bottom:14px; text-align:center;
+}
+
+/* Day sections */
+.sched-day-section { margin-bottom:14px; }
+.sched-day-header {
+  display:flex; align-items:center; gap:8px; margin-bottom:8px;
+}
+.sched-day-name { font-size:13px; font-weight:800; color:rgba(255,255,255,0.75); }
+.sched-day-date { font-size:11px; color:rgba(255,255,255,0.28); }
+.sched-day-total { font-size:11px; font-weight:600; color:rgba(255,255,255,0.28); margin-left:auto; }
+
+/* Block cards */
+.sched-block {
+  display:flex; align-items:center; gap:12px;
+  background:linear-gradient(135deg,#0D1F10 0%,#081008 100%);
+  border:1px solid rgba(76,161,48,0.08); border-radius:13px;
+  padding:12px 14px; margin-bottom:7px; cursor:pointer; transition:background .15s;
+}
+.sched-block:hover { background:linear-gradient(135deg,#112314 0%,#0A1209 100%); }
+.sched-block.done { opacity:.45; }
+.sched-block-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.sched-block-info { flex:1; min-width:0; }
+.sched-block-course { font-size:10px; font-weight:700; color:rgba(255,255,255,0.38); text-transform:uppercase; letter-spacing:.3px; }
+.sched-block-task { font-size:13px; font-weight:700; color:rgba(255,255,255,0.82); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px; }
+.sched-block-due { font-size:11px; color:rgba(255,255,255,0.3); margin-top:2px; }
+.sched-block-right { flex-shrink:0; text-align:right; }
+.sched-block-hrs { font-size:13px; font-weight:800; color:var(--g4); }
+.sched-block-pri { font-size:9px; font-weight:700; padding:2px 6px; border-radius:5px; margin-top:3px; display:inline-block; }
+.sched-block-pri.high   { background:rgba(199,91,58,0.2);  color:#FF9878; }
+.sched-block-pri.medium { background:rgba(212,136,43,0.2); color:#F5C87A; }
+.sched-block-pri.low    { background:rgba(76,161,48,0.15); color:#7ED458; }
+.sched-check { width:20px; height:20px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.18); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:11px; color:transparent; transition:all .18s; }
+.sched-block.done .sched-check { background:var(--g3); border-color:var(--g3); color:#fff; }
+
+.sched-empty { text-align:center; padding:40px 16px; color:rgba(255,255,255,0.3); font-size:13px; line-height:1.6; }
+.sched-loading { text-align:center; padding:32px; color:rgba(255,255,255,0.35); font-size:13px; }
+.sched-error { background:rgba(199,91,58,0.1); border:1px solid rgba(199,91,58,0.25); border-radius:12px; padding:14px 16px; font-size:13px; color:#FF9878; margin-bottom:12px; }
+
 /* Forest scene */
 .wu-scene {
   position:relative; width:100%; height:400px; border-radius:24px; overflow:hidden;
@@ -4151,6 +4250,22 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
             </div>
           </div>
         </div>
+        <!-- AI Schedule CTA -->
+        <div style="padding:4px 0 16px">
+          <button onclick="isPremium() ? openSchedule() : openPaywall('ai-schedule')"
+            style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
+              background:linear-gradient(135deg,rgba(76,161,48,0.18),rgba(46,96,32,0.12));
+              border:1px solid rgba(76,161,48,0.25);border-radius:14px;padding:14px 16px;
+              color:rgba(255,255,255,0.75);font-size:13px;font-weight:700;cursor:pointer;
+              font-family:'DM Sans',sans-serif;transition:all .18s"
+            onmouseover="this.style.background='linear-gradient(135deg,rgba(76,161,48,0.28),rgba(46,96,32,0.2))'"
+            onmouseout="this.style.background='linear-gradient(135deg,rgba(76,161,48,0.18),rgba(46,96,32,0.12))'">
+            <span style="font-size:16px">📅</span>
+            <span>Build My Weekly Schedule</span>
+            <span style="font-size:11px;background:rgba(76,161,48,0.2);color:var(--g3);border-radius:5px;padding:2px 6px;font-weight:700">AI</span>
+          </button>
+        </div>
+
         <div class="session-log" id="session-log">
           <div class="slog-header">
             <span class="slog-title">Session History</span>
@@ -5536,6 +5651,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // Global Escape key: close any open overlay
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
+    if (document.getElementById('sched-overlay').classList.contains('show'))      { closeSchedule(); return; }
     if (document.getElementById('levelup-overlay').classList.contains('show'))    { closeLevelUp(); return; }
     if (document.getElementById('session-complete').classList.contains('show'))   { closeSessionComplete(); return; }
     if (document.getElementById('add-assign-overlay').classList.contains('show')) { closeAddAssign(); return; }
@@ -9078,6 +9194,139 @@ function copyFriendCode() {
   navigator.clipboard.writeText(code).then(() => showToast('Friend code copied! 🌲', 2500));
 }
 
+// ── AI WEEKLY SCHEDULE ────────────────────────────────────
+let _schedDoneSet = new Set(JSON.parse(localStorage.getItem('sq_sched_done') || '[]'));
+
+function openSchedule() {
+  document.getElementById('sched-overlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+  track('schedule_opened');
+  // If we have assignments, auto-generate on open
+  if (allAssignments.length) generateSchedule();
+}
+
+function closeSchedule() {
+  document.getElementById('sched-overlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+function _schedAvailability() {
+  const days = ['mon','tue','wed','thu','fri','sat','sun'];
+  const out  = {};
+  days.forEach(d => {
+    const el = document.getElementById('sched-' + d);
+    out[d] = el ? (parseFloat(el.value) || 0) : 0;
+  });
+  return out;
+}
+
+async function generateSchedule() {
+  const btn     = document.getElementById('sched-gen-btn');
+  const results = document.getElementById('sched-results');
+  const summary = document.getElementById('sched-summary');
+  btn.disabled  = true;
+  btn.textContent = '⏳ Generating…';
+  results.innerHTML = '<div class="sched-loading">Building your schedule…</div>';
+  summary.style.display = 'none';
+
+  const token = localStorage.getItem('sq_token');
+  const url   = localStorage.getItem('sq_url');
+
+  // Use cached assignments or fetch fresh
+  let assignments = allAssignments.length ? allAssignments : [];
+  if (!assignments.length && token && url) {
+    try {
+      const res  = await fetch(`${API}/assignments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ canvas_url: url, token }),
+      });
+      const data = await res.json();
+      assignments = data.assignments || [];
+    } catch(e) {}
+  }
+
+  if (!assignments.length) {
+    results.innerHTML = '<div class="sched-empty">Connect Canvas to generate a personalised schedule 🌱</div>';
+    btn.disabled = false; btn.textContent = '✦ Generate';
+    return;
+  }
+
+  const sessionLen = parseFloat(document.getElementById('sched-session-len').value) || 1.5;
+  const avail      = _schedAvailability();
+
+  try {
+    const res  = await fetch(`${API}/generate-schedule`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ assignments, availability: avail, session_length: sessionLen }),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || 'Server error');
+
+    summary.textContent = data.summary;
+    summary.style.display = 'block';
+    _renderSchedule(data.schedule);
+    track('schedule_generated', { blocks: (data.summary.match(/^\d+/) || ['0'])[0] });
+  } catch(e) {
+    results.innerHTML = `<div class="sched-error">Couldn't generate schedule — make sure your Canvas connection is active.</div>`;
+  }
+
+  btn.disabled = false; btn.textContent = '✦ Regenerate';
+}
+
+function _renderSchedule(schedule) {
+  const el = document.getElementById('sched-results');
+  if (!schedule || !schedule.length) {
+    el.innerHTML = '<div class="sched-empty">No upcoming assignments found 🎉<br>Looks like you\'re all caught up!</div>';
+    return;
+  }
+
+  el.innerHTML = schedule.map(day => {
+    const dayHrs = day.blocks.reduce((s, b) => s + b.hours, 0);
+    const blockHtml = day.blocks.map((b, i) => {
+      const blockId = `${day.date}-${i}`;
+      const isDone  = _schedDoneSet.has(blockId);
+      return `<div class="sched-block${isDone ? ' done' : ''}" onclick="toggleSchedBlock(this, '${blockId}')">
+        <div class="sched-check">${isDone ? '✓' : ''}</div>
+        <div class="sched-block-dot" style="background:${b.color}"></div>
+        <div class="sched-block-info">
+          <div class="sched-block-course">${esc(b.course)}</div>
+          <div class="sched-block-task">${esc(b.task)}</div>
+          <div class="sched-block-due">${esc(b.due_label)}</div>
+        </div>
+        <div class="sched-block-right">
+          <div class="sched-block-hrs">${b.hours}h</div>
+          <div class="sched-block-pri ${b.priority}">${b.priority}</div>
+        </div>
+      </div>`;
+    }).join('');
+    const dateObj = new Date(day.date + 'T12:00:00');
+    const dateStr = dateObj.toLocaleDateString('en-US', { month:'short', day:'numeric' });
+    return `<div class="sched-day-section">
+      <div class="sched-day-header">
+        <span class="sched-day-name">${esc(day.day)}</span>
+        <span class="sched-day-date">${dateStr}</span>
+        <span class="sched-day-total">${dayHrs.toFixed(1)} hrs</span>
+      </div>
+      ${blockHtml}
+    </div>`;
+  }).join('');
+}
+
+function toggleSchedBlock(el, id) {
+  const done = el.classList.toggle('done');
+  const check = el.querySelector('.sched-check');
+  if (done) {
+    _schedDoneSet.add(id);
+    check.textContent = '✓';
+  } else {
+    _schedDoneSet.delete(id);
+    check.textContent = '';
+  }
+  localStorage.setItem('sq_sched_done', JSON.stringify([..._schedDoneSet]));
+}
+
 function openPaywall(context) {
   _paywallContext = context || 'generic';
   track('paywall_opened', { context: _paywallContext });
@@ -9094,6 +9343,9 @@ function openPaywall(context) {
     } else if (context === 'assign-gate') {
       heading.innerHTML = "See every assignment<br>that matters.";
       sub.textContent   = "Free shows your top 5. Premium unlocks your full priority list.";
+    } else if (context === 'ai-schedule') {
+      heading.innerHTML = "Get your week<br>planned for you.";
+      sub.textContent   = "AI builds a study schedule around your deadlines, weights, and free time — automatically.";
     } else {
       heading.innerHTML = "Unlock your full<br>grove potential.";
       sub.textContent   = "Every decoration, every feature. Cancel anytime.";
@@ -9437,6 +9689,44 @@ if ('serviceWorker' in navigator) {
     <div class="lu-xp-pill" id="lu-xp-pill">1,200 XP reached</div>
     <p class="lu-sub" id="lu-sub">Your roots are deepening. Keep going.</p>
     <button class="lu-btn" onclick="closeLevelUp()">Keep Growing →</button>
+  </div>
+</div>
+
+<!-- ══ AI WEEKLY SCHEDULE OVERLAY ══════════════════════════ -->
+<div id="sched-overlay">
+  <div class="sched-panel">
+    <div class="sched-header">
+      <span class="sched-title">📅 Weekly Schedule</span>
+      <button class="sched-close" onclick="closeSchedule()">✕</button>
+    </div>
+
+    <!-- Availability inputs -->
+    <div class="sched-avail-title">Hours available per day</div>
+    <div class="sched-avail-grid">
+      <div class="sched-day-col"><span class="sched-day-lbl">Mon</span><input class="sched-hrs-input" id="sched-mon" type="number" min="0" max="12" step="0.5" value="2"></div>
+      <div class="sched-day-col"><span class="sched-day-lbl">Tue</span><input class="sched-hrs-input" id="sched-tue" type="number" min="0" max="12" step="0.5" value="2"></div>
+      <div class="sched-day-col"><span class="sched-day-lbl">Wed</span><input class="sched-hrs-input" id="sched-wed" type="number" min="0" max="12" step="0.5" value="2"></div>
+      <div class="sched-day-col"><span class="sched-day-lbl">Thu</span><input class="sched-hrs-input" id="sched-thu" type="number" min="0" max="12" step="0.5" value="2"></div>
+      <div class="sched-day-col"><span class="sched-day-lbl">Fri</span><input class="sched-hrs-input" id="sched-fri" type="number" min="0" max="12" step="0.5" value="1"></div>
+      <div class="sched-day-col"><span class="sched-day-lbl">Sat</span><input class="sched-hrs-input" id="sched-sat" type="number" min="0" max="12" step="0.5" value="3"></div>
+      <div class="sched-day-col"><span class="sched-day-lbl">Sun</span><input class="sched-hrs-input" id="sched-sun" type="number" min="0" max="12" step="0.5" value="2"></div>
+    </div>
+
+    <!-- Options row -->
+    <div class="sched-opts">
+      <span class="sched-opt-label">Session</span>
+      <select class="sched-session-sel" id="sched-session-len">
+        <option value="1">1 hr blocks</option>
+        <option value="1.5" selected>1.5 hr blocks</option>
+        <option value="2">2 hr blocks</option>
+        <option value="0.5">30 min blocks</option>
+      </select>
+      <button class="sched-gen-btn" id="sched-gen-btn" onclick="generateSchedule()">✦ Generate</button>
+    </div>
+
+    <!-- Results -->
+    <div id="sched-summary" style="display:none" class="sched-summary"></div>
+    <div id="sched-results"></div>
   </div>
 </div>
 
