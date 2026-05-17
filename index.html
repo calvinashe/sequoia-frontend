@@ -969,6 +969,50 @@ body {
 .g-forecast.warn { color:#F5C060; font-weight:600; }
 .g-forecast.hard { color:#FF9878; font-weight:600; }
 .grades-footer { padding:10px 18px 14px; font-size:11px; color:rgba(255,255,255,0.28); text-align:center; }
+/* ── What-if grade slider ── */
+.g-whatif-btn {
+  display:inline-flex; align-items:center; gap:4px;
+  font-size:11px; font-weight:600; color:rgba(255,255,255,0.3);
+  background:none; border:none; cursor:pointer; padding:4px 0 0;
+  font-family:'DM Sans',sans-serif; transition:color .18s;
+}
+.g-whatif-btn:hover { color:var(--g3); }
+.g-slider-wrap {
+  display:none; padding:12px 0 2px;
+  border-top:1px solid rgba(255,255,255,0.06); margin-top:8px;
+}
+.g-slider-header {
+  display:flex; justify-content:space-between; align-items:center;
+  font-size:11px; color:rgba(255,255,255,0.38); margin-bottom:8px;
+}
+.g-slider-header strong { color:rgba(255,255,255,0.75); }
+.g-slider-val { color:var(--g4); font-weight:700; }
+input.g-slider {
+  width:100%; -webkit-appearance:none; appearance:none;
+  height:5px; border-radius:3px; outline:none; cursor:pointer;
+  background:linear-gradient(to right,var(--g3) 75%,rgba(255,255,255,0.12) 75%);
+}
+input.g-slider::-webkit-slider-thumb {
+  -webkit-appearance:none; width:18px; height:18px; border-radius:50%;
+  background:var(--g3); cursor:pointer;
+  box-shadow:0 2px 8px rgba(76,161,48,0.45);
+}
+input.g-slider::-moz-range-thumb {
+  width:18px; height:18px; border-radius:50%; border:none;
+  background:var(--g3); cursor:pointer;
+}
+.g-projected {
+  display:flex; justify-content:space-between; align-items:center;
+  margin-top:10px; padding:10px 14px; border-radius:10px;
+  border:1px solid rgba(76,161,48,0.18);
+  background:rgba(76,161,48,0.07); transition:all .2s;
+}
+.g-proj-left { display:flex; flex-direction:column; gap:2px; }
+.g-proj-label { font-size:10px; color:rgba(255,255,255,0.35); font-weight:600; letter-spacing:.4px; text-transform:uppercase; }
+.g-proj-letter { font-size:22px; font-weight:800; color:var(--g4); line-height:1; transition:color .2s; }
+.g-proj-right { text-align:right; }
+.g-proj-pct { font-size:20px; font-weight:800; color:rgba(255,255,255,0.8); }
+.g-proj-change { font-size:11px; color:rgba(255,255,255,0.35); margin-top:2px; }
 /* keep legacy course-dot for assignment rows */
 .course-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
 .courses-divider { height:1px; background:var(--border); margin:8px 16px; }
@@ -5627,6 +5671,53 @@ function forecastNeeded(current, earnedPct, target) {
   return Math.round(needed);
 }
 
+function toggleGradeSlider(idx) {
+  const wrap = document.getElementById('g-slider-' + idx);
+  if (!wrap) return;
+  const opening = wrap.style.display === 'none' || wrap.style.display === '';
+  wrap.style.display = opening ? 'block' : 'none';
+  if (opening) {
+    const slider = wrap.querySelector('.g-slider');
+    if (slider) updateGradeSlider(idx, slider.value);
+  }
+}
+
+function updateGradeSlider(idx, val) {
+  const slider    = document.querySelector(`#g-slider-${idx} .g-slider`);
+  if (!slider) return;
+  const current   = parseFloat(slider.dataset.current);
+  const earned    = parseFloat(slider.dataset.earned);
+  const remaining = 100 - earned;
+  const sliderVal = parseInt(val);
+
+  // Projected final = current points earned + new points on remaining work
+  const projected    = Math.round(current * (earned / 100) + sliderVal * (remaining / 100));
+  const [ltr]        = letterGrade(projected);
+  const diff         = projected - Math.round(current);
+  const diffStr      = diff > 0 ? `+${diff}% from now` : diff < 0 ? `${diff}% from now` : 'no change';
+  const color        = projected >= 90 ? '#4CA130' : projected >= 80 ? '#5B8ACF' : projected >= 70 ? '#D4882B' : '#C75B3A';
+
+  // Update slider track fill
+  slider.style.background = `linear-gradient(to right,var(--g3) ${sliderVal}%,rgba(255,255,255,0.12) ${sliderVal}%)`;
+
+  // Update label
+  const valEl = document.querySelector(`#g-slider-${idx} .g-slider-val`);
+  if (valEl) valEl.textContent = sliderVal + '%';
+
+  // Update projected card
+  const projCard = document.getElementById('g-proj-' + idx);
+  if (projCard) {
+    projCard.style.borderColor = color + '44';
+    projCard.style.background  = color + '14';
+  }
+  const letterEl = document.getElementById('g-proj-letter-' + idx);
+  if (letterEl) { letterEl.textContent = ltr; letterEl.style.color = color; }
+  const pctEl = document.getElementById('g-proj-pct-' + idx);
+  if (pctEl) { pctEl.textContent = projected + '%'; }
+  const changeEl = document.getElementById('g-proj-change-' + idx);
+  if (changeEl) { changeEl.textContent = diffStr; changeEl.style.color = diff >= 0 ? 'rgba(130,204,85,0.7)' : 'rgba(255,152,120,0.7)'; }
+}
+
 function renderGrades(grades) {
   window._lastGrades = grades;
   const el     = document.getElementById('grades-list');
@@ -5634,7 +5725,7 @@ function renderGrades(grades) {
   const target = parseInt(document.getElementById('grades-target').value, 10);
   if (!grades.length) { el.innerHTML = '<div class="loading-state" style="text-align:center;padding:24px 16px"><div style="font-size:28px;margin-bottom:8px">📚</div><div style="font-size:13px;color:var(--light)">No courses found.<br>Connect Canvas to see your grades.</div></div>'; return; }
   const weakSpots = getWeakSpots();
-  el.innerHTML = grades.slice(0, 7).map(c => {
+  el.innerHTML = grades.slice(0, 7).map((c, idx) => {
     const hasPct  = c.current !== null && c.current !== undefined;
     const pct     = hasPct ? Math.round(c.current) : null;
     const [letter, cls] = hasPct ? letterGrade(pct) : ['—', 'lc'];
@@ -5659,6 +5750,27 @@ function renderGrades(grades) {
     const wsHtml = spots.length
       ? `<div class="g-weakspots">${spots.slice(0,4).map(s=>`<span class="g-ws-chip">⚠ ${esc(s)}</span>`).join('')}${spots.length>4?`<span class="g-ws-more">+${spots.length-4} more</span>`:''}</div>`
       : '';
+    const defaultSlider = 75;
+    const sliderHtml = hasPct && c.earned_pct !== null ? `
+      <button class="g-whatif-btn" onclick="toggleGradeSlider(${idx})">✦ What if? →</button>
+      <div class="g-slider-wrap" id="g-slider-${idx}">
+        <div class="g-slider-header">
+          <span>If I score <strong><span class="g-slider-val">${defaultSlider}%</span></strong> on remaining work</span>
+        </div>
+        <input class="g-slider" type="range" min="0" max="100" value="${defaultSlider}"
+          oninput="updateGradeSlider(${idx}, this.value)"
+          data-current="${c.current}" data-earned="${c.earned_pct}">
+        <div class="g-projected" id="g-proj-${idx}">
+          <div class="g-proj-left">
+            <span class="g-proj-label">Projected Grade</span>
+            <span class="g-proj-letter" id="g-proj-letter-${idx}">—</span>
+          </div>
+          <div class="g-proj-right">
+            <div class="g-proj-pct" id="g-proj-pct-${idx}">—</div>
+            <div class="g-proj-change" id="g-proj-change-${idx}"></div>
+          </div>
+        </div>
+      </div>` : '';
     return `<div class="g-row">
       <div class="g-top">
         <div class="g-dot" style="background:${c.color}"></div>
@@ -5669,6 +5781,7 @@ function renderGrades(grades) {
       ${hasPct ? `<div class="g-bar-track"><div class="g-bar-fill" style="width:0%;background:${barClr}" data-pct="${barPct}"></div></div>` : ''}
       ${forecastHtml}
       ${wsHtml}
+      ${sliderHtml}
     </div>`;
   }).join('');
   footer.textContent = `Target: ${target}%+ · ${grades.length} course${grades.length !== 1 ? 's' : ''}`;
