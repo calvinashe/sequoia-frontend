@@ -1505,6 +1505,96 @@ input.g-slider::-moz-range-thumb {
 }
 #undo-toast .ut-btn:hover { background:var(--g2); }
 
+/* ── SYLLABUS IMPORT OVERLAY ─────────────────────────────── */
+#syllabus-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(6px);
+  z-index:9600; display:flex; align-items:flex-end; justify-content:center;
+  opacity:0; pointer-events:none; visibility:hidden;
+  transition:opacity .25s, visibility .25s;
+}
+#syllabus-overlay.show { opacity:1; pointer-events:auto; visibility:visible; }
+.syl-sheet {
+  width:100%; max-width:480px;
+  background:var(--card); border-radius:20px 20px 0 0;
+  padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));
+  max-height:88vh; overflow-y:auto;
+  transform:translateY(20px); transition:transform .3s cubic-bezier(.22,.68,0,1.1);
+}
+#syllabus-overlay.show .syl-sheet { transform:translateY(0); }
+.syl-handle { width:36px; height:4px; border-radius:2px; background:rgba(255,255,255,0.15); margin:0 auto 16px; }
+.syl-title  { font-family:'Playfair Display',serif; font-size:20px; font-weight:700; color:var(--text); margin-bottom:4px; }
+.syl-sub    { font-size:13px; color:var(--mid); margin-bottom:18px; line-height:1.5; }
+.syl-close  { position:absolute; top:18px; right:18px; background:none; border:none;
+              font-size:18px; color:var(--mid); cursor:pointer; padding:4px 8px; }
+/* Course cards */
+.syl-course-list { display:flex; flex-direction:column; gap:10px; margin-bottom:18px; }
+.syl-course-card {
+  display:flex; align-items:center; gap:12px;
+  background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+  border-radius:12px; padding:12px 14px; cursor:default;
+}
+.syl-course-icon { font-size:22px; flex-shrink:0; }
+.syl-course-info { flex:1; min-width:0; }
+.syl-course-name { font-size:13px; font-weight:700; color:var(--text);
+                   white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.syl-course-status { font-size:11px; color:var(--mid); margin-top:2px; }
+.syl-course-action {
+  flex-shrink:0; font-size:11px; font-weight:700; padding:6px 10px;
+  border-radius:8px; border:none; cursor:pointer; transition:opacity .15s;
+}
+.sca-auto    { background:rgba(76,161,48,0.18); color:var(--g3); }
+.sca-upload  { background:rgba(255,255,255,0.08); color:var(--text); }
+.sca-paste   { background:rgba(255,255,255,0.06); color:var(--mid); }
+.sca-done    { background:rgba(76,161,48,0.12); color:var(--g3); cursor:default; }
+.sca-loading { background:rgba(255,255,255,0.06); color:var(--mid); cursor:default; }
+.syl-course-card.syl-imported { border-color:rgba(76,161,48,0.3); }
+/* Paste textarea */
+.syl-paste-wrap { display:none; flex-direction:column; gap:8px; margin-bottom:14px; }
+.syl-paste-wrap.show { display:flex; }
+.syl-paste-label { font-size:12px; font-weight:600; color:var(--mid); }
+.syl-paste-ta {
+  width:100%; min-height:120px; border-radius:10px; padding:10px 12px;
+  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
+  color:var(--text); font-size:13px; font-family:'DM Sans',sans-serif;
+  resize:vertical; outline:none; box-sizing:border-box;
+}
+.syl-paste-ta:focus { border-color:rgba(76,161,48,0.4); }
+.syl-parse-btn {
+  width:100%; padding:14px; border-radius:12px; border:none; cursor:pointer;
+  background:var(--g3); color:#fff; font-size:14px; font-weight:800;
+  margin-bottom:8px; display:none;
+}
+.syl-parse-btn.show { display:block; }
+.syl-parse-btn:disabled { opacity:.45; cursor:not-allowed; }
+/* Review step */
+.syl-review-header { font-size:14px; font-weight:700; color:var(--text); margin-bottom:12px; }
+.syl-review-list { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; max-height:40vh; overflow-y:auto; }
+.syl-review-item {
+  display:flex; align-items:flex-start; gap:10px;
+  background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07);
+  border-radius:10px; padding:10px 12px;
+}
+.sri-check { flex-shrink:0; margin-top:2px; accent-color:var(--g3); width:16px; height:16px; cursor:pointer; }
+.sri-body  { flex:1; min-width:0; }
+.sri-name  { font-size:13px; font-weight:600; color:var(--text); margin-bottom:3px; }
+.sri-meta  { font-size:11px; color:var(--mid); }
+.sri-type  { display:inline-block; font-size:10px; font-weight:700; padding:2px 6px;
+             border-radius:100px; background:rgba(255,255,255,0.07); color:var(--mid);
+             margin-right:6px; text-transform:uppercase; letter-spacing:.04em; }
+.syl-confirm-btn {
+  width:100%; padding:14px; border-radius:12px; border:none; cursor:pointer;
+  background:var(--g3); color:#fff; font-size:15px; font-weight:800; margin-bottom:8px;
+}
+.syl-confirm-btn:disabled { opacity:.45; cursor:not-allowed; }
+.syl-back-btn {
+  width:100%; padding:11px; border-radius:12px; border:1px solid rgba(255,255,255,0.1);
+  background:transparent; color:var(--mid); font-size:13px; cursor:pointer;
+}
+.syl-empty { text-align:center; padding:24px 0; font-size:13px; color:var(--mid); }
+[data-theme="light"] .syl-course-card { background:rgba(0,0,0,0.03); border-color:rgba(0,0,0,0.08); }
+[data-theme="light"] .syl-paste-ta { background:#fff; border-color:rgba(0,0,0,0.15); color:#1A2E1A; }
+[data-theme="light"] .syl-review-item { background:rgba(0,0,0,0.03); border-color:rgba(0,0,0,0.06); }
+
 /* ── ADD ASSIGNMENT SHEET ───────────────────────────────── */
 #add-assign-overlay {
   position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(4px);
@@ -4247,6 +4337,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         <span class="assign-title">Your Priorities</span>
         <div style="display:flex;gap:6px;align-items:center">
           <button class="ai-pick-btn" onclick="aiQuickPick()" title="AI recommendation"><span class="ai-spark">⚡</span> AI Pick</button>
+          <button class="add-btn" onclick="openSyllabusImport()" title="Import syllabus">📄</button>
           <button class="add-btn" onclick="openAddAssign()" title="Add assignment">＋</button>
           <button class="add-btn" onclick="refreshAssignments()" title="Refresh">↻</button>
         </div>
@@ -5981,6 +6072,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('assign-detail').classList.contains('show'))      { closeAssignDetail(); return; }
     if (document.getElementById('settings-overlay').classList.contains('show'))   { closeSettings(); return; }
     if (document.getElementById('deco-shop-modal').classList.contains('show'))    { closeDecoShopModal(); return; }
+    if (document.getElementById('syllabus-overlay').classList.contains('show'))   { closeSyllabusImport(); return; }
   });
 });
 
@@ -7907,6 +7999,250 @@ function openAddAssign() {
 }
 function closeAddAssign() {
   document.getElementById('add-assign-overlay').classList.remove('show');
+}
+
+// ── SYLLABUS IMPORT ───────────────────────────────────────────────────────────
+let _sylCourses    = [];   // [{course_id, course_name, has_syllabus, syllabus_html}]
+let _sylParsedFor  = null; // course_id of last paste parse
+let _sylReviewing  = [];   // assignments currently in review step
+
+function openSyllabusImport() {
+  document.getElementById('syllabus-overlay').classList.add('show');
+  document.getElementById('syl-step-courses').style.display = '';
+  document.getElementById('syl-step-review').style.display  = 'none';
+  _loadSyllabusCourses();
+}
+function closeSyllabusImport() {
+  document.getElementById('syllabus-overlay').classList.remove('show');
+}
+function sylGoBack() {
+  document.getElementById('syl-step-review').style.display  = 'none';
+  document.getElementById('syl-step-courses').style.display = '';
+}
+
+async function _loadSyllabusCourses() {
+  const list = document.getElementById('syl-course-list');
+  list.innerHTML = '<div class="syl-empty">Checking Canvas for syllabi…</div>';
+  document.getElementById('syl-paste-wrap').classList.remove('show');
+  document.getElementById('syl-parse-btn').classList.remove('show');
+
+  const token = localStorage.getItem('sq_token');
+  const url   = localStorage.getItem('sq_url');
+  if (!token || !url) {
+    list.innerHTML = '<div class="syl-empty">Connect Canvas first to auto-import syllabi.</div>';
+    return;
+  }
+  try {
+    const res  = await fetch(API + '/canvas-syllabi', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ canvas_url: url, token }),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+    _sylCourses = data.courses;
+    _renderSylCourseList();
+    // Auto-parse any course that has a Canvas syllabus
+    _autoParseCanvasSyllabi();
+  } catch (e) {
+    list.innerHTML = `<div class="syl-empty">Couldn't load courses: ${e.message}</div>`;
+  }
+}
+
+function _renderSylCourseList() {
+  const list = document.getElementById('syl-course-list');
+  if (!_sylCourses.length) {
+    list.innerHTML = '<div class="syl-empty">No active courses found.</div>';
+    return;
+  }
+  list.innerHTML = _sylCourses.map(c => {
+    const icon   = c.has_syllabus ? '📋' : '📄';
+    const status = c.has_syllabus ? 'Found in Canvas' : 'Not in Canvas';
+    const actionClass = c.has_syllabus ? 'sca-auto' : 'sca-upload';
+    const actionLabel = c.has_syllabus ? '⏳ Parsing…' : '⬆ Upload PDF';
+    const actionClick = c.has_syllabus ? '' : `onclick="sylUploadPDF(${c.course_id}, '${c.course_name.replace(/'/g,"\\'")}')"`;
+    return `<div class="syl-course-card" id="syl-card-${c.course_id}">
+      <div class="syl-course-icon">${icon}</div>
+      <div class="syl-course-info">
+        <div class="syl-course-name">${c.course_name}</div>
+        <div class="syl-course-status" id="syl-status-${c.course_id}">${status}</div>
+      </div>
+      <button class="syl-course-action ${actionClass}" id="syl-action-${c.course_id}" ${actionClick}>${actionLabel}</button>
+    </div>`;
+  }).join('');
+
+  // Show paste option for courses without Canvas syllabus
+  const hasMissing = _sylCourses.some(c => !c.has_syllabus);
+  if (hasMissing) {
+    document.getElementById('syl-paste-wrap').classList.add('show');
+    document.getElementById('syl-paste-label').textContent =
+      'Or paste a syllabus for any course:';
+  }
+}
+
+async function _autoParseCanvasSyllabi() {
+  const toparse = _sylCourses.filter(c => c.has_syllabus);
+  for (const c of toparse) {
+    _setSylCardState(c.course_id, 'loading', '⏳ Parsing…', 'Parsing with AI…');
+    try {
+      const res  = await fetch(API + '/parse-syllabus', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: c.syllabus_html,
+          content_type: 'html',
+          course_name: c.course_name,
+        }),
+      });
+      const data = await res.json();
+      if (!data.ok || !data.assignments?.length) {
+        _setSylCardState(c.course_id, 'upload', '⬆ Upload PDF', 'Nothing found — try PDF');
+        continue;
+      }
+      const count = data.assignments.length;
+      _setSylCardState(c.course_id, 'done', `✓ ${count} found`, `${count} assignments found`);
+      // Tag each assignment with source course
+      const tagged = data.assignments.map(a => ({ ...a, course: c.course_name }));
+      _showReview(tagged, `Found ${count} assignments in Canvas syllabi`);
+      break; // show first batch for review; user comes back for others
+    } catch (e) {
+      _setSylCardState(c.course_id, 'upload', '⬆ Upload PDF', 'Parse failed — try PDF');
+    }
+  }
+}
+
+function _setSylCardState(courseId, type, label, statusText) {
+  const btn = document.getElementById(`syl-action-${courseId}`);
+  const sts = document.getElementById(`syl-status-${courseId}`);
+  const card= document.getElementById(`syl-card-${courseId}`);
+  if (!btn) return;
+  btn.textContent = label;
+  btn.className   = `syl-course-action sca-${type}`;
+  btn.disabled    = (type === 'done' || type === 'loading');
+  if (sts)  sts.textContent = statusText;
+  if (card && type === 'done') card.classList.add('syl-imported');
+}
+
+function sylUploadPDF(courseId, courseName) {
+  const input = document.createElement('input');
+  input.type  = 'accept' in input ? 'file' : 'text';
+  input.type  = 'file';
+  input.accept= '.pdf';
+  input.onchange = async () => {
+    const file = input.files[0];
+    if (!file) return;
+    _setSylCardState(courseId, 'loading', '⏳ Parsing…', 'Reading PDF…');
+    const form = new FormData();
+    form.append('file', file);
+    form.append('course_name', courseName);
+    try {
+      const res  = await fetch(API + '/parse-syllabus-pdf', { method: 'POST', body: form });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error);
+      const count = data.assignments.length;
+      _setSylCardState(courseId, 'done', `✓ ${count} found`, `${count} assignments found`);
+      const tagged = data.assignments.map(a => ({ ...a, course: courseName }));
+      _showReview(tagged, `Found ${count} assignments in ${courseName}`);
+    } catch (e) {
+      _setSylCardState(courseId, 'upload', '⬆ Upload PDF', 'Failed — try paste instead');
+      showToast('PDF parse failed: ' + e.message);
+    }
+  };
+  input.click();
+}
+
+function sylPasteInput() {
+  const val = document.getElementById('syl-paste-ta').value.trim();
+  const btn = document.getElementById('syl-parse-btn');
+  if (val.length > 80) btn.classList.add('show');
+  else btn.classList.remove('show');
+}
+
+async function parsePastedSyllabus() {
+  const text     = document.getElementById('syl-paste-ta').value.trim();
+  const btn      = document.getElementById('syl-parse-btn');
+  const origText = btn.textContent;
+  btn.disabled = true; btn.textContent = '⏳ Parsing…';
+  // Try to guess course name from paste area label context
+  const courseName = 'Pasted Syllabus';
+  try {
+    const res  = await fetch(API + '/parse-syllabus', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: text, content_type: 'text', course_name: courseName }),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+    const count = data.assignments.length;
+    _showReview(data.assignments, `Found ${count} assignments`);
+    document.getElementById('syl-paste-ta').value = '';
+    btn.classList.remove('show');
+  } catch (e) {
+    showToast('Parse failed: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = origText;
+  }
+}
+
+function _showReview(assignments, subtitle) {
+  _sylReviewing = assignments;
+  document.getElementById('syl-step-courses').style.display = 'none';
+  document.getElementById('syl-step-review').style.display  = '';
+  document.getElementById('syl-review-sub').textContent     = subtitle + ' — uncheck any you don\'t want.';
+
+  const TYPE_EMOJI = { exam:'📝', quiz:'❓', homework:'📚', project:'🔨', paper:'📄', lab:'🔬', other:'✅' };
+  const list = document.getElementById('syl-review-list');
+  if (!assignments.length) {
+    list.innerHTML = '<div class="syl-empty">No assignments were extracted. Try uploading a PDF or pasting the text.</div>';
+    document.getElementById('syl-confirm-btn').disabled = true;
+    return;
+  }
+  document.getElementById('syl-confirm-btn').disabled = false;
+  list.innerHTML = assignments.map((a, i) => {
+    const emoji   = TYPE_EMOJI[a.type] || '✅';
+    const due     = a.due_date ? new Date(a.due_date + 'T12:00:00').toLocaleDateString('en-US', { month:'short', day:'numeric' }) : 'No date';
+    const weight  = a.weight != null ? a.weight + '% of grade' : '';
+    const points  = a.points != null ? a.points + ' pts' : '';
+    const meta    = [due, weight, points].filter(Boolean).join(' · ');
+    return `<div class="syl-review-item">
+      <input class="sri-check" type="checkbox" id="sric-${i}" checked>
+      <div class="sri-body">
+        <div class="sri-name">${emoji} ${a.name || 'Untitled'}</div>
+        <div class="sri-meta"><span class="sri-type">${a.type || 'other'}</span>${meta}</div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('syl-confirm-btn').textContent = `Add ${assignments.length} Assignments →`;
+}
+
+function confirmSyllabusImport() {
+  const checked = _sylReviewing.filter((_, i) => {
+    const cb = document.getElementById(`sric-${i}`);
+    return cb && cb.checked;
+  });
+  if (!checked.length) { showToast('No assignments selected.'); return; }
+
+  // Add each checked assignment as a manual assignment
+  const manual = JSON.parse(localStorage.getItem('sq_manual') || '[]');
+  const now    = Date.now();
+  checked.forEach((a, i) => {
+    manual.push({
+      id:      'syl-' + now + '-' + i,
+      name:    a.name || 'Untitled',
+      course:  a.course || 'Unknown Course',
+      due:     a.due_date || '',
+      weight:  a.weight  != null ? a.weight  : 0,
+      points:  a.points  != null ? a.points  : 0,
+      source:  'syllabus',
+    });
+  });
+  localStorage.setItem('sq_manual', JSON.stringify(manual));
+  if (currentUser) saveUserData({ manual_assignments: manual });
+
+  closeSyllabusImport();
+  renderAssignments();
+  showToast(`✅ ${checked.length} assignment${checked.length !== 1 ? 's' : ''} added!`);
+  track('syllabus_imported', { count: checked.length });
 }
 function submitAddAssign() {
   const title  = document.getElementById('aa-title').value.trim();
@@ -10018,6 +10354,37 @@ if ('serviceWorker' in navigator) {
       <a href="terms.html" target="_blank" style="color:rgba(255,255,255,0.35);text-decoration:underline">Terms of Service</a>
       &nbsp;·&nbsp;
       <a href="mailto:calvinashe@myyahoo.com" style="color:rgba(255,255,255,0.35);text-decoration:underline">Contact</a>
+    </div>
+  </div>
+</div>
+
+<!-- ── SYLLABUS IMPORT SHEET ── -->
+<div id="syllabus-overlay" onclick="if(event.target===this)closeSyllabusImport()">
+  <div class="syl-sheet" style="position:relative">
+    <button class="syl-close" onclick="closeSyllabusImport()">✕</button>
+    <div class="syl-handle"></div>
+
+    <!-- Step 1: Course list -->
+    <div id="syl-step-courses">
+      <div class="syl-title">Import Syllabus</div>
+      <div class="syl-sub">We'll auto-pull from Canvas first. Upload a PDF or paste text for anything we can't find.</div>
+      <div class="syl-course-list" id="syl-course-list">
+        <div class="syl-empty">Loading your courses…</div>
+      </div>
+      <div class="syl-paste-wrap" id="syl-paste-wrap">
+        <div class="syl-paste-label" id="syl-paste-label">Paste syllabus text</div>
+        <textarea class="syl-paste-ta" id="syl-paste-ta" placeholder="Paste the full syllabus text here…" oninput="sylPasteInput()"></textarea>
+      </div>
+      <button class="syl-parse-btn" id="syl-parse-btn" onclick="parsePastedSyllabus()">Parse Syllabus →</button>
+    </div>
+
+    <!-- Step 2: Review extracted assignments -->
+    <div id="syl-step-review" style="display:none">
+      <div class="syl-title">Review Assignments</div>
+      <div class="syl-sub" id="syl-review-sub">Check what was found — uncheck anything you don't want to add.</div>
+      <div class="syl-review-list" id="syl-review-list"></div>
+      <button class="syl-confirm-btn" id="syl-confirm-btn" onclick="confirmSyllabusImport()">Add Assignments →</button>
+      <button class="syl-back-btn" onclick="sylGoBack()">← Back</button>
     </div>
   </div>
 </div>
