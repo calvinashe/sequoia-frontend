@@ -5475,6 +5475,7 @@ const _KNOWN_SCHOOLS = [
 function obUrlSuggest() {
   const el  = document.getElementById('ob-url');
   const box = document.getElementById('ob-url-suggestions');
+  if (!el || !box) return;
   const v   = el.value.trim().toLowerCase().replace(/https?:\/\//,'');
   if (!v || v.length < 2 || v.includes('.')) { box.innerHTML = ''; return; }
   const matches = _KNOWN_SCHOOLS.filter(([name, url]) =>
@@ -5567,9 +5568,13 @@ function obRevealEnter() {
   const token = localStorage.getItem('sq_token');
   const url   = localStorage.getItem('sq_url');
   closeOnboard();
-  // Render cached assignments if available
+  // Render what we already fetched in the reveal step
   if (allAssignments.length) _applyAssignments(allAssignments);
-  loadCourses(token, url);
+  // Background refresh to keep data fresh + kick off courses
+  if (token && url) {
+    _refreshAssignmentsBackground(token, url);
+    loadCourses(token, url);
+  }
   loadXPStreak(); updateDashTree(); syncTreeScreen();
   setTimeout(tourShow, 1200);
   track('onboard_reveal_entered');
