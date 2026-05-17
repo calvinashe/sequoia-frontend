@@ -5472,18 +5472,65 @@ function skeletonRows() {
     </div>`).join('');
 }
 
+const _ASSIGN_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+function _getCachedAssignments() {
+  try {
+    const ts   = parseInt(localStorage.getItem('sq_assign_ts') || '0');
+    const raw  = localStorage.getItem('sq_assign_cache');
+    if (raw && Date.now() - ts < _ASSIGN_CACHE_TTL) return JSON.parse(raw);
+  } catch (_) {}
+  return null;
+}
+
+function _setCachedAssignments(assignments) {
+  try {
+    localStorage.setItem('sq_assign_cache', JSON.stringify(assignments));
+    localStorage.setItem('sq_assign_ts',    String(Date.now()));
+  } catch (_) {}
+}
+
+function _applyAssignments(raw) {
+  const now = Date.now();
+  allAssignments = raw.map((a, i) => {
+    const days_until = a.due_at ? (new Date(a.due_at) - now) / 86400000 : null;
+    return {
+      ...a,
+      id:             'a' + (a.id || i),
+      title:          a.name || a.title || 'Untitled',
+      weight_pct:     a.grade_weight ?? a.weight_pct ?? 0,
+      priority_score: a.priority ?? a.priority_score ?? 0,
+      days_until,
+    };
+  });
+  const manual = JSON.parse(localStorage.getItem('sq_manual') || '[]');
+  manual.forEach(m => { if (!allAssignments.find(a => a.id === m.id)) allAssignments.unshift(m); });
+  renderAssignments(allAssignments);
+  scheduleNotifications(allAssignments);
+  buildQPick();
+}
+
 async function loadAssignments(token, url) {
   const list = document.getElementById('assign-list');
+
+  // ── Instant render from cache if fresh ──
+  const cached = _getCachedAssignments();
+  if (cached) {
+    _applyAssignments(cached);
+    // Refresh in background silently — no skeleton, no spinner
+    _refreshAssignmentsBackground(token, url);
+    return;
+  }
+
   list.innerHTML = skeletonRows();
 
   // After 8s still loading → show warm-up notice above the skeletons
   const wakeTimer = setTimeout(() => {
-    if (!list.querySelector('.sk-row')) return; // already rendered
+    if (!list.querySelector('.sk-row')) return;
     const notice = document.createElement('div');
     notice.className = 'wake-notice'; notice.id = 'wake-notice';
     notice.innerHTML = _wakeHTML();
     list.insertBefore(notice, list.firstChild);
-    // Replay the grow animation every 6s while waiting
     _wakeInterval = setInterval(() => {
       const n = document.getElementById('wake-notice');
       if (n) n.innerHTML = _wakeHTML();
@@ -5507,29 +5554,33 @@ async function loadAssignments(token, url) {
       }
       return;
     }
-    const now = Date.now();
-    allAssignments = (data.assignments || []).map((a, i) => {
-      const days_until = a.due_at ? (new Date(a.due_at) - now) / 86400000 : null;
-      return {
-        ...a,
-        id:             'a' + (a.id || i),
-        title:          a.name || a.title || 'Untitled',
-        weight_pct:     a.grade_weight ?? a.weight_pct ?? 0,
-        priority_score: a.priority ?? a.priority_score ?? 0,
-        days_until,
-      };
-    });
-    // merge any manually added assignments
-    const manual = JSON.parse(localStorage.getItem('sq_manual') || '[]');
-    manual.forEach(m => { if (!allAssignments.find(a => a.id === m.id)) allAssignments.unshift(m); });
-    renderAssignments(allAssignments);
-    scheduleNotifications(allAssignments);
-    buildQPick();
+    _setCachedAssignments(data.assignments || []);
+    _applyAssignments(data.assignments || []);
   } catch (e) {
     clearTimeout(wakeTimer);
     clearInterval(_wakeInterval); _wakeInterval = null;
-    list.innerHTML = `<div class="empty-state"><div class="es-icon">📡</div><h3>Can't reach the server</h3><p>The Sequoia server may still be waking up — try again in a few seconds, or use Demo Mode to explore.</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:4px"><button class="es-retry" onclick="loadAssignments('${esc(token)}','${esc(url)}')">Try Again</button><button class="es-retry" style="background:var(--g-pale);color:var(--g2)" onclick="loadDemo()">Try Demo Mode →</button></div></div>`;
+    // If we have stale cache, use it rather than showing an error
+    const stale = (() => { try { return JSON.parse(localStorage.getItem('sq_assign_cache') || 'null'); } catch { return null; } })();
+    if (stale) {
+      _applyAssignments(stale);
+      showToast('Showing cached assignments — check your connection');
+    } else {
+      list.innerHTML = `<div class="empty-state"><div class="es-icon">📡</div><h3>Can't reach the server</h3><p>The Sequoia server may still be waking up — try again in a few seconds, or use Demo Mode to explore.</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:4px"><button class="es-retry" onclick="loadAssignments('${esc(token)}','${esc(url)}')">Try Again</button><button class="es-retry" style="background:var(--g-pale);color:var(--g2)" onclick="loadDemo()">Try Demo Mode →</button></div></div>`;
+    }
   }
+}
+
+// Silent background refresh — updates cache + UI without any loading state
+async function _refreshAssignmentsBackground(token, url) {
+  try {
+    const res  = await fetch(`${API}/assignments`, { headers: { 'X-Canvas-Token': token, 'X-Canvas-URL': url } });
+    const data = await res.json();
+    if (data.ok && data.assignments) {
+      _setCachedAssignments(data.assignments);
+      _applyAssignments(data.assignments);
+    }
+  } catch (_) {} // silent — user already sees cached data
+}
 }
 
 async function loadCourses(token, url) {

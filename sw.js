@@ -1,12 +1,13 @@
 // Sequoia Service Worker
-const CACHE = 'sequoia-v6';
+const CACHE = 'sequoia-v8';
 const BASE  = '/sequoia-frontend';
 const SHELL = [
   BASE + '/',
   BASE + '/index.html',
   BASE + '/manifest.json',
-  BASE + '/icon-192.svg',
-  BASE + '/icon-512.svg',
+  BASE + '/icon-192.png',
+  BASE + '/icon-512.png',
+  BASE + '/icon-maskable.png',
 ];
 
 // ── Install: cache app shell (fail-safe) ─────────────────
@@ -27,20 +28,26 @@ self.addEventListener('activate', e => {
   );
 });
 
-// ── Fetch: skip non-http requests, cache-first for shell ─
+// ── Fetch: network-first for API, cache-first for shell ──
 self.addEventListener('fetch', e => {
-  // Skip non-http(s) requests (chrome-extension, etc.)
   if (!e.request.url.startsWith('http')) return;
 
   const url = new URL(e.request.url);
 
-  // Always hit network for API calls
-  if (url.hostname.includes('instructure.com') || url.pathname.startsWith('/api')) {
-    e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+  // Always network for Canvas, backend API, Firebase, Stripe
+  const isAPI = url.hostname.includes('instructure.com')
+    || url.hostname.includes('onrender.com')
+    || url.hostname.includes('firebaseapp.com')
+    || url.hostname.includes('googleapis.com')
+    || url.hostname.includes('stripe.com')
+    || url.hostname.includes('posthog.com');
+
+  if (isAPI) {
+    e.respondWith(fetch(e.request).catch(() => new Response('', { status: 503 })));
     return;
   }
 
-  // Cache-first for everything else
+  // Cache-first for app shell and static assets
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
@@ -50,7 +57,7 @@ self.addEventListener('fetch', e => {
           caches.open(CACHE).then(c => c.put(e.request, clone));
         }
         return res;
-      }).catch(() => caches.match(e.request));
+      }).catch(() => caches.match(BASE + '/index.html'));
     })
   );
 });
@@ -63,8 +70,8 @@ self.addEventListener('push', e => {
   e.waitUntil(
     self.registration.showNotification(data.title, {
       body:    data.body,
-      icon:    BASE + '/icon-192.svg',
-      badge:   BASE + '/icon-192.svg',
+      icon:    BASE + '/icon-192.png',
+      badge:   BASE + '/icon-192.png',
       tag:     data.tag || 'sequoia',
       data:    data,
       actions: data.actions || [],
