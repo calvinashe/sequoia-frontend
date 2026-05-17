@@ -2681,6 +2681,78 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 .ob-link:hover { color:rgba(255,255,255,0.65); }
 .ob-link.demo { color:var(--g2); font-weight:600; margin-bottom:4px; }
 
+/* ── ONBOARDING STEP 3 — WOW REVEAL ────────────────────── */
+.ob-reveal {
+  min-height:100vh; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; padding:32px 20px 48px; text-align:center;
+}
+/* scanning phase */
+.ob-scan-title {
+  font-family:'Playfair Display',serif; font-size:24px; font-weight:800; color:#FFFEF8;
+  margin-bottom:8px; animation:obPulse 1.8s ease-in-out infinite;
+}
+@keyframes obPulse { 0%,100%{opacity:.7} 50%{opacity:1} }
+.ob-scan-sub { font-size:13px; color:rgba(255,255,255,0.38); margin-bottom:32px; }
+.ob-scan-lines { display:flex; flex-direction:column; gap:8px; width:100%; max-width:280px; }
+.ob-scan-line {
+  height:6px; border-radius:3px; background:rgba(76,161,48,0.12);
+  position:relative; overflow:hidden;
+}
+.ob-scan-line::after {
+  content:''; position:absolute; inset-block:0; left:-100%; width:60%;
+  background:linear-gradient(90deg,transparent,rgba(76,161,48,0.7),transparent);
+  animation:obScan 1.4s ease-in-out infinite;
+}
+.ob-scan-line:nth-child(2)::after { animation-delay:.2s; }
+.ob-scan-line:nth-child(3)::after { animation-delay:.4s; }
+@keyframes obScan { to { left:160%; } }
+
+/* reveal phase */
+.ob-reveal-card {
+  display:none; background:linear-gradient(155deg,#0D1E10 0%,#081408 100%);
+  border:1px solid rgba(76,161,48,0.2); border-radius:24px; padding:28px 24px;
+  width:100%; max-width:400px; box-shadow:0 24px 60px rgba(0,0,0,0.6);
+  animation:revealIn .5s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes revealIn { from{opacity:0;transform:scale(.94) translateY(16px)} to{opacity:1;transform:none} }
+.ob-reveal-card.show { display:block; }
+.ob-reveal-tree { font-size:64px; line-height:1; margin-bottom:12px; animation:treePop .6s cubic-bezier(.22,1,.36,1) .1s both; }
+@keyframes treePop { from{opacity:0;transform:scale(.4)} to{opacity:1;transform:scale(1)} }
+.ob-reveal-name { font-family:'Playfair Display',serif; font-size:26px; font-weight:800; color:#FFFEF8; margin-bottom:4px; }
+.ob-reveal-sub  { font-size:13px; color:rgba(255,255,255,0.4); margin-bottom:20px; }
+.ob-reveal-stats {
+  display:flex; justify-content:center; gap:16px; margin-bottom:20px;
+}
+.ob-reveal-stat { text-align:center; }
+.ob-reveal-stat-val { font-size:22px; font-weight:800; color:var(--g4); font-family:'Playfair Display',serif; }
+.ob-reveal-stat-lbl { font-size:10px; color:rgba(255,255,255,0.35); font-weight:700; text-transform:uppercase; letter-spacing:.4px; }
+.ob-reveal-priority {
+  background:rgba(76,161,48,0.08); border:1px solid rgba(76,161,48,0.18);
+  border-radius:14px; padding:14px 16px; margin-bottom:20px; text-align:left;
+}
+.ob-reveal-priority-label { font-size:10px; font-weight:700; color:rgba(255,255,255,0.35); text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+.ob-reveal-priority-name  { font-size:14px; font-weight:700; color:rgba(255,255,255,0.85); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ob-reveal-priority-course { font-size:11px; color:var(--g4); margin-top:2px; }
+.ob-reveal-xp {
+  font-size:13px; font-weight:700; color:var(--g3); margin-bottom:18px;
+  animation:obPulse 2s ease-in-out infinite;
+}
+.ob-reveal-btn {
+  width:100%; padding:15px; background:linear-gradient(135deg,#2E6020,#4CA130,#5DD140);
+  color:#fff; border:none; border-radius:14px; font-family:'DM Sans',sans-serif;
+  font-size:16px; font-weight:800; cursor:pointer; box-shadow:0 6px 24px rgba(76,161,48,0.4);
+}
+.ob-reveal-btn:hover { opacity:.9; }
+
+/* URL smart-detect */
+.ob-url-suggestions { margin-top:5px; display:flex; flex-wrap:wrap; gap:5px; }
+.ob-url-chip {
+  font-size:11px; font-weight:700; background:rgba(76,161,48,0.12);
+  color:rgba(76,161,48,0.85); border:1px solid rgba(76,161,48,0.2);
+  border-radius:6px; padding:3px 8px; cursor:pointer; transition:background .15s;
+}
+.ob-url-chip:hover { background:rgba(76,161,48,0.22); }
+
 /* ── SHARED UTILS ─────────────────────────────────────────── */
 .mt8 { margin-top:8px; }
 .pb12 { padding-bottom:12px; }
@@ -3757,12 +3829,13 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
           <input type="text" id="ob-name" placeholder="e.g. Alex" autocomplete="given-name">
         </div>
 
-        <!-- Canvas URL with validation -->
+        <!-- Canvas URL with validation + smart detect -->
         <div class="ob-field">
           <label>Canvas URL <span class="ob-field-hint">your school's Canvas address</span></label>
           <input type="url" id="ob-url" placeholder="yourschool.instructure.com"
-            autocomplete="url" oninput="obUrlHint()" onblur="obUrlFix()">
+            autocomplete="url" oninput="obUrlHint(); obUrlSuggest()" onblur="obUrlFix()">
           <div class="ob-url-hint" id="ob-url-hint"></div>
+          <div class="ob-url-suggestions" id="ob-url-suggestions"></div>
         </div>
 
         <!-- Token with show/hide -->
@@ -3815,6 +3888,50 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
       <div class="ob-divider"><span>or</span></div>
       <button class="ob-demo-btn" onclick="loadDemo()">🌱 Try the demo first</button>
       <button class="ob-link" onclick="obGo(0)" style="margin-top:6px">← Back</button>
+    </div>
+  </div>
+
+  <!-- Step 3: Wow reveal -->
+  <div class="ob-step" id="obs2">
+    <div class="ob-reveal">
+      <!-- Scanning phase (shown while loading) -->
+      <div id="ob-scan-phase">
+        <div style="font-size:52px;margin-bottom:16px;animation:treePop .5s cubic-bezier(.22,1,.36,1) both">🌱</div>
+        <div class="ob-scan-title" id="ob-scan-title">Scanning your Canvas…</div>
+        <div class="ob-scan-sub" id="ob-scan-sub">Finding your courses and assignments</div>
+        <div class="ob-scan-lines">
+          <div class="ob-scan-line"></div>
+          <div class="ob-scan-line"></div>
+          <div class="ob-scan-line"></div>
+        </div>
+      </div>
+      <!-- Reveal card (shown after data loads) -->
+      <div class="ob-reveal-card" id="ob-reveal-card">
+        <div class="ob-reveal-tree" id="ob-reveal-tree">🌱</div>
+        <div class="ob-reveal-name" id="ob-reveal-name">Welcome!</div>
+        <div class="ob-reveal-sub" id="ob-reveal-sub">Your Sequoia is planted.</div>
+        <div class="ob-reveal-stats">
+          <div class="ob-reveal-stat">
+            <div class="ob-reveal-stat-val" id="ob-reveal-courses">—</div>
+            <div class="ob-reveal-stat-lbl">Courses</div>
+          </div>
+          <div class="ob-reveal-stat">
+            <div class="ob-reveal-stat-val" id="ob-reveal-assigns">—</div>
+            <div class="ob-reveal-stat-lbl">Assignments</div>
+          </div>
+          <div class="ob-reveal-stat">
+            <div class="ob-reveal-stat-val" id="ob-reveal-urgent">—</div>
+            <div class="ob-reveal-stat-lbl">Due soon</div>
+          </div>
+        </div>
+        <div class="ob-reveal-priority" id="ob-reveal-priority" style="display:none">
+          <div class="ob-reveal-priority-label">⚡ Your #1 priority right now</div>
+          <div class="ob-reveal-priority-name" id="ob-reveal-priority-name"></div>
+          <div class="ob-reveal-priority-course" id="ob-reveal-priority-course"></div>
+        </div>
+        <div class="ob-reveal-xp">+100 XP — your Sequoia is alive 🌲</div>
+        <button class="ob-reveal-btn" onclick="obRevealEnter()">Let's start growing →</button>
+      </div>
     </div>
   </div>
 
@@ -5305,6 +5422,13 @@ function obGo(to) {
   const prev = obCur; obCur = to;
   setTimeout(() => steps[prev].classList.remove('exit'), 380);
   setTimeout(() => steps[to].classList.add('active'), 40);
+  // Reset reveal step if navigating away from it
+  if (prev === 2 || to !== 2) {
+    const scan = document.getElementById('ob-scan-phase');
+    const card = document.getElementById('ob-reveal-card');
+    if (scan) scan.style.display = '';
+    if (card) card.classList.remove('show');
+  }
 }
 function closeOnboard() { document.getElementById('onboard').classList.add('gone'); }
 function toggleTokenHelp(btn) {
@@ -5326,6 +5450,129 @@ function obUrlFix() {
   if (!v.startsWith('http')) v = 'https://' + v;
   el.value = v;
   obUrlHint();
+  document.getElementById('ob-url-suggestions').innerHTML = '';
+}
+
+// Smart URL suggestions based on common Canvas patterns
+const _KNOWN_SCHOOLS = [
+  ['ASU', 'asu.instructure.com'],
+  ['UCLA', 'ucla.instructure.com'],
+  ['USC', 'usc.instructure.com'],
+  ['UMich', 'umich.instructure.com'],
+  ['NYU', 'nyu.instructure.com'],
+  ['BYU', 'byu.instructure.com'],
+  ['UTA', 'uta.instructure.com'],
+  ['GT', 'gatech.instructure.com'],
+  ['Penn State', 'psu.instructure.com'],
+  ['Purdue', 'purdue.instructure.com'],
+  ['UF', 'ufl.instructure.com'],
+  ['FSU', 'fsu.instructure.com'],
+  ['OSU', 'osu.instructure.com'],
+  ['UT Austin', 'utexas.instructure.com'],
+  ['Colorado', 'coloradostate.instructure.com'],
+];
+
+function obUrlSuggest() {
+  const el  = document.getElementById('ob-url');
+  const box = document.getElementById('ob-url-suggestions');
+  const v   = el.value.trim().toLowerCase().replace(/https?:\/\//,'');
+  if (!v || v.length < 2 || v.includes('.')) { box.innerHTML = ''; return; }
+  const matches = _KNOWN_SCHOOLS.filter(([name, url]) =>
+    name.toLowerCase().includes(v) || url.includes(v)
+  ).slice(0, 3);
+  box.innerHTML = matches.map(([name, url]) =>
+    `<span class="ob-url-chip" onclick="obPickUrl('https://${url}')">${name} → ${url}</span>`
+  ).join('');
+}
+
+function obPickUrl(url) {
+  document.getElementById('ob-url').value = url;
+  document.getElementById('ob-url-suggestions').innerHTML = '';
+  obUrlHint();
+}
+
+async function _obStartReveal(token, url, name) {
+  // Start loading assignments in background while scanning animation plays
+  const scanTitle = document.getElementById('ob-scan-title');
+  const scanSub   = document.getElementById('ob-scan-sub');
+
+  // Cycle through scan messages for personality
+  const msgs = [
+    ['Scanning your Canvas…', 'Finding your courses and assignments'],
+    ['Calculating priorities…', 'Weighing grade impact and urgency'],
+    ['Building your Sequoia…', 'Almost ready — this is exciting'],
+  ];
+  let mi = 0;
+  const msgTimer = setInterval(() => {
+    mi = (mi + 1) % msgs.length;
+    if (scanTitle) scanTitle.textContent = msgs[mi][0];
+    if (scanSub)   scanSub.textContent   = msgs[mi][1];
+  }, 1400);
+
+  // Fetch assignments
+  let assigns = [];
+  try {
+    const res  = await fetch(`${API}/assignments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ canvas_url: url, token }),
+    });
+    const d = await res.json();
+    assigns  = d.assignments || [];
+  } catch(e) {}
+
+  clearInterval(msgTimer);
+
+  // Grant XP
+  starterGrant('sq_grant_canvas', 100, '');
+
+  // Fill reveal card
+  const now = new Date();
+  const urgent = assigns.filter(a => {
+    if (!a.due_at) return false;
+    const days = (new Date(a.due_at) - now) / 86400000;
+    return days >= 0 && days <= 7;
+  }).length;
+  const courses = [...new Set(assigns.map(a => a.course).filter(Boolean))].length;
+  const top     = assigns[0];
+
+  document.getElementById('ob-reveal-name').textContent     = `Welcome, ${name.split(' ')[0]}! 🌱`;
+  document.getElementById('ob-reveal-sub').textContent      = assigns.length
+    ? `Found ${assigns.length} assignment${assigns.length !== 1 ? 's' : ''} across ${courses} course${courses !== 1 ? 's' : ''}.`
+    : 'Your tree is planted. Connect Canvas anytime in Settings.';
+  document.getElementById('ob-reveal-courses').textContent  = courses || '—';
+  document.getElementById('ob-reveal-assigns').textContent  = assigns.length || '—';
+  document.getElementById('ob-reveal-urgent').textContent   = urgent || '0';
+
+  if (top) {
+    document.getElementById('ob-reveal-priority').style.display = 'block';
+    document.getElementById('ob-reveal-priority-name').textContent   = top.name;
+    document.getElementById('ob-reveal-priority-course').textContent =
+      top.course + (top.grade_weight ? ` · ${top.grade_weight}% of grade` : '');
+  }
+
+  // Store assignments so dashboard loads instantly
+  _setCachedAssignments && _setCachedAssignments(assigns);
+  if (assigns.length) { allAssignments = assigns.map ? assigns.map(a => ({...a})) : assigns; }
+
+  // XP burst visual
+  setTimeout(() => showXPBurst && showXPBurst(100), 200);
+
+  // Show reveal card, hide scan
+  document.getElementById('ob-scan-phase').style.display = 'none';
+  document.getElementById('ob-reveal-card').classList.add('show');
+}
+
+function obRevealEnter() {
+  const token = localStorage.getItem('sq_token');
+  const url   = localStorage.getItem('sq_url');
+  closeOnboard();
+  // Render cached assignments if available
+  if (allAssignments.length) _applyAssignments(allAssignments);
+  loadCourses(token, url);
+  loadXPStreak(); updateDashTree(); syncTreeScreen();
+  setTimeout(tourShow, 1200);
+  track('onboard_reveal_entered');
 }
 function obUrlHint() {
   const v = document.getElementById('ob-url').value.trim();
@@ -5442,16 +5689,11 @@ async function connectCanvas() {
       loadXPStreak(); updateDashTree(); syncTreeScreen();
     }
 
-    // Brief success moment before entering
+    // Go to the wow reveal step
     btn.textContent = '🌱 You\'re in! Loading your courses…';
     btn.classList.add('ob-btn-success');
-    setTimeout(() => {
-      closeOnboard();
-      loadAssignments(token, url);
-      loadCourses(token, url);
-      starterGrant('sq_grant_canvas', 100, '🌱 +100 XP — Canvas connected! Your Sequoia is alive.');
-      setTimeout(tourShow, 1800); // let assignments render first
-    }, 900);
+    obGo(2); // → Step 3: reveal
+    _obStartReveal(token, url, name);
 
   } catch (e) {
     clearTimeout(wt); obSetWake(false);
