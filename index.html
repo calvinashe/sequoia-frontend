@@ -8622,7 +8622,9 @@ function syncWrapUp() {
 
   // Semester label
   const now = new Date();
-  const sem = (now.getMonth() < 6 ? 'Spring' : 'Fall') + ' ' + now.getFullYear();
+  const _m = now.getMonth();
+  const _semName = _m <= 4 ? 'Spring' : _m <= 7 ? 'Summer' : 'Fall';
+  const sem = _semName + ' ' + now.getFullYear();
 
   // Inject scene tree
   const wrap   = document.getElementById('wu-tree');
@@ -8928,10 +8930,12 @@ async function confirmNewSemester() {
 function _resetSemesterState() {
   localStorage.setItem('sq_xp','0'); localStorage.setItem('sq_streak','0');
   localStorage.setItem('sq_pomo_sessions','0'); localStorage.setItem('sq_done','[]');
+  localStorage.setItem('sq_leaves','0');         // fresh leaf balance for new semester
   localStorage.removeItem('sq_sessions');
+  localStorage.removeItem('sq_equipped');         // clear equipped decos (purchases stay)
   sessionEntries = []; renderSessionLog();
   completedIds = new Set(); totalCompleted = 0; treeFaded = false;
-  saveUserData({ xp: 0, streak: 0, pomo_sessions: 0, done_ids: [], last_study: '' });
+  saveUserData({ xp: 0, streak: 0, pomo_sessions: 0, done_ids: [], last_study: '', leaves: 0 });
   loadXPStreak(); updateDashTree(); syncTreeScreen();
   document.getElementById('wu-tree').innerHTML = '';
   document.getElementById('wu-stump').classList.remove('show');
