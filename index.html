@@ -5499,7 +5499,12 @@ async function loadAssignments(token, url) {
     clearInterval(_wakeInterval); _wakeInterval = null;
     const data = await res.json();
     if (!data.ok || data.error) {
-      list.innerHTML = `<div class="empty-state"><div class="es-icon">🔑</div><h3>Canvas error</h3><p>${esc(data.error || 'Something went wrong')}</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:4px"><button class="es-retry" onclick="loadAssignments('${esc(token)}','${esc(url)}')">Try Again</button><button class="es-retry" style="background:var(--g-pale);color:var(--g2)" onclick="loadDemo()">Try Demo Mode →</button></div></div>`;
+      const isTokenError = res.status === 401 || (data.error || '').toLowerCase().includes('token');
+      if (isTokenError) {
+        list.innerHTML = `<div class="empty-state"><div class="es-icon">🔑</div><h3>Canvas token expired</h3><p>Your Canvas access token is no longer valid. Generate a new one in Canvas and update it in Settings.</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:4px"><button class="es-retry" onclick="openSettings()">Update Token in Settings</button><button class="es-retry" style="background:var(--g-pale);color:var(--g2)" onclick="loadDemo()">Try Demo Mode →</button></div></div>`;
+      } else {
+        list.innerHTML = `<div class="empty-state"><div class="es-icon">🔑</div><h3>Canvas error</h3><p>${esc(data.error || 'Something went wrong')}</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:4px"><button class="es-retry" onclick="loadAssignments('${esc(token)}','${esc(url)}')">Try Again</button><button class="es-retry" style="background:var(--g-pale);color:var(--g2)" onclick="loadDemo()">Try Demo Mode →</button></div></div>`;
+      }
       return;
     }
     const now = Date.now();
