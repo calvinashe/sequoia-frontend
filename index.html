@@ -5509,11 +5509,16 @@ async function loadUserData(uid) {
     // Sync today's XP usage from Firestore so the daily cap chip is accurate across
     // devices and fresh logins. Only apply if the stored date matches today UTC.
     if (d.xp_today !== undefined && d.xp_today_date) {
-      const _todayUTC = new Date().toISOString().slice(0, 10);
-      if (d.xp_today_date === _todayUTC) {
+      // Compare against local date — backend now stores local date too
+      const _todayLocal = _localDateStr();
+      if (d.xp_today_date === _todayLocal) {
         localStorage.setItem('sq_xp_today',      String(d.xp_today));
         localStorage.setItem('sq_xp_today_date', d.xp_today_date);
       }
+    }
+    // Sync one-time starter grants so clearing localStorage can't re-earn them
+    if (Array.isArray(d.granted_bonuses)) {
+      d.granted_bonuses.forEach(key => localStorage.setItem(key, '1'));
     }
     // Fetch notification badge separately so it can't crash the user data load
     userRef.collection('notifications').where('read', '==', false).get()
@@ -6149,7 +6154,7 @@ function loadDemo() {
     name:   localStorage.getItem('sq_name'),
   };
   // Seed demo with realistic progress
-  const today = new Date().toISOString().slice(0,10);
+  const today = _localDateStr();
   localStorage.setItem('sq_xp',            '2850');
   localStorage.setItem('sq_leaves',        '2850'); // match XP so leaf balance is consistent
   localStorage.setItem('sq_streak',        '12');
@@ -6988,12 +6993,12 @@ function renderCalendar(assignments) {
   if (!container) return;
   const today = new Date(); today.setHours(0,0,0,0);
 
-  // Build a map: dateKey (YYYY-MM-DD) → array of assignments
+  // Build a map: dateKey (YYYY-MM-DD, local timezone) → array of assignments
   const dayMap = {};
   assignments.forEach(a => {
     if (!a.due_at) return;
-    const d = new Date(a.due_at); d.setHours(0,0,0,0);
-    const k = d.toISOString().slice(0,10);
+    const d = new Date(a.due_at);
+    const k = _fmtDate(d);
     if (!dayMap[k]) dayMap[k] = [];
     dayMap[k].push(a);
   });
@@ -7024,7 +7029,7 @@ function renderCalendar(assignments) {
     for (let d = 0; d < 7; d++) {
       const date = new Date(weekStart);
       date.setDate(weekStart.getDate() + d);
-      const k = date.toISOString().slice(0,10);
+      const k = _fmtDate(date);
       const items = dayMap[k] || [];
       const isPast = date < today;
       const isToday = date.getTime() === today.getTime();
@@ -7545,9 +7550,22 @@ async function grantXP(amount, opts = {}) {
   } catch (_) { /* offline or backend down — local optimistic value stands */ }
 }
 
+// Return today's date in the user's LOCAL timezone (YYYY-MM-DD).
+// Using local date means the daily XP cap and streak reset at the user's midnight,
+// not UTC midnight, so a student studying at 11 PM doesn't "lose" their day.
+function _localDateStr() {
+  return _fmtDate(new Date());
+}
+// Format any Date object as YYYY-MM-DD in the local (device) timezone.
+function _fmtDate(d) {
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
+
 // Internal: track today's XP locally so the cap chip works offline/demo
 function _trackDailyXP(amount) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = _localDateStr();
   const stored = localStorage.getItem('sq_xp_today_date');
   const used   = stored === today ? parseInt(localStorage.getItem('sq_xp_today') || '0') : 0;
   localStorage.setItem('sq_xp_today_date', today);
@@ -7581,10 +7599,19 @@ function addXP(amount) { grantXP(amount, { source: 'session' }); }
 
 // ── STARTER XP GRANTS ───────────────────────────────────
 // One-time XP rewards for key onboarding moments.
-// Each fires exactly once, guarded by a localStorage flag.
+// Guards: localStorage (fast path) + Firestore granted_bonuses array (cross-device / anti-exploit).
+// loadUserData() syncs granted_bonuses → localStorage on every sign-in so clearing
+// localStorage can't re-earn bonuses on the same account.
 function starterGrant(key, amount, message) {
-  if (localStorage.getItem(key)) return;   // already granted
+  if (localStorage.getItem(key)) return;   // already granted (fast path)
   localStorage.setItem(key, '1');
+  // Persist to Firestore so the grant can't be re-earned by clearing localStorage.
+  // Use set({merge}) rather than update() so it's safe even before initNewUser resolves.
+  if (currentUser && !isDemo) {
+    db.collection('users').doc(currentUser.uid).set({
+      granted_bonuses: firebase.firestore.FieldValue.arrayUnion(key)
+    }, { merge: true }).catch(() => {});
+  }
   setTimeout(() => {
     addXP(amount);
     showXPBurst(amount);
@@ -7593,7 +7620,7 @@ function starterGrant(key, amount, message) {
 }
 
 function updateStreak() {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = _localDateStr();
   const last  = localStorage.getItem('sq_last_study');
   let streak  = getStreak();
   if (last === today) { /* no change */ }
@@ -7624,13 +7651,14 @@ function updateStreak() {
 }
 
 function prevDay() {
-  const d = new Date(); d.setDate(d.getDate() - 1); return d.toISOString().slice(0, 10);
+  const d = new Date(); d.setDate(d.getDate() - 1);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 
 function checkStreakRisk() {
   const streak  = getStreak();
   const last    = localStorage.getItem('sq_last_study');
-  const today   = new Date().toISOString().slice(0, 10);
+  const today   = _localDateStr();
   const hour    = new Date().getHours();
   // At risk: has a streak, hasn't studied today, and it's past noon
   const atRisk  = streak > 0 && last !== today && hour >= 12;
@@ -8733,7 +8761,7 @@ function syncTreeScreen() {
   document.getElementById('tsc-streak').textContent   = streak;
 
   // Daily XP cap chip — show today's usage if user has earned any XP today
-  const _today      = new Date().toISOString().slice(0, 10);
+  const _today      = _localDateStr();
   const _capDate    = localStorage.getItem('sq_xp_today_date');
   const _capUsed    = _capDate === _today ? parseInt(localStorage.getItem('sq_xp_today') || '0') : 0;
   const _mo         = new Date().getMonth() + 1;
@@ -8803,13 +8831,13 @@ function phaseDur() { return pomoPhase==='focus' ? FOCUS_DUR : (pomoCycle===0 ? 
 function rem() { return pomoAt ? Math.max(phaseDur() - Math.floor((Date.now()-pomoAt)/1000), 0) : pomoSecs; }
 
 function _todaySessionCount() {
-  const today = new Date().toISOString().slice(0,10);
+  const today = _localDateStr();
   const raw   = JSON.parse(localStorage.getItem('sq_sessions_today') || '{"date":"","count":0}');
   if (raw.date !== today) return 0;
   return raw.count;
 }
 function _bumpTodaySessionCount() {
-  const today = new Date().toISOString().slice(0,10);
+  const today = _localDateStr();
   const raw   = JSON.parse(localStorage.getItem('sq_sessions_today') || '{"date":"","count":0}');
   const count = raw.date === today ? raw.count + 1 : 1;
   localStorage.setItem('sq_sessions_today', JSON.stringify({date:today, count}));
@@ -9032,7 +9060,7 @@ function renderStreakCal(streak) {
   let html = '';
   for (let i = days - 1; i >= 0; i--) {
     const d = new Date(today); d.setDate(d.getDate() - i);
-    const key = d.toISOString().slice(0,10);
+    const key = _fmtDate(d);
     const isToday = i === 0;
     const daysAgo = lastDate ? Math.round((today - d) / 86400000) : 999;
     let lvClass = '';
@@ -9054,9 +9082,9 @@ function openAddAssign() { lockScroll();
   document.getElementById('aa-course').value = '';
   document.getElementById('aa-weight').value = '';
   document.getElementById('aa-err').textContent = '';
-  // default due date = tomorrow
+  // default due date = tomorrow (local date)
   const tom = new Date(); tom.setDate(tom.getDate()+1);
-  document.getElementById('aa-due').value = tom.toISOString().slice(0,10);
+  document.getElementById('aa-due').value = _fmtDate(tom);
   document.getElementById('add-assign-overlay').classList.add('show');
   setTimeout(() => document.getElementById('aa-title').focus(), 200);
 }
@@ -9798,7 +9826,7 @@ async function undoComplete() {
   document.getElementById('dash-xp-amt').textContent = newXP.toLocaleString() + ' XP';
 
   // Also walk back today's local cap tracking
-  const _todayStr = new Date().toISOString().slice(0, 10);
+  const _todayStr = _localDateStr();
   if (localStorage.getItem('sq_xp_today_date') === _todayStr) {
     const _used = parseInt(localStorage.getItem('sq_xp_today') || '0');
     localStorage.setItem('sq_xp_today', Math.max(0, _used - xp));
@@ -10796,7 +10824,7 @@ async function initPushBtn() {
 // ── Schedule in-app notifs from assignments ───────────
 function scheduleNotifications(assignments) {
   // Key by today's date so the set resets each day automatically
-  const today = new Date().toISOString().slice(0, 10);
+  const today = _localDateStr();
   const lsKey = 'sq_notified_' + today;
   const notified = new Set(JSON.parse(localStorage.getItem(lsKey) || '[]'));
   const now = Date.now();
@@ -10856,7 +10884,7 @@ function _syncPremiumUI() {
   const sfBtn = document.getElementById('streak-freeze-btn');
   if (sfBtn) {
     sfBtn.disabled = false;
-    const frozeToday = localStorage.getItem('sq_freeze_date') === new Date().toISOString().slice(0,10);
+    const frozeToday = localStorage.getItem('sq_freeze_date') === _localDateStr();
     if (pro) {
       sfBtn.innerHTML = frozeToday
         ? '🧊 Streak Frozen Today ✓'
@@ -10872,7 +10900,7 @@ function _syncPremiumUI() {
 }
 
 function _useStreakFreeze() {
-  const today = new Date().toISOString().slice(0,10);
+  const today = _localDateStr();
   if (localStorage.getItem('sq_freeze_date') === today) {
     showToast('Streak already frozen today ✓');
     return;
@@ -10891,7 +10919,7 @@ function _syncStreakRepairBtn() {
   if (!btn) return;
   const oldStreak  = parseInt(localStorage.getItem('sq_streak_before_break') || '0');
   const breakDate  = localStorage.getItem('sq_streak_break_date') || '';
-  const thisMonth  = new Date().toISOString().slice(0, 7);
+  const thisMonth  = _localDateStr().slice(0, 7);
   const usedMonth  = localStorage.getItem('sq_repair_used_month') || '';
   const alreadyUsed = usedMonth === thisMonth;
   const currentStreak = getStreak();
@@ -10909,7 +10937,7 @@ function _syncStreakRepairBtn() {
 function _useStreakRepair() {
   const oldStreak = parseInt(localStorage.getItem('sq_streak_before_break') || '0');
   if (!oldStreak) { showToast('No broken streak to repair.'); return; }
-  const thisMonth = new Date().toISOString().slice(0, 7);
+  const thisMonth = _localDateStr().slice(0, 7);
   if (localStorage.getItem('sq_repair_used_month') === thisMonth) {
     showToast('Streak repair already used this month.'); return;
   }
