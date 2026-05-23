@@ -5945,6 +5945,7 @@ function loadDemo() {
   // Seed demo with realistic progress
   const today = new Date().toISOString().slice(0,10);
   localStorage.setItem('sq_xp',            '2850');
+  localStorage.setItem('sq_leaves',        '2850'); // match XP so leaf balance is consistent
   localStorage.setItem('sq_streak',        '12');
   localStorage.setItem('sq_pomo_sessions', '18');
   localStorage.setItem('sq_last_study',    today); // FIX: prevent streak reset on first action
@@ -7568,14 +7569,20 @@ function updateHeroDecorations() {
   const scene    = document.getElementById('th-scene');
   if (!scene) return;
 
-  scene.querySelectorAll('.th-deco-overlay').forEach(el => el.remove());
+  // Remove overlays for decos that are no longer equipped (preserves existing ones)
+  scene.querySelectorAll('.th-deco-overlay').forEach(el => {
+    if (!equipped.includes(el.dataset.decoId)) el.remove();
+  });
 
   equipped.forEach(id => {
+    // Skip if overlay already rendered — prevents re-randomizing on every navigate
+    if (scene.querySelector(`.th-deco-overlay[data-deco-id="${id}"]`)) return;
     const d = DECORATIONS.find(x => x.id === id);
     if (!d) return;
 
     const overlay = document.createElement('div');
     overlay.className = 'th-deco-overlay';
+    overlay.dataset.decoId = id;
     overlay.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:3;overflow:hidden;';
 
     if (id === 'fireflies') {
@@ -7957,6 +7964,7 @@ function pomoTick() {
       logSession(goal,sessionXP);
       const n=parseInt(localStorage.getItem('sq_pomo_sessions')||'0')+1;
       localStorage.setItem('sq_pomo_sessions',n);
+      saveUserData({ pomo_sessions: n });
       _bumpTodaySessionCount();
       pomoPhase='break'; pomoSecs=phaseDur(); pomoAt=Date.now();
       showWeakSpotPrompt();
@@ -7983,6 +7991,10 @@ function endSessionEarly() {
     if (partial > 0) {
       showXPBurst(partial, document.getElementById('btn-end-early'));
       addXP(partial); updateStreak(); updateDashTree(); pomoXP+=partial;
+      const n = parseInt(localStorage.getItem('sq_pomo_sessions')||'0') + 1;
+      localStorage.setItem('sq_pomo_sessions', n);
+      saveUserData({ pomo_sessions: n });
+      _bumpTodaySessionCount();
     }
     const goal = document.getElementById('pomo-goal').value.trim() || 'Focus session';
     if (partial > 0) logSession(goal + ' (early)', partial);
@@ -8000,7 +8012,8 @@ function showSessionComplete(xpEarned) {
   const overlay = document.getElementById('session-complete');
   document.getElementById('sc-xp-big').textContent    = '+' + xpEarned + ' XP';
   document.getElementById('sc-stage-name').textContent = st.name;
-  document.getElementById('sc-xp-label').textContent   = xp.toLocaleString() + ' / ' + st.xpNext.toLocaleString() + ' XP';
+  const isMaxStage = STAGES.indexOf(st) === STAGES.length - 1;
+  document.getElementById('sc-xp-label').textContent   = xp.toLocaleString() + ' / ' + (isMaxStage ? '∞' : st.xpNext.toLocaleString()) + ' XP';
   document.getElementById('sc-bar-fill').style.width   = '0%';
   overlay.classList.add('show');
   // animate bar after render
@@ -8084,8 +8097,8 @@ function openAssignDetail(id) {
   if (a.due_at) {
     dueStr = new Date(a.due_at).toLocaleDateString('en-US',{month:'short',day:'numeric'});
     if (a.days_until !== null) {
-      const d = Math.ceil(a.days_until);
-      daysStr = d < 0 ? 'Overdue' : d === 0 ? 'Today' : d + 'd';
+      const d = a.days_until;
+      daysStr = d < 0 ? 'Overdue' : d < 1 ? 'Today' : Math.ceil(d) + 'd';
     }
   }
   document.getElementById('ad-due-val').textContent  = dueStr;
@@ -8442,6 +8455,7 @@ function submitAddAssign() {
   const saved = JSON.parse(localStorage.getItem('sq_manual') || '[]');
   saved.unshift(newAssign);
   localStorage.setItem('sq_manual', JSON.stringify(saved));
+  if (currentUser) saveUserData({ manual_assignments: saved });
   renderAssignments(allAssignments);
   buildQPick();
   closeAddAssign();
@@ -10453,7 +10467,7 @@ function _tourRender() {
 }
 
 // ── UTILS ────────────────────────────────────────────────
-function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 // ── SERVICE WORKER ───────────────────────────────────────
 if ('serviceWorker' in navigator) {
