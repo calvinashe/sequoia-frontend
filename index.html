@@ -1028,8 +1028,12 @@ input.g-slider::-moz-range-thumb {
 .gpa-toggle-label { font-size:12px; font-weight:700; color:rgba(255,255,255,0.55); letter-spacing:.2px; }
 .gpa-toggle-arrow { font-size:12px; color:rgba(255,255,255,0.3); transition:transform .2s; }
 .gpa-toggle-btn.open .gpa-toggle-arrow { transform:rotate(180deg); }
-.gpa-panel { display:none; padding:14px 18px 18px; border-top:1px solid rgba(255,255,255,0.05); }
-.gpa-panel.show { display:block; }
+.gpa-panel {
+  padding:14px 18px 18px; border-top:1px solid rgba(255,255,255,0.05);
+  max-height:0; overflow:hidden; opacity:0;
+  transition:max-height .35s ease, opacity .25s ease;
+}
+.gpa-panel.show { max-height:600px; opacity:1; }
 .gpa-result-card {
   display:flex; align-items:center; justify-content:space-between;
   background:rgba(76,161,48,0.09); border:1px solid rgba(76,161,48,0.22);
@@ -1550,7 +1554,8 @@ input.g-slider::-moz-range-thumb {
 .syl-course-card.syl-imported { border-color:rgba(76,161,48,0.3); }
 /* Paste textarea */
 .syl-paste-wrap { display:none; flex-direction:column; gap:8px; margin-bottom:14px; }
-.syl-paste-wrap.show { display:flex; }
+.syl-paste-wrap { opacity:0; transition:opacity .25s ease; }
+.syl-paste-wrap.show { display:flex; opacity:1; }
 .syl-paste-label { font-size:12px; font-weight:600; color:var(--mid); }
 .syl-paste-ta {
   width:100%; min-height:120px; border-radius:10px; padding:10px 12px;
@@ -1564,7 +1569,8 @@ input.g-slider::-moz-range-thumb {
   background:var(--g3); color:#fff; font-size:14px; font-weight:800;
   margin-bottom:8px; display:none;
 }
-.syl-parse-btn.show { display:block; }
+.syl-parse-btn { opacity:0; transform:translateY(4px); transition:opacity .2s ease, transform .2s ease; }
+.syl-parse-btn.show { display:block; opacity:1; transform:translateY(0); }
 .syl-parse-btn:disabled { opacity:.45; cursor:not-allowed; }
 /* Review step */
 .syl-review-header { font-size:14px; font-weight:700; color:var(--text); margin-bottom:12px; }
@@ -1872,6 +1878,13 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
   12%  { opacity:0.85; }
   50%  { transform:translate(var(--px,20px), -60px) rotate(var(--pr,120deg)) scale(0.85); opacity:0.7; }
   100% { transform:translate(var(--px2,-10px), -140px) rotate(var(--pr2,280deg)) scale(0.5); opacity:0; }
+}
+@keyframes flameFlicker {
+  0%   { transform:translateX(-50%) scaleX(1)   scaleY(1)    skewX(0deg);  opacity:0.9; }
+  25%  { transform:translateX(-50%) scaleX(0.88) scaleY(1.06) skewX(-3deg); opacity:1; }
+  50%  { transform:translateX(-50%) scaleX(1.08) scaleY(0.94) skewX(2deg);  opacity:0.85; }
+  75%  { transform:translateX(-50%) scaleX(0.92) scaleY(1.08) skewX(-2deg); opacity:0.95; }
+  100% { transform:translateX(-50%) scaleX(1.04) scaleY(0.97) skewX(1deg);  opacity:0.9; }
 }
 @keyframes wingFlap {
   0%,100% { transform:scaleX(1); }
@@ -3732,6 +3745,48 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 /* My Tree / Wrap Up stat box */
 [data-theme="light"] .tsc-lbl           { color:var(--mid); }
 
+/* ── LIGHT THEME GAPS — polish pass ─────────────────────── */
+[data-theme="light"] .nav-settings      { color:var(--g1); }
+[data-theme="light"] .ai-pick-btn:hover { color:var(--g1); }
+[data-theme="light"] .add-btn:hover     { color:#fff; }
+/* Hero stat text on light bg */
+[data-theme="light"] .hero-stat .sv     { color:var(--g1); }
+[data-theme="light"] .hero-stat .sl     { color:var(--mid); }
+[data-theme="light"] .xp-bar-track      { background:rgba(0,0,0,0.08); }
+/* Filter tab text readable on light */
+[data-theme="light"] .deco-tab:hover    { color:var(--g2); }
+/* Auth screen */
+[data-theme="light"] .al-google-btn     { color:var(--g1); border-color:var(--border); background:#fff; }
+[data-theme="light"] .al-email-toggle   { color:var(--mid); }
+[data-theme="light"] .auth-input        { background:#fff; border-color:var(--border); color:var(--text); }
+[data-theme="light"] .auth-input::placeholder { color:var(--light); }
+/* Syl overlay */
+[data-theme="light"] .syl-course-card   { background:rgba(0,0,0,0.03); border-color:rgba(0,0,0,0.08); }
+[data-theme="light"] .syl-review-item   { background:rgba(0,0,0,0.03); border-color:rgba(0,0,0,0.06); }
+[data-theme="light"] .syl-paste-ta      { background:#fff; border-color:var(--border); color:var(--text); }
+[data-theme="light"] .syl-title         { color:var(--text); }
+[data-theme="light"] .syl-back-btn      { border-color:var(--border); color:var(--mid); }
+/* Grades */
+[data-theme="light"] .g-name            { color:var(--g1); }
+[data-theme="light"] .g-pct             { color:var(--g1); }
+[data-theme="light"] .g-forecast        { color:var(--mid); }
+[data-theme="light"] .grades-footer     { color:var(--mid); }
+/* Session complete */
+[data-theme="light"] .sc-title          { color:var(--g1); }
+[data-theme="light"] .sc-sub            { color:var(--mid); }
+/* Weak spot chips */
+[data-theme="light"] .ws-chip           { background:var(--g-pale); border-color:var(--border); color:var(--text); }
+/* GPA panel */
+[data-theme="light"] .gpa-panel         { border-top-color:var(--border); }
+[data-theme="light"] .gpa-row label     { color:var(--mid); }
+/* deco-shop modal */
+[data-theme="light"] .dsm-card          { background:linear-gradient(180deg,#EFF6EC,#E4F0E0); border-color:rgba(76,161,48,0.25); }
+[data-theme="light"] .dsm-name          { color:var(--text); }
+[data-theme="light"] .dsm-desc          { color:var(--mid); }
+[data-theme="light"] .dsm-cost-label strong { color:var(--text); }
+[data-theme="light"] .dsm-btn-cancel    { border-color:var(--border); color:var(--mid); }
+[data-theme="light"] .dsm-alt           { color:var(--mid); }
+
 </style>
 <!-- Apply theme before first paint to prevent flash -->
 <script>
@@ -4336,10 +4391,10 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
       <div class="assign-header">
         <span class="assign-title">Your Priorities</span>
         <div style="display:flex;gap:6px;align-items:center">
-          <button class="ai-pick-btn" onclick="aiQuickPick()" title="AI recommendation"><span class="ai-spark">⚡</span> AI Pick</button>
-          <button class="add-btn" onclick="openSyllabusImport()" title="Import syllabus">📄</button>
-          <button class="add-btn" onclick="openAddAssign()" title="Add assignment">＋</button>
-          <button class="add-btn" onclick="refreshAssignments()" title="Refresh">↻</button>
+          <button class="ai-pick-btn" onclick="aiQuickPick()" title="AI recommendation" aria-label="AI Pick — best assignment to study now"><span class="ai-spark">⚡</span> AI Pick</button>
+          <button class="add-btn" onclick="openSyllabusImport()" title="Import syllabus" aria-label="Import syllabus">📄</button>
+          <button class="add-btn" onclick="openAddAssign()" title="Add assignment" aria-label="Add assignment">＋</button>
+          <button class="add-btn" onclick="refreshAssignments()" title="Refresh assignments" aria-label="Refresh assignments">↻</button>
         </div>
       </div>
       <div class="filter-tabs">
@@ -7430,9 +7485,14 @@ function toggleDecoration(id) {
 }
 
 // ── DECO SHOP — XP purchase flow ──────────────────────────────────────────
+// ── SCROLL LOCK — prevent body scroll behind modals ──────────────────────────
+let _scrollLockCount = 0;
+function lockScroll()   { if (++_scrollLockCount === 1) document.body.style.overflow = 'hidden'; }
+function unlockScroll() { if (--_scrollLockCount <= 0) { _scrollLockCount = 0; document.body.style.overflow = ''; } }
+
 let _decoShopId = null;
 
-function openDecoShop(id) {
+function openDecoShop(id) { lockScroll();
   const d    = DECORATIONS.find(x => x.id === id);
   if (!d) return;
   _decoShopId = id;
@@ -7455,6 +7515,7 @@ function openDecoShop(id) {
 function closeDecoShopModal() {
   document.getElementById('deco-shop-modal').classList.remove('show');
   _decoShopId = null;
+  unlockScroll();
 }
 
 function confirmDecoXPBuy() {
@@ -7634,6 +7695,97 @@ function updateHeroDecorations() {
         makeCrystal('calc(50% + 46px)', 14, 22, '#6C5CE7', 0.75) +
         makeCrystal('calc(50% + 68px)', 20, 18, '#D8B4FE', 0.6) +
         makeCrystal('calc(50% - 88px)', 16, 16, '#C084FC', 0.5);
+
+    } else if (id === 'fairy_lights') {
+      // String of tiny glowing bulbs draped across the scene
+      let html = '';
+      const colors = ['#FFD700','#FF6B6B','#74B9FF','#A29BFE','#55EFC4','#FD79A8','#FDCB6E'];
+      for (let i = 0; i < 18; i++) {
+        const x    = 4 + (i / 17) * 92;
+        // gentle catenary drape: high at edges, low in middle
+        const sag  = Math.sin((i / 17) * Math.PI) * 18;
+        const bot  = 55 + sag + (Math.random() - 0.5) * 6;
+        const col  = colors[i % colors.length];
+        const dur  = 1.8 + Math.random() * 1.4;
+        const del  = (i * 0.18) % 2.2;
+        html += `<div style="position:absolute;left:${x.toFixed(1)}%;bottom:${bot.toFixed(1)}%;` +
+          `width:5px;height:7px;border-radius:1px 1px 3px 3px;background:${col};` +
+          `box-shadow:0 0 6px 3px ${col}99,0 0 12px 5px ${col}44;` +
+          `animation:fireflyPulse ${dur}s ${del}s ease-in-out infinite;"></div>`;
+      }
+      // draw the string itself
+      html += `<svg style="position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;" preserveAspectRatio="none">
+        <path d="M 4% 42% Q 50% 58% 96% 42%" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="0.8"/>
+      </svg>`;
+      overlay.innerHTML = html;
+
+    } else if (id === 'campfire') {
+      // Flickering campfire at the base of the tree with log SVG
+      overlay.innerHTML = `
+        <div style="position:absolute;left:50%;bottom:12px;transform:translateX(-50%);width:54px;">
+          <!-- logs -->
+          <svg width="54" height="18" viewBox="0 0 54 18" xmlns="http://www.w3.org/2000/svg" style="display:block;">
+            <ellipse cx="27" cy="16" rx="25" ry="5" fill="#2C1A0A" opacity="0.7"/>
+            <rect x="4"  y="8" width="22" height="7" rx="3.5" fill="#5C2E0A" transform="rotate(-18 15 11)"/>
+            <rect x="28" y="8" width="22" height="7" rx="3.5" fill="#6B3510" transform="rotate(18  39 11)"/>
+          </svg>
+          <!-- flame layers -->
+          <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);width:28px;height:38px;">
+            <!-- outer flame -->
+            <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+              width:24px;height:34px;border-radius:50% 50% 30% 30%/60% 60% 40% 40%;
+              background:radial-gradient(ellipse at 50% 80%,#FF6B00,#FF3D00 40%,transparent 75%);
+              animation:flameFlicker 0.9s ease-in-out infinite alternate;
+              transform-origin:50% 100%;"></div>
+            <!-- mid flame -->
+            <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+              width:16px;height:26px;border-radius:50% 50% 30% 30%/60% 60% 40% 40%;
+              background:radial-gradient(ellipse at 50% 80%,#FFB300,#FF6B00 50%,transparent 80%);
+              animation:flameFlicker 0.7s 0.15s ease-in-out infinite alternate-reverse;
+              transform-origin:50% 100%;"></div>
+            <!-- core -->
+            <div style="position:absolute;bottom:2px;left:50%;transform:translateX(-50%);
+              width:8px;height:14px;border-radius:50% 50% 30% 30%/60% 60% 40% 40%;
+              background:radial-gradient(ellipse at 50% 80%,#FFFDE7,#FFD600 60%,transparent 85%);
+              animation:flameFlicker 0.55s 0.05s ease-in-out infinite alternate;
+              transform-origin:50% 100%;"></div>
+          </div>
+          <!-- ground glow -->
+          <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+            width:70px;height:18px;border-radius:50%;
+            background:radial-gradient(ellipse,rgba(255,100,0,0.28),transparent 70%);
+            animation:fireflyPulse 1.1s ease-in-out infinite;"></div>
+        </div>`;
+
+    } else if (id === 'rainbow') {
+      // Pastel rainbow arc over the canopy, slow fade in/out
+      overlay.innerHTML = `
+        <svg style="position:absolute;left:0;top:0;width:100%;height:60%;overflow:visible;pointer-events:none;"
+             viewBox="0 0 200 80" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="rbg" cx="50%" cy="100%" r="70%" gradientUnits="userSpaceOnUse">
+              <stop offset="0%"   stop-color="#FF6B6B" stop-opacity="0.55"/>
+              <stop offset="16%"  stop-color="#FFA94D" stop-opacity="0.50"/>
+              <stop offset="33%"  stop-color="#FFE066" stop-opacity="0.45"/>
+              <stop offset="50%"  stop-color="#8CE99A" stop-opacity="0.45"/>
+              <stop offset="66%"  stop-color="#74C0FC" stop-opacity="0.45"/>
+              <stop offset="83%"  stop-color="#A5B4FC" stop-opacity="0.45"/>
+              <stop offset="100%" stop-color="#DA77F2" stop-opacity="0.40"/>
+            </radialGradient>
+          </defs>
+          <!-- Rainbow bands as concentric arcs -->
+          <path d="M 8,78 A 92,78 0 0 1 192,78" fill="none" stroke="#FF6B6B" stroke-width="5" stroke-opacity="0.45" stroke-linecap="round"/>
+          <path d="M 14,78 A 86,72 0 0 1 186,78" fill="none" stroke="#FFA94D" stroke-width="5" stroke-opacity="0.42" stroke-linecap="round"/>
+          <path d="M 20,78 A 80,66 0 0 1 180,78" fill="none" stroke="#FFE066" stroke-width="5" stroke-opacity="0.42" stroke-linecap="round"/>
+          <path d="M 26,78 A 74,60 0 0 1 174,78" fill="none" stroke="#8CE99A" stroke-width="5" stroke-opacity="0.42" stroke-linecap="round"/>
+          <path d="M 32,78 A 68,54 0 0 1 168,78" fill="none" stroke="#74C0FC" stroke-width="5" stroke-opacity="0.42" stroke-linecap="round"/>
+          <path d="M 38,78 A 62,48 0 0 1 162,78" fill="none" stroke="#A5B4FC" stroke-width="5" stroke-opacity="0.40" stroke-linecap="round"/>
+          <path d="M 44,78 A 56,42 0 0 1 156,78" fill="none" stroke="#DA77F2" stroke-width="5" stroke-opacity="0.38" stroke-linecap="round"/>
+          <animateTransform attributeName="transform" type="scale" values="1;1.012;1" dur="6s" repeatCount="indefinite" additive="sum"/>
+        </svg>
+        <div style="position:absolute;inset:0;
+          background:radial-gradient(ellipse 80% 30% at 50% 0%,rgba(200,180,255,0.07),transparent 70%);
+          animation:fireflyPulse 5s ease-in-out infinite;pointer-events:none;"></div>`;
     }
 
     scene.appendChild(overlay);
@@ -7986,7 +8138,7 @@ function renderStreakCal(streak) {
 }
 
 // ── ADD ASSIGNMENT ──────────────────────────────────────────
-function openAddAssign() {
+function openAddAssign() { lockScroll();
   document.getElementById('aa-title').value  = '';
   document.getElementById('aa-course').value = '';
   document.getElementById('aa-weight').value = '';
@@ -7999,6 +8151,7 @@ function openAddAssign() {
 }
 function closeAddAssign() {
   document.getElementById('add-assign-overlay').classList.remove('show');
+  unlockScroll();
 }
 
 // ── SYLLABUS IMPORT ───────────────────────────────────────────────────────────
@@ -8007,6 +8160,7 @@ let _sylParsedFor  = null; // course_id of last paste parse
 let _sylReviewing  = [];   // assignments currently in review step
 
 function openSyllabusImport() {
+  lockScroll();
   document.getElementById('syllabus-overlay').classList.add('show');
   document.getElementById('syl-step-courses').style.display = '';
   document.getElementById('syl-step-review').style.display  = 'none';
@@ -8014,6 +8168,7 @@ function openSyllabusImport() {
 }
 function closeSyllabusImport() {
   document.getElementById('syllabus-overlay').classList.remove('show');
+  unlockScroll();
 }
 function sylGoBack() {
   document.getElementById('syl-step-review').style.display  = 'none';
@@ -10126,7 +10281,7 @@ function toggleSchedBlock(el, id) {
   localStorage.setItem('sq_sched_done', JSON.stringify([..._schedDoneSet]));
 }
 
-function openPaywall(context) {
+function openPaywall(context) { lockScroll();
   _paywallContext = context || 'generic';
   track('paywall_opened', { context: _paywallContext });
   // Contextual copy
@@ -10154,6 +10309,7 @@ function openPaywall(context) {
 }
 function closePaywall() {
   document.getElementById('paywall-overlay').classList.remove('show');
+  unlockScroll();
 }
 
 async function startCheckout() {
@@ -10218,15 +10374,28 @@ function _checkUpgradeRedirect() {
   }
 }
 
+// Toast queue — prevents stacking when multiple fire rapidly
+let _toastQueue = [], _toastActive = false;
 function showToast(msg, duration) {
+  _toastQueue.push({ msg, duration: duration || 2500 });
+  if (!_toastActive) _nextToast();
+}
+function _nextToast() {
+  if (!_toastQueue.length) { _toastActive = false; return; }
+  _toastActive = true;
+  const { msg, duration } = _toastQueue.shift();
   const t = document.createElement('div');
   t.style.cssText = 'position:fixed;bottom:calc(90px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);' +
     'background:#1A3A1A;color:#fff;font-size:13px;font-weight:700;padding:12px 20px;border-radius:100px;' +
     'z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.4);white-space:nowrap;border:1px solid rgba(76,161,48,0.3);' +
-    'animation:fadeUp .3s ease;';
+    'animation:fadeUp .3s ease;pointer-events:none;';
   t.textContent = msg;
   document.body.appendChild(t);
-  setTimeout(() => t.remove(), duration || 2500);
+  setTimeout(() => {
+    t.style.transition = 'opacity .25s ease';
+    t.style.opacity = '0';
+    setTimeout(() => { t.remove(); _nextToast(); }, 270);
+  }, duration);
 }
 
 let _tourStep = 0;
@@ -10366,7 +10535,10 @@ if ('serviceWorker' in navigator) {
 
     <!-- Step 1: Course list -->
     <div id="syl-step-courses">
-      <div class="syl-title">Import Syllabus</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+        <div class="syl-title">Import Syllabus</div>
+        <div style="font-size:11px;font-weight:600;color:var(--mid)">Step 1 of 2</div>
+      </div>
       <div class="syl-sub">We'll auto-pull from Canvas first. Upload a PDF or paste text for anything we can't find.</div>
       <div class="syl-course-list" id="syl-course-list">
         <div class="syl-empty">Loading your courses…</div>
@@ -10380,7 +10552,10 @@ if ('serviceWorker' in navigator) {
 
     <!-- Step 2: Review extracted assignments -->
     <div id="syl-step-review" style="display:none">
-      <div class="syl-title">Review Assignments</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+        <div class="syl-title">Review Assignments</div>
+        <div style="font-size:11px;font-weight:600;color:var(--mid)">Step 2 of 2</div>
+      </div>
       <div class="syl-sub" id="syl-review-sub">Check what was found — uncheck anything you don't want to add.</div>
       <div class="syl-review-list" id="syl-review-list"></div>
       <button class="syl-confirm-btn" id="syl-confirm-btn" onclick="confirmSyllabusImport()">Add Assignments →</button>
