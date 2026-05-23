@@ -4924,6 +4924,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
       <div class="tree-stat-chip"><div class="tsc-val" id="tsc-sessions">0</div><div class="tsc-lbl">Study Sessions</div></div>
       <div class="tree-stat-chip"><div class="tsc-val" id="tsc-done">0</div><div class="tsc-lbl">Assignments Done</div></div>
       <div class="tree-stat-chip"><div class="tsc-val" id="tsc-streak">0</div><div class="tsc-lbl">Day Streak</div></div>
+      <div class="tree-stat-chip" id="tsc-cap-chip" style="display:none"><div class="tsc-val" id="tsc-cap-val">0/300</div><div class="tsc-lbl">Today's XP</div></div>
     </div>
 
     <div class="stage-cards">
@@ -7223,13 +7224,23 @@ function toggleDone(id, el, title, weight) {
   localStorage.setItem('sq_done', JSON.stringify([...completedIds]));
   saveUserData({ done_ids: [...completedIds] });
   if (el) { el.classList.add('checked'); el.textContent = '✓'; }
-  // XP: same formula as detail sheet preview — includes early bonus
-  const a = allAssignments.find(x => x.id === id);
+
+  const a        = allAssignments.find(x => x.id === id);
   const daysLeft = a?.days_until ?? null;
-  const early = (daysLeft !== null && daysLeft > 2) ? Math.min(1.2, 1 + (Math.min(daysLeft, 7) - 2) * 0.04) : 1;
-  const xp = Math.round(50 * Math.max(1, weight / 10) * early);
+  const daysEarly= (daysLeft !== null && daysLeft > 0) ? Math.min(daysLeft, 7) : 0;
+  const early    = daysEarly > 2 ? Math.min(1.2, 1 + (daysEarly - 2) * 0.04) : 1;
+  const gradeW   = (weight || 10) / 100;   // weight arrives as %, convert to 0-1
+  const xp       = Math.round(50 * Math.max(1, (weight || 10) / 10) * early);
+
   showXPBurst(xp, el);
-  addXP(xp); updateStreak(); totalCompleted++;
+  // grantXP is async — optimistic UI fires immediately, server reconciles in background
+  grantXP(xp, {
+    source:        'assignment',
+    assignment_id: String(id),
+    grade_weight:  gradeW,
+    days_early:    daysEarly,
+  });
+  updateStreak(); totalCompleted++;
   track('assignment_done', { xp_earned: xp, weight_pct: weight, course: a?.course || '' });
   starterGrant('sq_grant_first_done', 25, '✅ +25 XP — First assignment crushed! Keep the momentum.');
   document.getElementById('hstat-done').textContent = totalCompleted;
@@ -7394,14 +7405,79 @@ function saveSettings() {
   setTimeout(() => { msg.style.opacity = '0'; setTimeout(closeSettings, 250); }, 1200);
 }
 
-function addXP(amount) {
+// ── XP granting — optimistic local update, then reconcile with server ────────
+// grantXP is the primary entry point. It immediately updates the UI optimistically,
+// then calls /grant-xp to enforce the daily cap server-side.
+// If the server grants less (cap hit), it corrects localStorage and shows a toast.
+// Falls back to local-only in demo mode or when not logged in.
+async function grantXP(amount, opts = {}) {
+  // opts: { source, assignment_id, grade_weight, days_early, streak, estimated_hours }
+  const source = opts.source || 'assignment';
+
+  // Optimistic update — apply full amount immediately so UI feels instant
+  _applyXPLocally(amount);
+  _trackDailyXP(amount);
+
+  // If demo or not logged in, we're done — no server to call
+  if (isDemo || !currentUser) return;
+
+  // Call backend for authoritative grant + daily cap enforcement
+  try {
+    const idToken = await currentUser.getIdToken();
+    const res = await fetch(API + '/grant-xp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+      body: JSON.stringify({
+        source,
+        assignment_id:    opts.assignment_id    || null,
+        grade_weight:     opts.grade_weight     ?? 0.10,
+        days_early:       opts.days_early       ?? 0,
+        streak:           opts.streak           ?? getStreak(),
+        estimated_hours:  opts.estimated_hours  ?? 1.0,
+      }),
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.ok) return;
+
+    // Reconcile: server is authoritative — correct local XP to match
+    const serverXP = data.xp;
+    const localXP  = getXP();
+    if (serverXP !== localXP) {
+      // Server capped — correct the optimistic over-grant
+      localStorage.setItem('sq_xp', serverXP);
+      document.getElementById('nav-xp').textContent      = serverXP.toLocaleString() + ' XP';
+      document.getElementById('dash-xp-amt').textContent = serverXP.toLocaleString() + ' XP';
+      // Also correct today's local tracking
+      localStorage.setItem('sq_xp_today', data.daily_used);
+    }
+    if (data.capped && data.granted < data.raw) {
+      const remaining = data.daily_cap - (data.daily_used - data.granted);
+      if (remaining <= 0) {
+        showToast(`Daily XP cap reached (${data.daily_cap} XP). Come back tomorrow! 🌙`, 4000);
+      }
+    }
+  } catch (_) { /* offline or backend down — local optimistic value stands */ }
+}
+
+// Internal: track today's XP locally so the cap chip works offline/demo
+function _trackDailyXP(amount) {
+  const today = new Date().toISOString().slice(0, 10);
+  const stored = localStorage.getItem('sq_xp_today_date');
+  const used   = stored === today ? parseInt(localStorage.getItem('sq_xp_today') || '0') : 0;
+  localStorage.setItem('sq_xp_today_date', today);
+  localStorage.setItem('sq_xp_today', used + amount);
+}
+
+// Internal: immediately apply XP to localStorage and update all UI
+function _applyXPLocally(amount) {
   const prevXP    = getXP();
   const prevStage = getStageIndex(prevXP);
   const xp        = prevXP + amount;
   localStorage.setItem('sq_xp', xp);
-  addLeaves(amount); // leaves earned 1:1 with XP, but are spendable
+  addLeaves(amount);
   saveUserData({ xp });
-  document.getElementById('nav-xp').textContent     = xp.toLocaleString() + ' XP';
+  document.getElementById('nav-xp').textContent      = xp.toLocaleString() + ' XP';
   document.getElementById('dash-xp-amt').textContent = xp.toLocaleString() + ' XP';
   const newStage = getStageIndex(xp);
   if (newStage > prevStage) {
@@ -7409,13 +7485,14 @@ function addXP(amount) {
     const stageName = STAGES[newStage]?.name || 'new stage';
     addNotification('new_stage', `Your tree reached ${stageName}! 🌲`, `Keep studying — your Sequoia is growing stronger every day.`);
   }
-  // XP milestones
   const milestones = [100,500,1000,2500,5000,10000];
   milestones.forEach(m => { if (prevXP < m && xp >= m) addNotification('xp_milestone', `${m.toLocaleString()} XP reached! ⭐`, `You're on a roll. Every session adds up.`); });
-  // Debounced public profile sync (so leaderboard stays fresh after study sessions)
-  clearTimeout(addXP._syncTimer);
-  addXP._syncTimer = setTimeout(() => _upsertPublicProfile(), 5000);
+  clearTimeout(_applyXPLocally._syncTimer);
+  _applyXPLocally._syncTimer = setTimeout(() => _upsertPublicProfile(), 5000);
 }
+
+// Legacy shim — internal callers that pass a plain number still work
+function addXP(amount) { grantXP(amount, { source: 'session' }); }
 
 // ── STARTER XP GRANTS ───────────────────────────────────
 // One-time XP rewards for key onboarding moments.
@@ -7490,7 +7567,13 @@ const STAGES = [
   { name:'Ancient Sequoia', xpMin:10000, xpNext:99999, levelMin:38 },
 ];
 function stageFor(xp) { let s=STAGES[0]; for(let i=STAGES.length-1;i>=0;i--){if(xp>=STAGES[i].xpMin){s=STAGES[i];break;}} return s; }
-function levelFor(xp) { return Math.max(1, Math.min(50, Math.floor(xp/120)+1)); }
+function levelFor(xp) {
+  // Each stage maps to a level band so level 50 = Ancient Sequoia
+  if (xp < 1200)  return Math.max(1,  Math.min(10, Math.floor(xp / 120) + 1));           // Seedling  lv 1-10
+  if (xp < 4800)  return Math.min(25, Math.floor((xp - 1200)  / 240) + 11);              // Sapling   lv 11-25
+  if (xp < 10000) return Math.min(45, Math.floor((xp - 4800)  / 260) + 26);              // Grove     lv 26-45
+  return           Math.min(50, Math.floor((xp - 10000) / 500) + 46);                     // Ancient   lv 46-50
+}
 
 function updateDashTree() {
   const xp  = getXP();
@@ -8550,6 +8633,22 @@ function syncTreeScreen() {
   document.getElementById('tsc-sessions').textContent = sessions;
   document.getElementById('tsc-done').textContent     = completedIds.size;
   document.getElementById('tsc-streak').textContent   = streak;
+
+  // Daily XP cap chip — show today's usage if user has earned any XP today
+  const _today      = new Date().toISOString().slice(0, 10);
+  const _capDate    = localStorage.getItem('sq_xp_today_date');
+  const _capUsed    = _capDate === _today ? parseInt(localStorage.getItem('sq_xp_today') || '0') : 0;
+  const _mo         = new Date().getMonth() + 1;
+  const _capLimit   = (_mo === 5 || _mo === 12) ? 600 : (_mo === 3 || _mo === 10) ? 450 : 300;
+  const _capChip    = document.getElementById('tsc-cap-chip');
+  const _capVal     = document.getElementById('tsc-cap-val');
+  if (_capChip && _capUsed > 0) {
+    _capChip.style.display = '';
+    _capVal.textContent    = _capUsed + '/' + _capLimit;
+    _capVal.style.color    = _capUsed >= _capLimit ? '#e05c2a' : '';
+  } else if (_capChip) {
+    _capChip.style.display = 'none';
+  }
   renderStreakCal(streak);
   renderDecorations();
   updateHeroDecorations();
@@ -8639,7 +8738,8 @@ function pomoTick() {
       const mult = getStreakMultiplier();
       const sessionXP = Math.round(50 * mult);
       pomoCount++; pomoCycle=pomoCount%4; pomoXP+=sessionXP;
-      addXP(sessionXP); updateStreak(); updateDashTree();
+      grantXP(sessionXP, { source: 'session', streak: getStreak() });
+      updateStreak(); updateDashTree();
       track('session_completed', { xp_earned: sessionXP, session_number: pomoCount });
       starterGrant('sq_grant_first_session', 50, '⏱ +50 XP — First focus session done! The habit starts here.');
       const goal=document.getElementById('pomo-goal').value.trim()||'Focus session';
@@ -8672,7 +8772,7 @@ function endSessionEarly() {
     const partial = Math.round(50 * mult * (elapsed / phaseDur()));
     if (partial > 0) {
       showXPBurst(partial, document.getElementById('btn-end-early'));
-      addXP(partial); updateStreak(); updateDashTree(); pomoXP+=partial;
+      grantXP(partial, { source: 'session', streak: getStreak() }); updateStreak(); updateDashTree(); pomoXP+=partial;
       const n = parseInt(localStorage.getItem('sq_pomo_sessions')||'0') + 1;
       localStorage.setItem('sq_pomo_sessions', n);
       saveUserData({ pomo_sessions: n });
