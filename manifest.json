@@ -1,13 +1,15 @@
 {
-  "name": "Sequoia",
+  "name": "Sequoia — Grow Through Every Semester",
   "short_name": "Sequoia",
-  "description": "The study app that grows as you do.",
+  "description": "Connect your Canvas, tackle what matters most, and watch your Sequoia tree grow all semester long.",
+  "id": "/sequoia-frontend/",
   "start_url": "/sequoia-frontend/",
   "display": "standalone",
-  "background_color": "#1C3A1C",
+  "background_color": "#0A1A0A",
   "theme_color": "#1C3A1C",
   "orientation": "portrait-primary",
   "categories": ["education", "productivity"],
+  "lang": "en-US",
   "icons": [
     {
       "src": "icon-192.png",

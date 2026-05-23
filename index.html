@@ -59,6 +59,8 @@
   --bg:          #ffffff;
 }
 *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+* { -webkit-tap-highlight-color:transparent; }
+button, a, [onclick], [role="button"] { touch-action:manipulation; }
 html { height:100%; }
 body {
   font-family:'DM Sans',sans-serif;
@@ -1056,10 +1058,11 @@ input.g-slider::-moz-range-thumb {
 .gpa-row-pct { font-size:12px; font-weight:700; color:rgba(255,255,255,0.5); width:36px; text-align:right; flex-shrink:0; }
 .gpa-credits-label { font-size:10px; color:rgba(255,255,255,0.3); flex-shrink:0; }
 .gpa-credits-input {
-  width:38px; text-align:center; font-size:12px; font-weight:700;
+  width:38px; text-align:center; font-size:16px; font-weight:700;
   background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12);
   border-radius:6px; color:rgba(255,255,255,0.75); padding:4px 0;
   font-family:'DM Sans',sans-serif; -moz-appearance:textfield;
+  transform:scale(0.75); transform-origin:center; margin:-4px -5px;
 }
 .gpa-credits-input::-webkit-outer-spin-button,
 .gpa-credits-input::-webkit-inner-spin-button { -webkit-appearance:none; }
@@ -2088,9 +2091,8 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 .fr-add-row   { display:flex; gap:8px; }
 .fr-add-input {
   flex:1; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12);
-  border-radius:10px; padding:10px 14px; color:#fff; font-size:13px; font-weight:600;
-  font-family:'DM Mono',monospace; letter-spacing:1.5px; text-transform:uppercase;
-  font-family:'DM Sans',sans-serif;
+  border-radius:10px; padding:10px 14px; color:#fff; font-size:16px; font-weight:600;
+  font-family:'DM Sans',sans-serif; letter-spacing:1.5px; text-transform:uppercase;
 }
 .fr-add-input::placeholder { color:rgba(255,255,255,0.2); font-family:'DM Sans',sans-serif; letter-spacing:0; }
 .fr-add-input:focus { outline:none; border-color:rgba(76,161,48,0.5); background:rgba(76,161,48,0.08); }
@@ -2233,7 +2235,7 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
   position:absolute; bottom:34px; left:50%; transform:translateX(-50%);
   z-index:2; opacity:0; transition:opacity 2.2s ease;
 }
-.wu-stump-wrap.show { opacity:1; }
+.wu-stump-wrap.show { opacity:1; animation:stumpGlowPulse 3.2s ease-in-out infinite 2.5s; }
 .wu-seedling-wrap {
   position:absolute; bottom:40px; left:50%; transform:translateX(-50%) scale(0);
   z-index:3; opacity:0;
@@ -2302,7 +2304,7 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
   font-size:15px; color:rgba(255,255,255,0.7); font-weight:600; margin-top:22px;
   opacity:0; transform:translateY(10px);
   transition:opacity 1.6s ease, transform 1.6s ease;
-  letter-spacing:.3px;
+  letter-spacing:.3px; text-align:center; width:100%;
 }
 .wu-done-msg.show { opacity:1; transform:translateY(0); }
 
@@ -2475,6 +2477,26 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
   cursor:pointer; transition:all .22s; flex-shrink:0;
 }
 .share-dl-btn:hover { background:rgba(76,161,48,0.16); border-color:rgba(130,204,85,0.4); transform:scale(1.05); }
+.share-x-btn {
+  padding:16px 18px; border-radius:16px; border:1px solid rgba(255,255,255,0.15);
+  background:rgba(255,255,255,0.06);
+  color:rgba(255,255,255,0.8); font-family:'DM Sans',sans-serif; font-size:18px; font-weight:700;
+  cursor:pointer; transition:all .22s; flex-shrink:0;
+}
+.share-x-btn:hover { background:rgba(255,255,255,0.12); border-color:rgba(255,255,255,0.3); transform:scale(1.05); }
+.wu-sem-reminder {
+  margin-bottom:10px; padding:11px 16px; border-radius:14px;
+  background:linear-gradient(135deg,rgba(212,136,43,0.15),rgba(180,100,30,0.1));
+  border:1px solid rgba(212,136,43,0.35);
+  color:rgba(255,210,120,0.95); font-size:13px; font-weight:600;
+  text-align:center; cursor:pointer; line-height:1.4;
+  animation:semReminderPulse 3s ease-in-out infinite;
+}
+.wu-sem-reminder:hover { background:linear-gradient(135deg,rgba(212,136,43,0.25),rgba(180,100,30,0.18)); }
+@keyframes semReminderPulse {
+  0%,100% { box-shadow:0 0 0 0 rgba(212,136,43,0); }
+  50%      { box-shadow:0 0 12px 2px rgba(212,136,43,0.25); }
+}
 .wu-new-semester {
   margin-top:12px; width:100%; padding:13px; border-radius:14px;
   border:1px solid rgba(255,255,255,0.12); background:transparent;
@@ -2726,7 +2748,7 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 .ob-field label { font-size:10px; font-weight:700; color:rgba(255,255,255,0.45); text-transform:uppercase; letter-spacing:1.4px; display:block; margin-bottom:6px; }
 .ob-field input {
   width:100%; padding:13px 16px; border:1.5px solid rgba(255,255,255,0.1); border-radius:12px;
-  font-family:'DM Sans',sans-serif; font-size:15px; color:#FFFEF8;
+  font-family:'DM Sans',sans-serif; font-size:16px; color:#FFFEF8;
   background:rgba(0,0,0,0.25); outline:none; transition:border-color .2s, box-shadow .2s;
   box-sizing:border-box;
 }
@@ -3152,6 +3174,12 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 .dbadge-level  { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.4); }
 .dbadge-xp     { background:rgba(147,112,219,0.22); color:#B89EFF; border:1px solid rgba(147,112,219,0.4); }
 .dbadge-owned  { background:rgba(76,161,48,0.18); color:var(--g3); border:1px solid rgba(76,161,48,0.3); }
+.dbadge-new    { background:rgba(255,80,80,0.22); color:#FF8080; border:1px solid rgba(255,80,80,0.4); }
+.deco-cell-new-dot {
+  position:absolute; top:7px; left:7px;
+  width:7px; height:7px; border-radius:50%;
+  background:#FF5050; box-shadow:0 0 6px rgba(255,80,80,0.7);
+}
 
 /* ── DECO SHOP MODAL ───────────────────────────────────────── */
 #deco-shop-modal {
@@ -3339,7 +3367,7 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 .bottom-nav { display:none; }
 .btab {
   flex:1; display:flex; flex-direction:column; align-items:center;
-  justify-content:center; gap:3px; padding:10px 4px 8px;
+  justify-content:center; gap:3px; padding:12px 4px 10px; min-height:44px;
   background:none; border:none; cursor:pointer;
   color:rgba(255,255,255,0.35); font-family:'DM Sans',sans-serif;
   transition:color .18s, transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
@@ -5103,6 +5131,9 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
 
     <!-- END OF SEMESTER ENTRY POINT -->
     <div class="wu-entry-wrap">
+      <div class="wu-sem-reminder" id="wu-sem-reminder" style="display:none" onclick="showScreen(4)">
+        🌲 Semester ending soon — release your tree and get your stats card
+      </div>
       <div class="wu-entry-card" onclick="showScreen(4)">
         <div class="wu-entry-left">
           <div class="wu-entry-icon">✨</div>
@@ -5213,8 +5244,10 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
       </div>
       <p class="wu-release-copy">Your tree joins the ancient forest forever.<br>A new seedling will take its place.</p>
       <button class="wu-release-btn" id="wu-release-btn" onclick="startRegrow()">🌲 Release Your Tree to the Forest →</button>
-      <div class="wu-done-msg" id="wu-done-msg">Your tree found its place in the ancient forest. 🌲</div>
     </div>
+
+    <!-- Done message — outside wu-pre so it stays visible after wu-pre fades out -->
+    <div class="wu-done-msg" id="wu-done-msg">Your tree found its place in the ancient forest. 🌲</div>
 
     <!-- Post-release stats card -->
     <div class="wu-post" id="wu-post">
@@ -5259,12 +5292,13 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         <div class="stats-earned-badges" id="stats-earned-badges"></div>
 
         <!-- footer URL -->
-        <div class="sc-footer">grown with <span>sequoia.app</span></div>
+        <div class="sc-footer">grown with <span>getsequoia.app</span></div>
       </div>
 
       <!-- share row (outside card, not captured in screenshot) -->
       <div class="share-row">
         <button class="share-btn" id="share-main-btn" onclick="shareStatsCard()">📤 Share My Stats</button>
+        <button class="share-x-btn" onclick="shareToX()" title="Share on X">𝕏</button>
         <button class="share-dl-btn" id="share-dl-btn" onclick="downloadStatsCard()" title="Save image">⬇️</button>
       </div>
       <button class="wu-new-semester" onclick="newSemester()">🌱 Start a New Semester →</button>
@@ -7341,18 +7375,25 @@ function updateDashTree() {
 // ── TREE SCREEN — drives 4-card layout ─────────────────
 // ── DECORATIONS ───────────────────────────────────────────────────────────────
 const DECORATIONS = [
-  { id:'fireflies',   name:'Fireflies',     emoji:'✨', cat:'level',    unlockLevel:5,  desc:'Glow with every session' },
-  { id:'blossoms',    name:'Blossoms',      emoji:'🌸', cat:'level',    unlockLevel:11, desc:'Petals drift through your grove' },
-  { id:'mushrooms',   name:'Mushrooms',     emoji:'🍄', cat:'level',    unlockLevel:15, desc:'Dot the forest floor' },
-  { id:'lanterns',    name:'Lanterns',      emoji:'🕯️', cat:'level',    unlockLevel:20, desc:'Warm light, late nights' },
-  { id:'butterflies', name:'Butterflies',   emoji:'🦋', cat:'level',    unlockLevel:25, desc:'Flutter around your canopy' },
-  { id:'crystals',    name:'Crystals',      emoji:'💎', cat:'level',    unlockLevel:30, desc:'Gemstones from the earth' },
+  { id:'fireflies',       name:'Fireflies',       emoji:'✨', cat:'level',    unlockLevel:5,  desc:'Glow with every session' },
+  { id:'blossoms',        name:'Blossoms',        emoji:'🌸', cat:'level',    unlockLevel:11, desc:'Petals drift through your grove' },
+  { id:'mushrooms',       name:'Mushrooms',       emoji:'🍄', cat:'level',    unlockLevel:15, desc:'Dot the forest floor' },
+  { id:'lanterns',        name:'Lanterns',        emoji:'🕯️', cat:'level',    unlockLevel:20, desc:'Warm light, late nights' },
+  { id:'butterflies',     name:'Butterflies',     emoji:'🦋', cat:'level',    unlockLevel:25, desc:'Flutter around your canopy' },
+  { id:'crystals',        name:'Crystals',        emoji:'💎', cat:'level',    unlockLevel:30, desc:'Gemstones from the earth' },
+  { id:'foxes',           name:'Forest Fox',      emoji:'🦊', cat:'level',    unlockLevel:38, desc:'A curious visitor at your roots', isNew:true },
+  { id:'owls',            name:'Night Owls',      emoji:'🦉', cat:'level',    unlockLevel:46, desc:'Wise watchers of the ancient grove', isNew:true },
   { id:'snow',        name:'Snow',          emoji:'❄️', cat:'seasonal', season:'Winter', desc:'Winter wonderland' },
   { id:'autumn',      name:'Autumn Leaves', emoji:'🍂', cat:'seasonal', season:'Fall',   desc:'Warm colors swirl' },
   { id:'spring',      name:'Spring Bloom',  emoji:'🌼', cat:'seasonal', season:'Spring', desc:'Wild flowers bloom' },
-  { id:'fairy_lights',name:'Fairy Lights',  emoji:'🪄', cat:'shop', price:0.99, leafCost:500, desc:'Magic shimmers everywhere' },
-  { id:'campfire',    name:'Campfire',      emoji:'🔥', cat:'shop', price:1.99, leafCost:800, desc:'Warmth at your roots' },
-  { id:'rainbow',     name:'Rainbow',       emoji:'🌈', cat:'shop', price:1.49, leafCost:600, desc:'Arcs over your canopy' },
+  { id:'summer',      name:'Summer Haze',   emoji:'☀️', cat:'seasonal', season:'Summer', desc:'Golden warmth all around' },
+  { id:'fairy_lights',    name:'Fairy Lights',    emoji:'🪄', cat:'shop', price:0.99, leafCost:500, desc:'Magic shimmers everywhere' },
+  { id:'campfire',        name:'Campfire',        emoji:'🔥', cat:'shop', price:1.99, leafCost:800, desc:'Warmth at your roots' },
+  { id:'rainbow',         name:'Rainbow',         emoji:'🌈', cat:'shop', price:1.49, leafCost:600, desc:'Arcs over your canopy' },
+  { id:'moonlight',       name:'Moonlight',       emoji:'🌙', cat:'shop', price:1.49, leafCost:600, desc:'Silver glow on every leaf', isNew:true },
+  { id:'northern_lights', name:'Northern Lights', emoji:'🌌', cat:'shop', price:2.49, leafCost:1000, desc:'Aurora dances above your canopy', isNew:true },
+  { id:'golden_hour',     name:'Golden Hour',     emoji:'🌅', cat:'shop', price:1.49, leafCost:650, desc:'Warm dusk light through the trees', isNew:true },
+  { id:'thunderstorm',    name:'Thunderstorm',    emoji:'⛈️', cat:'shop', price:1.99, leafCost:900, desc:'Electric drama rolls through the grove', isNew:true },
 ];
 
 let _decoTab = 'all';
@@ -7375,6 +7416,7 @@ function _isDecoSeason(d) {
   if (d.season === 'Winter') return m === 12 || m <= 2;
   if (d.season === 'Fall')   return m >= 9  && m <= 11;
   if (d.season === 'Spring') return m >= 3  && m <= 5;
+  if (d.season === 'Summer') return m >= 6  && m <= 8;
   return false;
 }
 
@@ -7490,7 +7532,9 @@ function renderDecorations() {
       clickAttr = `onclick="toggleDecoration('${d.id}')"`;
     }
 
+    const newDot = d.isNew ? '<div class="deco-cell-new-dot"></div>' : '';
     return `<div class="${cellClass}" ${clickAttr}>
+      ${newDot}
       ${badgeHTML}
       <span class="deco-cell-emoji">${d.emoji}</span>
       <div class="deco-cell-name">${d.name}</div>
@@ -7886,6 +7930,13 @@ function syncTreeScreen() {
   renderStreakCal(streak);
   renderDecorations();
   updateHeroDecorations();
+
+  // End-of-semester reminder (shows in May and December if user has any XP)
+  const _semRem = document.getElementById('wu-sem-reminder');
+  if (_semRem) {
+    const _mo = new Date().getMonth() + 1; // 1-12
+    _semRem.style.display = (xp > 0 && (_mo === 5 || _mo === 12)) ? '' : 'none';
+  }
 
   // Stage cards: active / done / locked
   for (let i = 0; i < 4; i++) {
@@ -9341,6 +9392,11 @@ function startRegrow() {
     requestAnimationFrame(() => requestAnimationFrame(() => treeWrap.classList.add('fading')));
   }, 2800);
 
+  // ── Phase 3 (5s): Stump materialises as tree fades ──
+  setTimeout(() => {
+    document.getElementById('wu-stump').classList.add('show');
+  }, 5000);
+
   // ── Phase 3 (5.5s): Pre-section fades then collapses so stats card sits higher ──
   setTimeout(() => {
     const pre = document.getElementById('wu-pre');
@@ -9355,7 +9411,7 @@ function startRegrow() {
     document.getElementById('wu-seedling').classList.add('show');
   }, 6200);
 
-  // ── Phase 3 (6.8s): Done message ──
+  // ── Phase 3 (6.8s): Done message (now outside wu-pre, so it's always visible) ──
   setTimeout(() => {
     document.getElementById('wu-done-msg').classList.add('show');
   }, 6800);
@@ -9591,6 +9647,20 @@ async function downloadStatsCard() {
     btn.textContent = orig;
     btn.disabled    = false;
   }
+}
+
+// ── Share to X (Twitter) ──────────────────────────────────
+function shareToX() {
+  const xp    = parseInt((document.getElementById('stat-xp')?.textContent || '0').replace(/,/g,'')) || 0;
+  const sem   = document.getElementById('stats-sem')?.textContent || 'this semester';
+  const stage = document.getElementById('stat-badge-stage-val')?.textContent || '';
+  const hours = document.getElementById('stat-hours')?.textContent || '';
+  const parts = ['Just wrapped ' + sem + ' on Sequoia 🌲'];
+  if (stage) parts.push('Reached ' + stage + ' with ' + xp.toLocaleString() + ' XP');
+  if (hours)  parts.push(hours + ' of focused study');
+  parts.push('', 'Grow through every semester → getsequoia.app');
+  const text = encodeURIComponent(parts.join('\n'));
+  window.open('https://twitter.com/intent/tweet?text=' + text, '_blank', 'noopener,noreferrer');
 }
 
 // ── NOTIFICATIONS ────────────────────────────────────────
