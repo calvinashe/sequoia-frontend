@@ -6055,8 +6055,9 @@ window.addEventListener('DOMContentLoaded', () => {
   // Auto-launch demo mode when ?demo=1 is in the URL
   const _urlParams = new URLSearchParams(window.location.search);
   if (_urlParams.get('demo') === '1') {
-    // Wait for Firebase auth check to complete, then always enter demo
-    // loadDemo() snapshots real localStorage first, so signed-in users are safe
+    // Set isDemo immediately so the main auth handler won't overwrite demo data
+    isDemo = true;
+    // Wait for Firebase auth check to complete, then load demo
     const _demoUnsub = auth.onAuthStateChanged((user) => {
       _demoUnsub(); // one-shot — unsubscribe immediately
       hideAuthScreen();
@@ -6089,6 +6090,9 @@ window.addEventListener('DOMContentLoaded', () => {
       checkStreakRisk(); renderSessionLog();
       return;
     }
+
+    // If demo mode was already activated (e.g. ?demo=1 URL param), don't overwrite it
+    if (isDemo) return;
 
     // Signed in — show app immediately using cached localStorage data
     currentUser = user;
