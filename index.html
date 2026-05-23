@@ -6052,6 +6052,20 @@ window.addEventListener('DOMContentLoaded', () => {
   fetch(`${API}/health`, { signal: AbortSignal.timeout ? AbortSignal.timeout(90000) : undefined }).catch(() => {});
   _checkUpgradeRedirect();  // show success toast if returning from Stripe
 
+  // Auto-launch demo mode when ?demo=1 is in the URL
+  const _urlParams = new URLSearchParams(window.location.search);
+  if (_urlParams.get('demo') === '1') {
+    // Wait for Firebase auth check to complete before hijacking into demo
+    const _demoUnsub = auth.onAuthStateChanged((user) => {
+      _demoUnsub(); // unsubscribe immediately — we only need the first fire
+      if (!user) {
+        // Not signed in: go straight to demo without showing auth screen
+        loadDemoFromAuth();
+      }
+      // If already signed in, don't clobber their real session
+    });
+  }
+
   // Handle result from signInWithRedirect (mobile Google sign-in)
   auth.getRedirectResult().then(result => {
     if (result && result.user && result.additionalUserInfo && result.additionalUserInfo.isNewUser) {
