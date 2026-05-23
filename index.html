@@ -5506,6 +5506,15 @@ async function loadUserData(uid) {
     if (d.tier)                           localStorage.setItem('sq_tier',           d.tier);
     if (d.purchasedDecos)                 localStorage.setItem('sq_purchased_decos',JSON.stringify(d.purchasedDecos));
     if (d.leaves !== undefined)           localStorage.setItem('sq_leaves',          String(d.leaves));
+    // Sync today's XP usage from Firestore so the daily cap chip is accurate across
+    // devices and fresh logins. Only apply if the stored date matches today UTC.
+    if (d.xp_today !== undefined && d.xp_today_date) {
+      const _todayUTC = new Date().toISOString().slice(0, 10);
+      if (d.xp_today_date === _todayUTC) {
+        localStorage.setItem('sq_xp_today',      String(d.xp_today));
+        localStorage.setItem('sq_xp_today_date', d.xp_today_date);
+      }
+    }
     // Fetch notification badge separately so it can't crash the user data load
     userRef.collection('notifications').where('read', '==', false).get()
       .then(snap => _setBadge(snap.size)).catch(() => {});
@@ -5529,18 +5538,25 @@ function saveUserData(updates) {
 async function initNewUser(user, name) {
   const snap = await db.collection('users').doc(user.uid).get().catch(() => ({ exists: false }));
   if (snap.exists) return; // already exists, don't overwrite
+
+  // Demo data is fake — never seed it into a real account.
+  // If the user played demo before signing up, start them clean at 0.
+  // If they had genuine localStorage data (used the app before creating an account), migrate it.
+  const fromDemo = isDemo;
   await db.collection('users').doc(user.uid).set({
     name:               name || user.displayName || '',
     email:              user.email || '',
     tier:               'free',
-    xp:                 parseInt(localStorage.getItem('sq_xp')            || '0'),
-    streak:             parseInt(localStorage.getItem('sq_streak')        || '0'),
-    last_study:         localStorage.getItem('sq_last_study')             || '',
-    done_ids:           JSON.parse(localStorage.getItem('sq_done')        || '[]'),
-    canvas_token:       localStorage.getItem('sq_token')                  || '',
-    canvas_url:         localStorage.getItem('sq_url')                    || '',
-    pomo_sessions:      parseInt(localStorage.getItem('sq_pomo_sessions') || '0'),
-    manual_assignments: JSON.parse(localStorage.getItem('sq_manual')      || '[]'),
+    xp:                 fromDemo ? 0 : parseInt(localStorage.getItem('sq_xp')            || '0'),
+    streak:             fromDemo ? 0 : parseInt(localStorage.getItem('sq_streak')        || '0'),
+    last_study:         fromDemo ? '' : (localStorage.getItem('sq_last_study')           || ''),
+    done_ids:           fromDemo ? [] : JSON.parse(localStorage.getItem('sq_done')       || '[]'),
+    canvas_url:         localStorage.getItem('sq_url')                                   || '',
+    // canvas_token is intentionally NOT written here — it goes to the private
+    // Firestore subcollection via _saveCanvasTokenSecurely(), which fires from
+    // the migration block in onAuthStateChanged immediately after sign-up.
+    pomo_sessions:      fromDemo ? 0 : parseInt(localStorage.getItem('sq_pomo_sessions') || '0'),
+    manual_assignments: fromDemo ? [] : JSON.parse(localStorage.getItem('sq_manual')     || '[]'),
     created_at:         firebase.firestore.FieldValue.serverTimestamp(),
   }).catch(() => {});
 }
@@ -5741,7 +5757,11 @@ async function signOutUser() {
   closeAccountMenu();
   await auth.signOut();
   ['sq_token','sq_url','sq_name','sq_xp','sq_streak','sq_last_study',
-   'sq_done','sq_sessions','sq_pomo_sessions','sq_manual'].forEach(k => localStorage.removeItem(k));
+   'sq_done','sq_sessions','sq_pomo_sessions','sq_manual',
+   'sq_xp_today','sq_xp_today_date','sq_tier','sq_leaves',
+   'sq_assign_cache','sq_assign_cache_time','sq_purchased_decos',
+   'sq_freeze_date','sq_streak_before_break','sq_streak_break_date',
+  ].forEach(k => localStorage.removeItem(k));
   location.reload();
 }
 
@@ -5927,9 +5947,9 @@ function obRevealEnter() {
   const url   = localStorage.getItem('sq_url');
   closeOnboard();
   if (allAssignments.length) _applyAssignments(allAssignments);
-  if (token && url) {
-    _refreshAssignmentsBackground(token, url);
-    loadCourses(token, url);
+  if (url) {
+    _refreshAssignmentsBackground(token || '', url);
+    loadCourses(token || '', url);
   }
   loadXPStreak(); updateDashTree(); syncTreeScreen();
   setTimeout(tourShow, 1200);
@@ -6082,7 +6102,11 @@ async function connectCanvas() {
     localStorage.setItem('sq_token', token);
     localStorage.setItem('sq_url', url);
     localStorage.setItem('sq_name', name);
-    saveUserData({ canvas_token: token, canvas_url: url, name });
+    // Save name + URL to Firestore main doc (safe to expose).
+    // The Canvas TOKEN goes to the private subcollection via the backend so
+    // it's only accessible through the Admin SDK — not the Firestore JS SDK.
+    saveUserData({ canvas_url: url, name });
+    _saveCanvasTokenSecurely(token, url);
     setGreeting(name);
 
     // If coming from demo mode, restore snapshotted data and exit demo cleanly
@@ -6289,14 +6313,17 @@ window.addEventListener('DOMContentLoaded', () => {
     checkStreakRisk(); renderSessionLog();
     updateNavAccount(user, localStorage.getItem('sq_tier') || 'free');
 
-    const token = localStorage.getItem('sq_token');
-    const url   = localStorage.getItem('sq_url');
+    const token = localStorage.getItem('sq_token'); // may be null post-migration
+    const url   = localStorage.getItem('sq_url');   // persists as Canvas-connected indicator
 
-    if (token) {
+    // Use url (not token) as the indicator that Canvas is connected.
+    // After the secure migration, sq_token is removed but sq_url stays in localStorage.
+    // _canvasHeaders() uses Firebase auth when signed in, so token param can be empty.
+    if (url) {
       closeOnboard();
       setGreeting(localStorage.getItem('sq_name') || user.displayName || '');
-      loadAssignments(token, url);
-      loadCourses(token, url);
+      loadAssignments(token || '', url);
+      loadCourses(token || '', url);
     }
 
     // Sync Firestore data in background — updates UI when ready
@@ -6304,13 +6331,23 @@ window.addEventListener('DOMContentLoaded', () => {
       if (userData) {
         updateNavAccount(user, userData.tier || 'free');
         loadXPStreak(); updateDashTree(); syncTreeScreen();
-        const t = localStorage.getItem('sq_token');
         const u = localStorage.getItem('sq_url');
-        if (t && !token) { closeOnboard(); setGreeting(localStorage.getItem('sq_name') || ''); loadAssignments(t, u); loadCourses(t, u); }
+        // Load assignments if Canvas is connected but wasn't loaded yet (e.g. Firestore sync added sq_url)
+        if (u && !url) { closeOnboard(); setGreeting(localStorage.getItem('sq_name') || ''); loadAssignments('', u); loadCourses('', u); }
+        // Show one-time toast for users affected by the level formula update
+        _checkLevelMigration();
       }
     });
     // Keep timezone offset fresh on every login (user may travel or change device)
     saveUserData({ tz_offset: -new Date().getTimezoneOffset() });
+    // Migrate Canvas token from localStorage to secure Firestore subcollection if needed.
+    // Once migrated, the token is removed from localStorage and all future Canvas API
+    // calls use a Firebase ID token — the backend reads the Canvas token server-side.
+    const _migrateToken = localStorage.getItem('sq_token');
+    const _migrateUrl   = localStorage.getItem('sq_url');
+    if (_migrateToken && _migrateUrl) {
+      _saveCanvasTokenSecurely(_migrateToken, _migrateUrl);
+    }
     // Sync public leaderboard profile (fire-and-forget)
     setTimeout(() => _upsertPublicProfile(), 2000);
     initPushBtn(); // badge count is now fetched inside loadUserData (parallel query)
@@ -6557,6 +6594,38 @@ function _applyAssignments(raw) {
   buildQPick();
 }
 
+// ── CANVAS TOKEN SECURITY ────────────────────────────────────
+// After a successful Canvas connect (or on sign-in with a token in localStorage),
+// we push the token to the backend's private Firestore subcollection so it's
+// never readable by the Firestore JS SDK — only the Admin SDK (backend) can access it.
+// Subsequent API calls use a Firebase ID token; the backend reads the Canvas token server-side.
+async function _saveCanvasTokenSecurely(token, url) {
+  if (!currentUser || isDemo || !token) return;
+  try {
+    const idToken = await currentUser.getIdToken();
+    await fetch(API + '/save-canvas-token', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+      body:    JSON.stringify({ canvas_token: token, canvas_url: url }),
+    });
+    // Once saved server-side, clear from localStorage so it's not sitting in plaintext
+    localStorage.removeItem('sq_token');
+  } catch (_) { /* keep localStorage copy as fallback if backend unreachable */ }
+}
+
+// Returns headers for Canvas API routes — prefers Firebase auth (server reads token);
+// falls back to direct token headers if user isn't signed in (onboarding flow).
+async function _canvasHeaders(token, url) {
+  if (currentUser && !isDemo) {
+    try {
+      const idToken = await currentUser.getIdToken();
+      return { 'Authorization': 'Bearer ' + idToken };
+    } catch (_) {}
+  }
+  // Fallback: send token directly (used during onboarding before account creation)
+  return { 'X-Canvas-Token': token, 'X-Canvas-URL': url };
+}
+
 async function loadAssignments(token, url) {
   const list = document.getElementById('assign-list');
 
@@ -6587,17 +6656,22 @@ async function loadAssignments(token, url) {
   try {
     const ctrl = new AbortController();
     const timeout = setTimeout(() => ctrl.abort(), 90000);
-    const res  = await fetch(`${API}/assignments`, { headers: { 'X-Canvas-Token': token, 'X-Canvas-URL': url }, signal: ctrl.signal });
+    const hdrs = await _canvasHeaders(token, url);
+    const res  = await fetch(`${API}/assignments`, { headers: hdrs, signal: ctrl.signal });
     clearTimeout(timeout);
     clearTimeout(wakeTimer);
     clearInterval(_wakeInterval); _wakeInterval = null;
+    if (res.status === 429) {
+      list.innerHTML = `<div class="empty-state"><div class="es-icon">⏳</div><h3>Too many requests</h3><p>You've refreshed too quickly. Wait a moment and try again.</p><div style="margin-top:4px"><button class="es-retry" onclick="refreshAssignments()">Try Again</button></div></div>`;
+      return;
+    }
     const data = await res.json();
     if (!data.ok || data.error) {
       const isTokenError = res.status === 401 || (data.error || '').toLowerCase().includes('token');
       if (isTokenError) {
         list.innerHTML = `<div class="empty-state"><div class="es-icon">🔑</div><h3>Canvas token expired</h3><p>Your Canvas access token is no longer valid. Generate a new one in Canvas and update it in Settings.</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:4px"><button class="es-retry" onclick="openSettings()">Update Token in Settings</button><button class="es-retry" style="background:var(--g-pale);color:var(--g2)" onclick="loadDemo()">Try Demo Mode →</button></div></div>`;
       } else {
-        list.innerHTML = `<div class="empty-state"><div class="es-icon">🔑</div><h3>Canvas error</h3><p>${esc(data.error || 'Something went wrong')}</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:4px"><button class="es-retry" onclick="loadAssignments('${esc(token)}','${esc(url)}')">Try Again</button><button class="es-retry" style="background:var(--g-pale);color:var(--g2)" onclick="loadDemo()">Try Demo Mode →</button></div></div>`;
+        list.innerHTML = `<div class="empty-state"><div class="es-icon">🔑</div><h3>Canvas error</h3><p>${esc(data.error || 'Something went wrong')}</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:4px"><button class="es-retry" onclick="refreshAssignments()">Try Again</button><button class="es-retry" style="background:var(--g-pale);color:var(--g2)" onclick="loadDemo()">Try Demo Mode →</button></div></div>`;
       }
       return;
     }
@@ -6620,7 +6694,8 @@ async function loadAssignments(token, url) {
 // Silent background refresh — updates cache + UI without any loading state
 async function _refreshAssignmentsBackground(token, url) {
   try {
-    const res  = await fetch(`${API}/assignments`, { headers: { 'X-Canvas-Token': token, 'X-Canvas-URL': url } });
+    const hdrs = await _canvasHeaders(token, url);
+    const res  = await fetch(`${API}/assignments`, { headers: hdrs });
     const data = await res.json();
     if (data.ok && data.assignments) {
       _setCachedAssignments(data.assignments);
@@ -6639,7 +6714,8 @@ async function loadCourses(token, url) {
       <div class="sk-pill" style="width:32px"></div>
     </div>`).join('');
   try {
-    const res    = await fetch(`${API}/my-courses`, { headers: { 'X-Canvas-Token': token, 'X-Canvas-URL': url } });
+    const hdrs   = await _canvasHeaders(token, url);
+    const res    = await fetch(`${API}/my-courses`, { headers: hdrs });
     const data   = await res.json();
     if (!data.ok || data.error) { gradesList.innerHTML = `<div class="loading-state" style="font-size:12px;color:var(--red)">${esc(data.error || 'Could not load grades')}</div>`; return; }
     renderGrades((data.courses || []).map(c => ({
@@ -7104,9 +7180,9 @@ function renderFocusBanner() {
 
 function refreshAssignments() {
   if (isDemo) { renderAssignments(allAssignments, true); return; } // demo — re-render in place, calendar unchanged
-  const token = localStorage.getItem('sq_token');
+  const token = localStorage.getItem('sq_token'); // may be null post-migration; _canvasHeaders handles it
   const url   = localStorage.getItem('sq_url');
-  if (token) { loadAssignments(token, url); loadCourses(token, url); }
+  if (url) { loadAssignments(token || '', url); loadCourses(token || '', url); }
 }
 
 let activeFilter = 'all';
@@ -7228,12 +7304,20 @@ function toggleDone(id, el, title, weight) {
   const a        = allAssignments.find(x => x.id === id);
   const daysLeft = a?.days_until ?? null;
   const daysEarly= (daysLeft !== null && daysLeft > 0) ? Math.min(daysLeft, 7) : 0;
-  const early    = daysEarly > 2 ? Math.min(1.2, 1 + (daysEarly - 2) * 0.04) : 1;
-  const gradeW   = (weight || 10) / 100;   // weight arrives as %, convert to 0-1
-  const xp       = Math.round(50 * Math.max(1, (weight || 10) / 10) * early);
+  // Formula matches backend xp.py: early_bonus = min(1.0 + days_early * 0.033, 1.2)
+  const early    = Math.min(1.2, 1 + daysEarly * 0.033);
+  const gradeW   = weight / 100;   // weight arrives as %, convert to 0-1 (no fallback — 0 means unweighted)
+  // Don't show an optimistic burst for 0-weight assignments — the server will return 0 XP
+  // and the "got XP then it disappeared" pattern is more confusing than showing nothing.
+  // Formula matches backend assignment_xp(): BASE_XP(50) × (weight/10) × early_bonus
+  // No Math.max(1,...) floor — that caused a client/server mismatch where low-weight
+  // assignments showed a large burst that the server then silently corrected downward.
+  const xp       = weight > 0 ? Math.round(50 * (weight / 10) * early) : 0;
 
-  showXPBurst(xp, el);
-  // grantXP is async — optimistic UI fires immediately, server reconciles in background
+  if (xp > 0) showXPBurst(xp, el);
+  // grantXP is async — optimistic UI fires immediately, server reconciles in background.
+  // For 0-weight assignments grantXP(0) is a no-op locally but still records the
+  // assignment_id server-side for deduplication.
   grantXP(xp, {
     source:        'assignment',
     assignment_id: String(id),
@@ -7387,19 +7471,19 @@ function saveSettings() {
   const token = document.getElementById('set-token').value.trim();
   if (name)  { localStorage.setItem('sq_name', name);  setGreeting(name); const su = document.getElementById('stats-user'); if (su) su.textContent = name; }
   if (url)   { localStorage.setItem('sq_url', url); }
+  // Token stays in localStorage temporarily until _saveCanvasTokenSecurely migrates it
   if (token) { localStorage.setItem('sq_token', token); }
-  // Persist to Firestore so changes survive logout/login
+  // Persist to Firestore — canvas_url is not sensitive, canvas_token goes through the secure path
   const fsUpdate = {};
-  if (name)  fsUpdate.name         = name;
-  if (url)   fsUpdate.canvas_url   = url;
-  if (token) fsUpdate.canvas_token = token;
+  if (name)  fsUpdate.name       = name;
+  if (url)   fsUpdate.canvas_url = url;
   if (Object.keys(fsUpdate).length) saveUserData(fsUpdate);
-  // Reload assignments if token or url changed
-  if (token || url) {
-    const t = token || localStorage.getItem('sq_token');
-    const u = url   || localStorage.getItem('sq_url');
-    if (t) { loadAssignments(t, u); loadCourses(t, u); }
-  }
+  // Push new token to private Firestore subcollection (never to main doc)
+  const effectiveUrl = url || localStorage.getItem('sq_url') || '';
+  if (token && effectiveUrl) _saveCanvasTokenSecurely(token, effectiveUrl);
+  // Reload assignments whenever token or url changed
+  const effectiveToken = token || localStorage.getItem('sq_token') || '';
+  if (effectiveUrl) { loadAssignments(effectiveToken, effectiveUrl); loadCourses(effectiveToken, effectiveUrl); }
   const msg = document.getElementById('settings-saved-msg');
   msg.style.opacity = '1';
   setTimeout(() => { msg.style.opacity = '0'; setTimeout(closeSettings, 250); }, 1200);
@@ -7436,6 +7520,7 @@ async function grantXP(amount, opts = {}) {
         estimated_hours:  opts.estimated_hours  ?? 1.0,
       }),
     });
+    if (res.status === 429) { showToast('Slow down! XP will sync when you next open the app. 🌿', 3000); return; }
     if (!res.ok) return;
     const data = await res.json();
     if (!data.ok) return;
@@ -7556,6 +7641,19 @@ function checkStreakRisk() {
   if (atRisk && chip) {
     chip.querySelector('span').textContent =
       `🔥 Study today to keep your ${streak}-day streak!`;
+  }
+}
+
+// ── LEVEL FORMULA MIGRATION (v1→v2) ─────────────────────
+// The level formula was updated so levels align with tree growth stages.
+// Users with > 1,200 XP may see a lower level number — this one-time toast explains why.
+function _checkLevelMigration() {
+  if (localStorage.getItem('sq_level_v2_seen')) return;
+  localStorage.setItem('sq_level_v2_seen', '1');
+  if (getXP() >= 1200) {
+    setTimeout(() =>
+      showToast('✨ We updated how levels work so they align perfectly with your tree\'s growth stages. Your XP is unchanged — your tree is still exactly as tall!', 7000),
+    2000);
   }
 }
 
@@ -8886,8 +8984,10 @@ function openAssignDetail(id) {
   document.getElementById('ad-due-val').textContent  = dueStr;
   document.getElementById('ad-days-val').textContent = daysStr;
   // XP: base 50 × weight multiplier × early bonus up to 1.2x
-  const early = (a.days_until !== null && a.days_until > 2) ? Math.min(1.2, 1 + (Math.min(a.days_until,7)-2)*0.04) : 1;
-  const xpEst = Math.round(50 * Math.max(1, w/10) * early);
+  const early = a.days_until !== null && a.days_until > 0
+    ? Math.min(1.2, 1 + Math.min(a.days_until, 7) * 0.033)
+    : 1; // matches backend xp.py early_bonus formula
+  const xpEst = w > 0 ? Math.round(50 * (w / 10) * early) : 0; // matches backend formula
   document.getElementById('ad-xp-val').textContent   = '+' + xpEst + ' XP';
   // notes
   const saved = localStorage.getItem('sq_note_' + id) || '';
@@ -8992,17 +9092,18 @@ async function _loadSyllabusCourses() {
   document.getElementById('syl-paste-wrap').classList.remove('show');
   document.getElementById('syl-parse-btn').classList.remove('show');
 
-  const token = localStorage.getItem('sq_token');
+  const token = localStorage.getItem('sq_token'); // may be null post-migration
   const url   = localStorage.getItem('sq_url');
-  if (!token || !url) {
+  if (!url) {
     list.innerHTML = '<div class="syl-empty">Connect Canvas first to auto-import syllabi.</div>';
     return;
   }
   try {
+    const canvasHdrs = await _canvasHeaders(token || '', url);
     const res  = await fetch(API + '/canvas-syllabi', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ canvas_url: url, token }),
+      headers: { 'Content-Type': 'application/json', ...canvasHdrs },
+      body: JSON.stringify({ canvas_url: url }),
     });
     const data = await res.json();
     if (!data.ok) throw new Error(data.error);
@@ -9676,25 +9777,50 @@ function hideUndoToast() {
   _undoId = null; _undoXP = 0;
 }
 
-function undoComplete() {
+async function undoComplete() {
   if (!_undoId) return;
   const id  = _undoId;
   const xp  = _undoXP;   // capture before hideUndoToast() zeroes them
   hideUndoToast();
+
   // Reverse the completion
   completedIds.delete(id);
   localStorage.setItem('sq_done', JSON.stringify([...completedIds]));
   totalCompleted = Math.max(0, totalCompleted - 1);
   document.getElementById('hstat-done').textContent = totalCompleted;
-  // Reverse the XP
+
+  // Reverse the XP and leaves locally (leaves are earned 1:1 with XP)
   const newXP = Math.max(0, getXP() - xp);
   localStorage.setItem('sq_xp', newXP);
+  if (xp > 0) spendLeaves(xp);
   saveUserData({ xp: newXP, done_ids: [...completedIds] });
-  document.getElementById('nav-xp').textContent     = newXP.toLocaleString() + ' XP';
+  document.getElementById('nav-xp').textContent      = newXP.toLocaleString() + ' XP';
   document.getElementById('dash-xp-amt').textContent = newXP.toLocaleString() + ' XP';
+
+  // Also walk back today's local cap tracking
+  const _todayStr = new Date().toISOString().slice(0, 10);
+  if (localStorage.getItem('sq_xp_today_date') === _todayStr) {
+    const _used = parseInt(localStorage.getItem('sq_xp_today') || '0');
+    localStorage.setItem('sq_xp_today', Math.max(0, _used - xp));
+  }
+
   renderAssignments(allAssignments);
   updateDashTree();
   buildQPick();
+  syncTreeScreen(); // refresh cap chip
+
+  // Remove from server dedup set so re-completing the assignment awards XP correctly.
+  // Without this, re-doing the assignment would permanently yield 0 XP server-side.
+  if (!isDemo && currentUser && xp > 0) {
+    try {
+      const idToken = await currentUser.getIdToken();
+      await fetch(API + '/revoke-xp', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+        body:    JSON.stringify({ assignment_id: String(id), xp }),
+      });
+    } catch (_) { /* offline — local undo applied; server dedup entry stays but XP totals will reconcile on next grant */ }
+  }
 }
 
 // ── QUICK PICK ──────────────────────────────────────────
