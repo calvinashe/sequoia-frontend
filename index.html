@@ -9585,7 +9585,7 @@ async function downloadStatsCard() {
 }
 
 // ── NOTIFICATIONS ────────────────────────────────────────
-const VAPID_PUBLIC_KEY = 'BOL1XSHKq-CcuBl94pX2edZuH6d0EsWXe5oYSmIYQrgYMcbWJblM2GTJbAD7H1Oa7r2AN3ye0Pq_yNKdYZokDy8';
+const VAPID_PUBLIC_KEY = 'BLI7bQfzk5zPyvSnbSN4qYjocmO5J7dKrA87ihDb9aYlQyJFKbhv_3Ws3i4j7zhWpFvfDRcaWs54KiMWOUNHYUg';
 let _notifCache = [];
 
 // ── Panel open/close ──────────────────────────────────
@@ -10182,16 +10182,15 @@ function copyFriendCode() {
 let _schedDoneSet = new Set(JSON.parse(localStorage.getItem('sq_sched_done') || '[]'));
 
 function openSchedule() {
+  lockScroll();
   document.getElementById('sched-overlay').classList.add('show');
-  document.body.style.overflow = 'hidden';
   track('schedule_opened');
-  // If we have assignments, auto-generate on open
   if (allAssignments.length) generateSchedule();
 }
 
 function closeSchedule() {
   document.getElementById('sched-overlay').classList.remove('show');
-  document.body.style.overflow = '';
+  unlockScroll();
 }
 
 function _schedAvailability() {
@@ -10216,19 +10215,8 @@ async function generateSchedule() {
   const token = localStorage.getItem('sq_token');
   const url   = localStorage.getItem('sq_url');
 
-  // Use cached assignments or fetch fresh
-  let assignments = allAssignments.length ? allAssignments : [];
-  if (!assignments.length && token && url) {
-    try {
-      const res  = await fetch(`${API}/assignments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ canvas_url: url, token }),
-      });
-      const data = await res.json();
-      assignments = data.assignments || [];
-    } catch(e) {}
-  }
+  // Use in-memory assignments (already loaded from Canvas or demo)
+  const assignments = allAssignments.filter(a => !completedIds.has(a.id));
 
   if (!assignments.length) {
     results.innerHTML = '<div class="sched-empty">Connect Canvas to generate a personalised schedule 🌱</div>';
