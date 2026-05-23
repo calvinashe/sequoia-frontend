@@ -66,8 +66,9 @@ body {
   font-family:'DM Sans',sans-serif;
   background:var(--page);
   color:var(--text);
-  min-height:100vh;
+  min-height:100vh; min-height:100svh;
   overflow-x:hidden;
+  overscroll-behavior-y:none;
 }
 
 /* ── AUTH SCREEN ────────────────────────────────────────── */
@@ -398,8 +399,9 @@ body {
 .notif-mark-all:hover { background:var(--g-pale); }
 .notif-close-btn {
   background:none; border:none; font-size:16px; cursor:pointer;
-  color:var(--light); padding:4px; border-radius:6px;
-  line-height:1; transition:color .15s;
+  color:var(--light); padding:10px; border-radius:6px;
+  line-height:1; transition:color .15s; min-width:44px; min-height:44px;
+  display:flex; align-items:center; justify-content:center;
 }
 .notif-close-btn:hover { color:var(--text); }
 .notif-list { flex:1; overflow-y:auto; padding:8px 0; }
@@ -514,7 +516,7 @@ body {
 .nav-disconnect:hover { border-color:#C75B3A; color:#C75B3A; }
 
 /* ── SCREENS ─────────────────────────────────────────────── */
-.screen { display:none; min-height:100vh; padding-top:54px; }
+.screen { display:none; min-height:100vh; min-height:100svh; padding-top:54px; }
 .screen.active { display:block; }
 .screen.exiting {
   display:block; position:fixed; inset:0; z-index:98;
@@ -657,8 +659,9 @@ body {
   width:32px; height:32px; border-radius:9px; border:none;
   background:rgba(76,161,48,0.18); color:rgba(255,255,255,0.7); font-size:16px; cursor:pointer;
   display:flex; align-items:center; justify-content:center; transition:background .2s;
-  border:1px solid rgba(76,161,48,0.2);
+  border:1px solid rgba(76,161,48,0.2); position:relative;
 }
+.add-btn::after { content:''; position:absolute; inset:-8px; border-radius:50%; }
 .add-btn:hover { background:rgba(76,161,48,0.32); color:#fff; }
 
 /* ── AI QUICK PICK BUTTON ────────────────────────────────── */
@@ -1167,8 +1170,8 @@ input.g-slider::-moz-range-thumb {
 .btn-secondary:active { transform:scale(0.93); }
 .btn-end-early {
   font-size:12px; font-weight:600; color:rgba(255,255,255,0.35);
-  background:none; border:none; cursor:pointer; padding:4px 8px;
-  border-radius:7px; transition:color .18s;
+  background:none; border:none; cursor:pointer; padding:12px 16px;
+  border-radius:7px; transition:color .18s; min-height:44px;
 }
 .btn-end-early:hover { color:var(--red); }
 /* ── SESSION HISTORY ─────────────────────────────────────── */
@@ -1719,7 +1722,7 @@ input.g-slider::-moz-range-thumb {
 @keyframes settingsSlideIn { from{opacity:0;transform:translateY(-12px) scale(.97)} to{opacity:1;transform:none} }
 @keyframes settingsSlideUp  { from{opacity:0;transform:translateY(24px)}            to{opacity:1;transform:none} }
 .settings-title { font-family:'Playfair Display',serif; font-size:18px; font-weight:700; color:var(--text); margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; }
-.settings-close { background:none; border:none; font-size:18px; cursor:pointer; color:var(--light); line-height:1; padding:2px; }
+.settings-close { background:none; border:none; font-size:18px; cursor:pointer; color:var(--light); line-height:1; padding:10px; min-width:44px; min-height:44px; display:flex; align-items:center; justify-content:center; border-radius:8px; }
 .settings-close:hover { color:var(--text); }
 .settings-field { margin-bottom:16px; }
 .settings-field label { display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--light); margin-bottom:6px; }
@@ -2802,7 +2805,7 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 }
 .ob-btn:hover { transform:translateY(-1px); box-shadow:0 10px 32px rgba(76,161,48,0.55); }
 .ob-btn:disabled { opacity:0.45; cursor:not-allowed; transform:none; box-shadow:none; }
-.ob-link { background:none; border:none; font-family:'DM Sans',sans-serif; font-size:13px; color:rgba(255,255,255,0.35); cursor:pointer; padding:4px 8px; transition:color .2s; display:block; text-align:center; }
+.ob-link { background:none; border:none; font-family:'DM Sans',sans-serif; font-size:13px; color:rgba(255,255,255,0.35); cursor:pointer; padding:12px 16px; min-height:44px; transition:color .2s; display:block; text-align:center; }
 .ob-link:hover { color:rgba(255,255,255,0.65); }
 .ob-link.demo { color:var(--g2); font-weight:600; margin-bottom:4px; }
 
