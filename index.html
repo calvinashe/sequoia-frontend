@@ -3958,9 +3958,9 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         <h1 class="ob0-h1">Stop guessing.<br>Start growing.</h1>
         <p class="ob0-sub">Connect your Canvas, see every assignment ranked by real grade weight, and watch your tree grow all semester long.</p>
         <div class="ob0-ctas">
-          <button class="ob0-btn-primary" onclick="loadDemo()">Try it free &rarr;</button>
-          <div class="ob0-no-acct">No account needed &mdash; instant demo</div>
-          <button class="ob0-btn-secondary" onclick="obGo(1)">Connect Canvas &rarr;</button>
+          <button class="ob0-btn-primary" onclick="obGo(1)">Connect Canvas &rarr;</button>
+          <button class="ob0-btn-secondary" onclick="loadDemo()">✨ Try the Demo</button>
+          <div class="ob0-no-acct">No account needed &mdash; explore instantly</div>
         </div>
         <div class="ob0-pills">
           <span class="ob0-pill">🎯 Priority ranked</span>
@@ -4174,7 +4174,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
           <div class="ob-reveal-priority-course" id="ob-reveal-priority-course"></div>
         </div>
         <div class="ob-reveal-xp">+100 XP — your Sequoia is alive 🌲</div>
-        <button class="ob-reveal-btn" onclick="obRevealEnter()">Let's start growing →</button>
+        <button class="ob-reveal-btn" onclick="obRevealEnter()">Enter Sequoia 🌱</button>
       </div>
     </div>
   </div>
@@ -5686,7 +5686,13 @@ function obGo(to) {
     if (card) card.classList.remove('show');
   }
 }
-function closeOnboard() { document.getElementById('onboard').classList.add('gone'); }
+function closeOnboard() {
+  const ob = document.getElementById('onboard');
+  ob.style.transition = 'opacity 0.45s ease, transform 0.45s ease';
+  ob.style.opacity = '0';
+  ob.style.transform = 'translateY(16px)';
+  setTimeout(() => { ob.classList.add('gone'); ob.style.cssText = ''; }, 460);
+}
 function toggleTokenHelp(btn) {
   const steps = document.getElementById('ob-token-steps');
   const open  = steps.classList.toggle('open');
@@ -5824,16 +5830,62 @@ function obRevealEnter() {
   const token = localStorage.getItem('sq_token');
   const url   = localStorage.getItem('sq_url');
   closeOnboard();
-  // Render what we already fetched in the reveal step
   if (allAssignments.length) _applyAssignments(allAssignments);
-  // Background refresh to keep data fresh + kick off courses
   if (token && url) {
     _refreshAssignmentsBackground(token, url);
     loadCourses(token, url);
   }
   loadXPStreak(); updateDashTree(); syncTreeScreen();
   setTimeout(tourShow, 1200);
+  // First-time push notification nudge — after tour has had time to finish
+  if (!localStorage.getItem('sq_notif_nudge_shown')) {
+    setTimeout(_nudgePushPermission, 55000);
+  }
   track('onboard_reveal_entered');
+}
+
+function _nudgePushPermission() {
+  if (localStorage.getItem('sq_notif_nudge_shown')) return;
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+  if (Notification.permission === 'granted') return; // already have it
+  localStorage.setItem('sq_notif_nudge_shown', '1');
+  // Show a gentle inline toast — not a modal, not a blocker
+  const t = document.createElement('div');
+  t.id = 'push-nudge';
+  t.style.cssText = [
+    'position:fixed', 'bottom:calc(80px + env(safe-area-inset-bottom,0px) + 10px)',
+    'left:50%', 'transform:translateX(-50%)', 'z-index:9000',
+    'background:#1A3A1A', 'border:1px solid rgba(76,161,48,0.35)',
+    'border-radius:16px', 'padding:14px 18px', 'max-width:320px', 'width:calc(100% - 32px)',
+    'display:flex', 'align-items:center', 'gap:12px',
+    'box-shadow:0 8px 32px rgba(0,0,0,0.5)',
+    'animation:toastSlideUp .35s cubic-bezier(0.34,1.4,0.64,1)',
+    'font-family:\'DM Sans\',sans-serif',
+  ].join(';');
+  t.innerHTML = `
+    <span style="font-size:22px;flex-shrink:0">🔔</span>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px">Never miss a deadline</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.5);line-height:1.4">Enable notifications for daily study reminders and due-date alerts.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+      <button onclick="_nudgeAccept()" style="background:var(--g3);border:none;border-radius:8px;color:#fff;font-family:inherit;font-size:12px;font-weight:700;padding:6px 12px;cursor:pointer;white-space:nowrap">Turn on</button>
+      <button onclick="_nudgeDismiss()" style="background:transparent;border:none;color:rgba(255,255,255,0.35);font-family:inherit;font-size:11px;cursor:pointer;padding:2px">Not now</button>
+    </div>`;
+  document.body.appendChild(t);
+  setTimeout(() => { if (t.parentNode) t.remove(); }, 18000);
+}
+function _nudgeAccept() {
+  const el = document.getElementById('push-nudge'); if (el) el.remove();
+  // Redirect to the notifications panel where the user can enable properly
+  toggleNotifPanel();
+}
+function _nudgeDismiss() {
+  const el = document.getElementById('push-nudge'); if (el) {
+    el.style.transition = 'opacity 0.3s, transform 0.3s';
+    el.style.opacity = '0'; el.style.transform = 'translateX(-50%) translateY(10px)';
+    setTimeout(() => el.remove(), 320);
+  }
 }
 function obUrlHint() {
   const v = document.getElementById('ob-url').value.trim();
@@ -10559,9 +10611,66 @@ if ('serviceWorker' in navigator) {
       .catch(err => console.warn('[Sequoia] SW registration failed:', err));
   });
 }
+
+// ── PWA INSTALL PROMPT ───────────────────────────────────
+let _pwaInstallEvent = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _pwaInstallEvent = e;
+  // Show install banner only after user has been in the app for 90s, once per install
+  if (!localStorage.getItem('sq_pwa_install_shown') && !localStorage.getItem('sq_pwa_installed')) {
+    setTimeout(_showPwaInstallBanner, 90000);
+  }
+});
+window.addEventListener('appinstalled', () => {
+  localStorage.setItem('sq_pwa_installed', '1');
+  _pwaInstallEvent = null;
+  const el = document.getElementById('pwa-install-banner');
+  if (el) el.remove();
+  showToast('🌲 Sequoia added to your home screen!', 3000);
+});
+
+function _showPwaInstallBanner() {
+  if (!_pwaInstallEvent || localStorage.getItem('sq_pwa_install_shown')) return;
+  localStorage.setItem('sq_pwa_install_shown', '1');
+  const b = document.createElement('div');
+  b.id = 'pwa-install-banner';
+  b.style.cssText = [
+    'position:fixed', 'bottom:calc(80px + env(safe-area-inset-bottom,0px) + 10px)',
+    'left:50%', 'transform:translateX(-50%)', 'z-index:8999',
+    'background:#0F2010', 'border:1px solid rgba(76,161,48,0.4)',
+    'border-radius:16px', 'padding:14px 18px', 'max-width:340px', 'width:calc(100% - 32px)',
+    'display:flex', 'align-items:center', 'gap:12px',
+    'box-shadow:0 8px 32px rgba(0,0,0,0.55)',
+    'animation:toastSlideUp .35s cubic-bezier(0.34,1.4,0.64,1)',
+    'font-family:\'DM Sans\',sans-serif',
+  ].join(';');
+  b.innerHTML = `
+    <span style="font-size:28px;flex-shrink:0">🌲</span>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px">Add Sequoia to your home screen</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.45);line-height:1.4">Works offline. Opens instantly. Just like a native app.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+      <button id="pwa-install-btn" style="background:var(--g3);border:none;border-radius:8px;color:#fff;font-family:inherit;font-size:12px;font-weight:700;padding:6px 12px;cursor:pointer;white-space:nowrap">Install</button>
+      <button onclick="document.getElementById('pwa-install-banner').remove()" style="background:transparent;border:none;color:rgba(255,255,255,0.3);font-family:inherit;font-size:11px;cursor:pointer;padding:2px">Not now</button>
+    </div>`;
+  document.body.appendChild(b);
+  document.getElementById('pwa-install-btn').addEventListener('click', async () => {
+    if (!_pwaInstallEvent) return;
+    _pwaInstallEvent.prompt();
+    const { outcome } = await _pwaInstallEvent.userChoice;
+    _pwaInstallEvent = null;
+    b.remove();
+    if (outcome === 'accepted') localStorage.setItem('sq_pwa_installed', '1');
+    track('pwa_install_prompt', { outcome });
+  });
+  setTimeout(() => { if (b.parentNode) b.remove(); }, 20000);
+}
 </script>
 <style>
 @keyframes xpFloat { 0%{opacity:1;transform:translateY(0)} 100%{opacity:0;transform:translateY(-40px)} }
+@keyframes toastSlideUp { from{opacity:0;transform:translateX(-50%) translateY(18px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
 </style>
 
 <!-- ── BOTTOM NAV (mobile) ── -->
