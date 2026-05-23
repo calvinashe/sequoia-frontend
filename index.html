@@ -1940,25 +1940,60 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
   94%             { background:rgba(200,220,255,0.12); }
 }
 @keyframes snowFall {
-  0%   { transform:translate(0,0) rotate(0deg);                            opacity:0; }
+  0%   { transform:translate(0,0) rotate(0deg); opacity:0; }
   8%   { opacity:0.9; }
-  50%  { transform:translate(var(--sw,10px), 55vh) rotate(120deg);         opacity:0.8; }
+  50%  { transform:translate(var(--sw,10px), 55vh) rotate(120deg); opacity:0.8; }
   90%  { opacity:0.4; }
   100% { transform:translate(calc(var(--sw,10px)*0.6), 100vh) rotate(200deg); opacity:0; }
 }
 @keyframes leafTumble {
-  0%   { transform:translate(0,0) rotate(0deg);                              opacity:0; }
+  0%   { transform:translate(0,0) rotate(0deg); opacity:0; }
   8%   { opacity:0.9; }
   50%  { transform:translate(var(--px,18px), 52vh) rotate(var(--pr,160deg)); opacity:0.8; }
   90%  { opacity:0.3; }
   100% { transform:translate(var(--px2,-12px), 95vh) rotate(var(--pr2,320deg)); opacity:0; }
 }
 @keyframes seedRise {
-  0%   { transform:translate(0,0) rotate(0deg);                       opacity:0; }
+  0%   { transform:translate(0,0) rotate(0deg); opacity:0; }
   10%  { opacity:0.8; }
-  50%  { transform:translate(var(--fx,12px), -120px) rotate(15deg);  opacity:0.7; }
+  50%  { transform:translate(var(--fx,12px), -120px) rotate(15deg); opacity:0.7; }
   90%  { opacity:0.2; }
   100% { transform:translate(var(--fx2,-8px), -240px) rotate(-10deg); opacity:0; }
+}
+@keyframes crystalShimmer {
+  0%,100% { filter:brightness(1) saturate(1); }
+  50%     { filter:brightness(1.5) saturate(1.4); }
+}
+@keyframes mushroomGlow {
+  0%,100% { filter:drop-shadow(0 0 3px rgba(255,200,100,0.3)); }
+  50%     { filter:drop-shadow(0 0 8px rgba(255,220,120,0.6)); }
+}
+@keyframes smokeRise {
+  0%   { transform:translate(0,0) scale(0.5); opacity:0; }
+  15%  { opacity:0.35; }
+  60%  { transform:translate(var(--sw,8px),-80px) scale(1.6); opacity:0.18; }
+  100% { transform:translate(var(--sw,8px),-160px) scale(2.4); opacity:0; }
+}
+@keyframes foxTailWag {
+  0%,100% { transform:rotate(-10deg); }
+  50%     { transform:rotate(14deg); }
+}
+@keyframes headTilt {
+  0%,38%,100% { transform:rotate(0deg); }
+  48%,90%     { transform:rotate(-9deg); }
+}
+@keyframes heatShimmer {
+  0%,100% { transform:scaleX(1) translateY(0px); opacity:0.35; }
+  33%     { transform:scaleX(0.97) translateY(-1.5px); opacity:0.55; }
+  66%     { transform:scaleX(1.03) translateY(1px); opacity:0.25; }
+}
+@keyframes godRay {
+  0%,100% { opacity:0.07; }
+  50%     { opacity:0.18; }
+}
+@keyframes starWink {
+  0%,100% { opacity:0.2; transform:scale(0.6); }
+  50%     { opacity:1;   transform:scale(1.15); }
 }
 .tree-hero-ground {
   position:absolute; bottom:0; left:0; right:0; height:60px; z-index:1;
@@ -7678,8 +7713,20 @@ function renderDecorations() {
 function toggleDecoration(id) {
   const equipped = getEquipped();
   const idx = equipped.indexOf(id);
-  if (idx >= 0) equipped.splice(idx, 1);
-  else equipped.push(id);
+  if (idx >= 0) {
+    equipped.splice(idx, 1);
+  } else {
+    // Seasonal decos are mutually exclusive — unequip any other seasonal first
+    const d = DECORATIONS.find(x => x.id === id);
+    if (d && d.cat === 'seasonal') {
+      const seasonalIds = DECORATIONS.filter(x => x.cat === 'seasonal').map(x => x.id);
+      seasonalIds.forEach(sid => {
+        const si = equipped.indexOf(sid);
+        if (si >= 0) equipped.splice(si, 1);
+      });
+    }
+    equipped.push(id);
+  }
   localStorage.setItem('sq_equipped', JSON.stringify(equipped));
   renderDecorations();
   updateHeroDecorations();
@@ -7759,7 +7806,6 @@ function updateHeroDecorations() {
   });
 
   equipped.forEach(id => {
-    // Skip if overlay already rendered — prevents re-randomizing on every navigate
     if (scene.querySelector(`.th-deco-overlay[data-deco-id="${id}"]`)) return;
     const d = DECORATIONS.find(x => x.id === id);
     if (!d) return;
@@ -7770,537 +7816,674 @@ function updateHeroDecorations() {
     overlay.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:3;overflow:hidden;';
 
     if (id === 'fireflies') {
-      // SVG glowing dots with organic bezier drift via CSS variables
+      overlay.style.filter = 'blur(0.3px)';
+      const ffCols = ['rgba(200,255,80,0.95)','rgba(255,250,120,1)','rgba(255,230,60,0.9)','rgba(180,255,140,0.88)','rgba(240,255,160,0.92)'];
       let html = '';
-      for (let i = 0; i < 12; i++) {
-        const x   = 12 + Math.random() * 76;
-        const bot = 10 + Math.random() * 60;
-        const sz  = 4 + Math.random() * 4;
-        const dur = 3 + Math.random() * 4;
-        const del = Math.random() * 6;
-        const fx  = (Math.random() - 0.5) * 40;
-        const fx2 = (Math.random() - 0.5) * 30;
-        html += `<div style="position:absolute;left:${x}%;bottom:${bot}%;` +
-          `width:${sz}px;height:${sz}px;border-radius:50%;` +
-          `background:radial-gradient(circle,rgba(255,255,160,1),rgba(255,230,80,0.4) 55%,transparent 75%);` +
-          `animation:thFloat ${dur}s ${del}s ease-in-out infinite,fireflyPulse ${1.5+Math.random()*1.5}s ${del}s ease-in-out infinite;` +
-          `--fx:${fx}px;--fx2:${fx2}px;--fr:${Math.round((Math.random()-0.5)*30)}deg;--fr2:${Math.round((Math.random()-0.5)*25)}deg;` +
-          `box-shadow:0 0 6px 3px rgba(255,255,120,0.55);"></div>`;
+      for (let i = 0; i < 22; i++) {
+        const side = Math.random() < 0.5;
+        const x   = side ? 5 + Math.random() * 36 : 58 + Math.random() * 36;
+        const bot = 8 + Math.random() * 65;
+        const sz  = 3 + Math.random() * 5;
+        const dur = 3.5 + Math.random() * 4.5;
+        const del = Math.random() * 8;
+        const fx  = (Math.random() - 0.5) * 45;
+        const fx2 = (Math.random() - 0.5) * 35;
+        const fr  = Math.round((Math.random()-0.5)*40);
+        const fr2 = Math.round((Math.random()-0.5)*30);
+        const col = ffCols[i % ffCols.length];
+        const glow = sz * 3;
+        html += `<div style="position:absolute;left:${x}%;bottom:${bot}%;
+          width:${sz}px;height:${sz}px;border-radius:50%;
+          background:radial-gradient(circle,${col},rgba(255,255,80,0.4) 55%,transparent 80%);
+          box-shadow:0 0 ${glow}px ${glow/2}px rgba(180,255,80,0.5),0 0 ${glow*2}px ${glow}px rgba(255,255,80,0.18);
+          animation:thFloat ${dur}s ${del}s ease-in-out infinite,fireflyPulse ${1.2+Math.random()*1.8}s ${del}s ease-in-out infinite;
+          --fx:${fx}px;--fx2:${fx2}px;--fr:${fr}deg;--fr2:${fr2}deg;"></div>`;
       }
       overlay.innerHTML = html;
 
     } else if (id === 'blossoms') {
-      // SVG petal shapes with rotation drift — not emoji
-      const petalD = 'M0-7 C4-5 5 0 0 7 C-5 0-4-5 0-7Z';
-      const pinkShades = ['#FFAECF','#FF85B3','#FFB8D0','#FFC8DD','#FF6FA8','#E8A0BF','#FFD6E4'];
+      const pinkShades = ['#FF85B3','#FFAECF','#FF6FA8','#FFC8DD','#E8A0BF','#FFD6E4','#FF4D94','#F9A8D4'];
+      const centerCols = ['#FFE082','#FFF9C4','#FFF3E0'];
       let html = '';
-      for (let i = 0; i < 10; i++) {
-        const x   = 8  + Math.random() * 84;
-        const bot = 5  + Math.random() * 70;
+      for (let i = 0; i < 18; i++) {
+        const x   = 4  + Math.random() * 92;
         const sz  = 10 + Math.random() * 10;
-        const dur = 5  + Math.random() * 6;
-        const del = Math.random() * 7;
-        const px  = (Math.random() - 0.5) * 50;
-        const px2 = (Math.random() - 0.5) * 40;
-        const pr  = 90 + Math.random() * 200;
-        const pr2 = pr + 100 + Math.random() * 120;
+        const dur = 6  + Math.random() * 7;
+        const del = Math.random() * 9;
+        const px  = (Math.random() - 0.5) * 55;
+        const px2 = (Math.random() - 0.5) * 45;
+        const pr  = 80 + Math.random() * 200;
+        const pr2 = pr + 100 + Math.random() * 130;
         const col = pinkShades[i % pinkShades.length];
-        html += `<svg style="position:absolute;left:${x}%;bottom:${bot}%;overflow:visible;` +
-          `width:${sz}px;height:${sz}px;opacity:0.82;` +
-          `animation:petalDrift ${dur}s ${del}s ease-in-out infinite;` +
-          `--px:${px}px;--px2:${px2}px;--pr:${Math.round(pr)}deg;--pr2:${Math.round(pr2)}deg;" ` +
-          `viewBox="-8 -8 16 16" xmlns="http://www.w3.org/2000/svg">` +
-          `<path d="${petalD}" fill="${col}"/>` +
-          `</svg>`;
+        const cc  = centerCols[i % centerCols.length];
+        const petals = Array.from({length:5},(_,p) =>
+          `<ellipse cx="0" cy="-5" rx="2.5" ry="5" fill="${col}" opacity="0.88" transform="rotate(${p*72})"/>`
+        ).join('');
+        html += `<svg style="position:absolute;left:${x}%;top:-8px;overflow:visible;
+          width:${sz}px;height:${sz}px;opacity:0.9;
+          animation:petalDrift ${dur}s ${del}s ease-in-out infinite;
+          --px:${px}px;--px2:${px2}px;--pr:${Math.round(pr)}deg;--pr2:${Math.round(pr2)}deg;"
+          viewBox="-10 -10 20 20" xmlns="http://www.w3.org/2000/svg">
+          ${petals}
+          <circle cx="0" cy="0" r="2" fill="${cc}"/>
+          </svg>`;
       }
       overlay.innerHTML = html;
 
     } else if (id === 'mushrooms') {
-      // SVG mushrooms at the base of the tree
-      const makeShroom = (x, y, scale, opacity) =>
-        `<svg style="position:absolute;left:${x};bottom:${y}px;overflow:visible;transform:scale(${scale});transform-origin:50% 100%;opacity:${opacity};" width="22" height="24" viewBox="0 0 22 24" xmlns="http://www.w3.org/2000/svg">
-          <rect x="8" y="14" width="6" height="10" rx="2" fill="#E8D5B0"/>
-          <ellipse cx="11" cy="15" rx="11" ry="7" fill="#C0392B"/>
-          <ellipse cx="11" cy="15" rx="8" ry="5" fill="#E74C3C"/>
-          <circle cx="7" cy="13" r="1.5" fill="rgba(255,255,255,0.7)"/>
-          <circle cx="13" cy="12" r="1" fill="rgba(255,255,255,0.7)"/>
-          <circle cx="10" cy="14" r="1.2" fill="rgba(255,255,255,0.6)"/>
-        </svg>`;
-      overlay.innerHTML =
-        makeShroom('calc(50% - 58px)', 22, 1.0, 0.9) +
-        makeShroom('calc(50% + 38px)', 18, 0.8, 0.75) +
-        makeShroom('calc(50% - 82px)', 20, 0.75, 0.65) +
-        makeShroom('calc(50% + 62px)', 16, 0.6, 0.5);
+      const caps = [
+        {col:'#C0392B',hi:'#E74C3C'},{col:'#6B4226',hi:'#8B5E3C'},
+        {col:'#7B5EA7',hi:'#9B7DC7'},{col:'#C0392B',hi:'#FF6B6B'},
+        {col:'#2E7D32',hi:'#66BB6A'},{col:'#795548',hi:'#A1887F'}
+      ];
+      const makeShroom = (x, y, scale, opacity, ci) => {
+        const {col,hi} = caps[ci % caps.length];
+        return `<g style="transform:translate(${x}px,${y}px) scale(${scale});transform-origin:0px 0px;opacity:${opacity};animation:mushroomGlow ${2.5+ci*0.4}s ${ci*0.3}s ease-in-out infinite;">
+          <rect x="-3" y="0" width="6" height="10" rx="2" fill="#E8D5B0"/>
+          <ellipse cx="0" cy="1" rx="10" ry="6" fill="${col}"/>
+          <ellipse cx="0" cy="1" rx="7"  ry="4.5" fill="${hi}" opacity="0.55"/>
+          <circle cx="-4" cy="-1" r="1.3" fill="rgba(255,255,255,0.65)"/>
+          <circle cx="2"  cy="-2" r="1"   fill="rgba(255,255,255,0.5)"/>
+          <circle cx="-1" cy="1"  r="0.9" fill="rgba(255,255,255,0.55)"/>
+        </g>`;
+      };
+      let spores = '';
+      for (let i = 0; i < 8; i++) {
+        const sx = -30+Math.random()*60, dur=3+Math.random()*3, del=Math.random()*4;
+        spores += `<circle cx="${sx}" cy="${-20-Math.random()*30}" r="1" fill="rgba(255,220,150,0.55)"
+          style="animation:smokeRise ${dur}s ${del}s ease-in-out infinite;--sw:${(Math.random()-0.5)*20}px;"/>`;
+      }
+      overlay.innerHTML = `<svg style="position:absolute;overflow:visible;width:100%;height:100%;" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(50%,100%)">
+          ${makeShroom(-55,-22,1.0,0.92,0)}
+          ${makeShroom(-76,-20,0.75,0.70,1)}
+          ${makeShroom(-34,-18,0.85,0.78,2)}
+          ${makeShroom(42, -18,0.90,0.85,3)}
+          ${makeShroom(63, -16,0.70,0.65,4)}
+          ${makeShroom(79, -14,0.60,0.50,5)}
+          ${spores}
+        </g>
+      </svg>`;
 
     } else if (id === 'lanterns') {
-      // SVG lanterns that glow and sway
-      const makeLantern = (x, bot, dur, del) =>
-        `<svg style="position:absolute;left:${x}%;bottom:${bot}px;overflow:visible;` +
-        `animation:treeHeroSway ${dur}s ${del}s ease-in-out infinite;transform-origin:50% 0%;` +
-        `filter:drop-shadow(0 0 6px rgba(255,200,80,0.7));" ` +
-        `width="14" height="22" viewBox="0 0 14 22" xmlns="http://www.w3.org/2000/svg">
-          <line x1="7" y1="0" x2="7" y2="3" stroke="#8B7355" stroke-width="1.5"/>
-          <rect x="2" y="3" width="10" height="14" rx="3" fill="rgba(255,200,80,0.25)" stroke="#8B7355" stroke-width="1"/>
-          <rect x="3" y="4" width="8" height="12" rx="2" fill="rgba(255,210,100,0.5)"/>
-          <ellipse cx="7" cy="10" rx="3" ry="3" fill="rgba(255,230,120,0.9)"/>
-          <rect x="3" y="17" width="8" height="2" rx="1" fill="#8B7355"/>
-        </svg>`;
-      overlay.innerHTML =
-        makeLantern(20, 80, 3.8, 0) +
-        makeLantern(32, 95, 4.2, 0.5) +
-        makeLantern(62, 88, 3.6, 0.3) +
-        makeLantern(74, 76, 4.5, 0.8);
+      const positions = [[12,52],[24,68],[38,60],[58,63],[72,70],[84,54]];
+      const durs = [3.8,4.4,3.6,4.1,4.7,3.9];
+      const dels = [0,0.4,0.7,0.2,0.9,0.5];
+      const makeLantern = ([x,bot], dur, del) => `
+        <div style="position:absolute;left:${x}%;bottom:${bot}px;">
+          <svg style="display:block;overflow:visible;
+            animation:treeHeroSway ${dur}s ${del}s ease-in-out infinite;transform-origin:50% 0%;
+            filter:drop-shadow(0 0 8px rgba(255,190,70,0.85)) drop-shadow(0 0 18px rgba(255,150,40,0.3));"
+            width="14" height="28" viewBox="0 0 14 28" xmlns="http://www.w3.org/2000/svg">
+            <line x1="7" y1="0" x2="7" y2="4" stroke="#8B7355" stroke-width="1.5"/>
+            <rect x="1" y="4" width="12" height="17" rx="3" fill="rgba(255,195,75,0.2)" stroke="#8B7355" stroke-width="1"/>
+            <rect x="2.5" y="5.5" width="9" height="14" rx="2" fill="rgba(255,215,100,0.55)"/>
+            <ellipse cx="7" cy="13" rx="3.5" ry="3.5" fill="rgba(255,235,130,0.95)"/>
+            <line x1="1" y1="9"  x2="13" y2="9"  stroke="#8B7355" stroke-width="0.7" opacity="0.45"/>
+            <line x1="1" y1="17" x2="13" y2="17" stroke="#8B7355" stroke-width="0.7" opacity="0.45"/>
+            <rect x="2" y="21" width="10" height="2.5" rx="1" fill="#8B7355"/>
+          </svg>
+          <div style="position:absolute;top:100%;left:50%;transform:translateX(-50%);
+            width:36px;height:12px;border-radius:50%;margin-top:3px;
+            background:radial-gradient(ellipse,rgba(255,180,60,0.38),transparent 70%);
+            animation:fireflyPulse ${dur}s ${del}s ease-in-out infinite;"></div>
+        </div>`;
+      const wire = `<svg style="position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;" preserveAspectRatio="none">
+        <path d="M 12% 46% Q 18% 56% 24% 32% Q 31% 12% 38% 38% Q 48% 55% 58% 36% Q 65% 22% 72% 28% Q 78% 38% 84% 44%"
+          fill="none" stroke="rgba(160,130,90,0.28)" stroke-width="0.9"/>
+      </svg>`;
+      overlay.innerHTML = wire + positions.map((p,i) => makeLantern(p, durs[i], dels[i])).join('');
 
     } else if (id === 'butterflies') {
-      // SVG butterflies with animated flapping wings
       const makeButterfly = (x, bot, sz, dur, del, col1, col2) => {
-        const flapDur = 0.35 + Math.random() * 0.25;
-        return `<svg style="position:absolute;left:${x}%;bottom:${bot}%;overflow:visible;` +
-          `width:${sz}px;height:${sz*0.7}px;` +
-          `animation:thFloat ${dur}s ${del}s ease-in-out infinite;` +
-          `--fx:${Math.round((Math.random()-0.5)*45)}px;--fx2:${Math.round((Math.random()-0.5)*35)}px;` +
-          `--fr:${Math.round((Math.random()-0.5)*20)}deg;--fr2:${Math.round((Math.random()-0.5)*15)}deg;` +
-          `filter:drop-shadow(0 1px 3px rgba(0,0,0,0.3));" ` +
-          `viewBox="-12 -8 24 16" xmlns="http://www.w3.org/2000/svg">
+        const flapDur = 0.28 + Math.random() * 0.22;
+        return `<svg style="position:absolute;left:${x}%;bottom:${bot}%;overflow:visible;
+          width:${sz}px;height:${sz*0.75}px;
+          animation:thFloat ${dur}s ${del}s ease-in-out infinite;
+          --fx:${Math.round((Math.random()-0.5)*50)}px;--fx2:${Math.round((Math.random()-0.5)*38)}px;
+          --fr:${Math.round((Math.random()-0.5)*18)}deg;--fr2:${Math.round((Math.random()-0.5)*14)}deg;
+          filter:drop-shadow(0 1px 4px rgba(0,0,0,0.25));"
+          viewBox="-14 -10 28 22" xmlns="http://www.w3.org/2000/svg">
           <g style="animation:wingFlap ${flapDur}s ease-in-out infinite alternate;transform-origin:0 0;">
-            <path d="M0,0 C-3,-6 -10,-7 -11,-2 C-12,3 -5,5 0,1Z" fill="${col1}" opacity="0.85"/>
-            <path d="M0,1 C-3,4 -8,6 -9,3 C-10,0 -5,-2 0,0Z" fill="${col2}" opacity="0.7"/>
+            <path d="M0,0 C-2,-8 -12,-11 -13,-4 C-15,3 -8,7 -1,2Z" fill="${col1}" opacity="0.9"/>
+            <path d="M0,2 C-2,6 -10,9 -11,5 C-13,1 -6,-2 -1,1Z" fill="${col2}" opacity="0.75"/>
           </g>
           <g style="animation:wingFlap ${flapDur}s ease-in-out infinite alternate-reverse;transform-origin:0 0;">
-            <path d="M0,0 C3,-6 10,-7 11,-2 C12,3 5,5 0,1Z" fill="${col1}" opacity="0.85"/>
-            <path d="M0,1 C3,4 8,6 9,3 C10,0 5,-2 0,0Z" fill="${col2}" opacity="0.7"/>
+            <path d="M0,0 C2,-8 12,-11 13,-4 C15,3 8,7 1,2Z" fill="${col1}" opacity="0.9"/>
+            <path d="M0,2 C2,6 10,9 11,5 C13,1 6,-2 1,1Z" fill="${col2}" opacity="0.75"/>
           </g>
-          <ellipse cx="0" cy="0" rx="1.2" ry="4" fill="#2C1A0E"/>
+          <ellipse cx="0" cy="0" rx="1.2" ry="5" fill="#2C1A0E"/>
+          <line x1="-0.5" y1="-4" x2="-5" y2="-10" stroke="#2C1A0E" stroke-width="0.65"/>
+          <circle cx="-5" cy="-10" r="0.9" fill="#2C1A0E"/>
+          <line x1="0.5"  y1="-4" x2="5"  y2="-10" stroke="#2C1A0E" stroke-width="0.65"/>
+          <circle cx="5"  cy="-10" r="0.9" fill="#2C1A0E"/>
         </svg>`;
       };
-      const palettes = [['#7B68EE','#9B59B6'],['#F39C12','#E67E22'],['#1ABC9C','#16A085'],['#E91E63','#C2185B'],['#3498DB','#2980B9']];
+      const palettes = [['#7B68EE','#4834D4'],['#F39C12','#C0392B'],['#1ABC9C','#0E7E6A'],
+                        ['#E91E63','#880E4F'],['#FF6B9D','#C44569'],['#A29BFE','#6C5CE7'],
+                        ['#55EFC4','#00B894'],['#FDCB6E','#E17055']];
       let html = '';
-      for (let i = 0; i < 5; i++) {
-        const [c1, c2] = palettes[i % palettes.length];
-        html += makeButterfly(
-          12 + Math.random() * 74,
-          20 + Math.random() * 55,
-          20 + Math.random() * 12,
-          5 + Math.random() * 4,
-          Math.random() * 5,
-          c1, c2
-        );
+      for (let i = 0; i < 8; i++) {
+        const [c1,c2] = palettes[i % palettes.length];
+        html += makeButterfly(8+Math.random()*82, 18+Math.random()*58, 18+Math.random()*14, 5+Math.random()*4.5, Math.random()*6, c1, c2);
       }
       overlay.innerHTML = html;
 
     } else if (id === 'crystals') {
-      // SVG crystals at the base
-      const makeCrystal = (x, y, h, col, opacity) =>
-        `<svg style="position:absolute;left:${x};bottom:${y}px;overflow:visible;opacity:${opacity};` +
-        `filter:drop-shadow(0 0 5px ${col}88);" ` +
-        `width="14" height="${h}" viewBox="0 0 14 ${h}" xmlns="http://www.w3.org/2000/svg">
-          <polygon points="7,0 14,${h*0.35} 11,${h} 3,${h} 0,${h*0.35}" fill="${col}" opacity="0.75"/>
-          <polygon points="7,0 14,${h*0.35} 7,${h*0.2}" fill="rgba(255,255,255,0.4)"/>
-        </svg>`;
-      overlay.innerHTML =
-        makeCrystal('calc(50% - 68px)', 18, 28, '#A29BFE', 0.9) +
-        makeCrystal('calc(50% + 46px)', 14, 22, '#6C5CE7', 0.75) +
-        makeCrystal('calc(50% + 68px)', 20, 18, '#D8B4FE', 0.6) +
-        makeCrystal('calc(50% - 88px)', 16, 16, '#C084FC', 0.5);
+      const makeCrystal = (x, y, h, col, opacity, delay) => `
+        <g style="transform:translate(${x}px,${y}px);opacity:${opacity};
+          animation:crystalShimmer ${2.8+delay*0.4}s ${delay*0.5}s ease-in-out infinite;
+          filter:drop-shadow(0 0 7px ${col}aa);">
+          <polygon points="0,0 ${h*0.52},${h*0.32} ${h*0.42},${h} ${-h*0.42},${h} ${-h*0.52},${h*0.32}"
+            fill="${col}" opacity="0.72"/>
+          <polygon points="0,0 ${h*0.52},${h*0.32} 0,${h*0.24}" fill="rgba(255,255,255,0.38)"/>
+          <polygon points="0,0 ${-h*0.52},${h*0.32} 0,${h*0.24}" fill="rgba(255,255,255,0.14)"/>
+          <line x1="0" y1="-5" x2="0"  y2="5"  stroke="rgba(255,255,255,0.75)" stroke-width="0.8" transform="translate(0,-4)"/>
+          <line x1="-4" y1="0" x2="4" y2="0"  stroke="rgba(255,255,255,0.75)" stroke-width="0.8" transform="translate(0,-4)"/>
+          <line x1="-2.5" y1="-2.5" x2="2.5" y2="2.5" stroke="rgba(255,255,255,0.4)" stroke-width="0.5" transform="translate(0,-4)"/>
+          <line x1="2.5"  y1="-2.5" x2="-2.5" y2="2.5" stroke="rgba(255,255,255,0.4)" stroke-width="0.5" transform="translate(0,-4)"/>
+        </g>`;
+      overlay.innerHTML = `<svg style="position:absolute;overflow:visible;width:100%;height:100%;" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(50%,98%)">
+          ${makeCrystal(-62,-28,28,'#A29BFE',0.92,0)}
+          ${makeCrystal(-42,-22,22,'#6C5CE7',0.78,1)}
+          ${makeCrystal(-80,-24,20,'#DDA0DD',0.65,2)}
+          ${makeCrystal( 44,-18,26,'#74B9FF',0.88,3)}
+          ${makeCrystal( 66,-14,18,'#C084FC',0.70,4)}
+          ${makeCrystal( 83,-20,14,'#B39DDB',0.55,5)}
+        </g>
+      </svg>`;
 
     } else if (id === 'fairy_lights') {
-      // String of tiny glowing bulbs draped across the scene
-      let html = '';
-      const colors = ['#FFD700','#FF6B6B','#74B9FF','#A29BFE','#55EFC4','#FD79A8','#FDCB6E'];
-      for (let i = 0; i < 18; i++) {
-        const x    = 4 + (i / 17) * 92;
-        // gentle catenary drape: high at edges, low in middle
-        const sag  = Math.sin((i / 17) * Math.PI) * 18;
-        const bot  = 55 + sag + (Math.random() - 0.5) * 6;
-        const col  = colors[i % colors.length];
-        const dur  = 1.8 + Math.random() * 1.4;
-        const del  = (i * 0.18) % 2.2;
-        html += `<div style="position:absolute;left:${x.toFixed(1)}%;bottom:${bot.toFixed(1)}%;` +
-          `width:5px;height:7px;border-radius:1px 1px 3px 3px;background:${col};` +
-          `box-shadow:0 0 6px 3px ${col}99,0 0 12px 5px ${col}44;` +
-          `animation:fireflyPulse ${dur}s ${del}s ease-in-out infinite;"></div>`;
+      const strands = [
+        {a:'M 3% 48% Q 25% 66% 50% 52% Q 75% 38% 97% 50%', bBot:45, vary:12},
+        {a:'M 8% 36% Q 30% 54% 55% 40% Q 78% 28% 92% 38%', bBot:33, vary:10},
+        {a:'M 15% 58% Q 38% 75% 60% 62% Q 80% 50% 88% 58%', bBot:55, vary:8},
+      ];
+      const cols = ['#FF6B6B','#FFA94D','#FFE066','#74C0FC','#A29BFE','#FD79A8','#55EFC4','#FDCB6E','#FF85B3'];
+      let wires = '', bulbs = '';
+      strands.forEach(st => {
+        wires += `<path d="${st.a}" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="0.9"/>`;
+      });
+      for (let i = 0; i < 30; i++) {
+        const st  = strands[i % 3];
+        const t   = (i / 10);
+        const x   = 3 + t * 89 + ((i % 3) * 2.5);
+        const sag = Math.sin(t * Math.PI) * 16;
+        const bot = st.bBot + sag + (Math.random()-0.5) * st.vary;
+        const col = cols[i % cols.length];
+        const dur = 1.5 + Math.random() * 1.4;
+        const del = (i * 0.11) % 2.4;
+        bulbs += `<div style="position:absolute;left:${x.toFixed(1)}%;bottom:${bot.toFixed(1)}%;
+          width:6px;height:8px;border-radius:2px 2px 4px 4px;background:${col};
+          box-shadow:0 0 8px 4px ${col}bb,0 0 16px 7px ${col}44;
+          animation:fireflyPulse ${dur}s ${del}s ease-in-out infinite;"></div>`;
       }
-      // draw the string itself
-      html += `<svg style="position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;" preserveAspectRatio="none">
-        <path d="M 4% 42% Q 50% 58% 96% 42%" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="0.8"/>
-      </svg>`;
-      overlay.innerHTML = html;
+      overlay.innerHTML = `<svg style="position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;"
+        preserveAspectRatio="none">${wires}</svg>${bulbs}`;
 
     } else if (id === 'campfire') {
-      // Flickering campfire at the base of the tree with log SVG
+      let smoke = '';
+      for (let i = 0; i < 6; i++) {
+        const sx = -8 + Math.random()*16, dur = 3+Math.random()*3, del = Math.random()*3;
+        smoke += `<div style="position:absolute;bottom:46px;left:calc(50% + ${sx}px);
+          width:${6+Math.random()*6}px;height:${6+Math.random()*6}px;border-radius:50%;
+          background:rgba(180,180,180,0.25);
+          animation:smokeRise ${dur}s ${del}s ease-in-out infinite;
+          --sw:${(Math.random()-0.5)*24}px;"></div>`;
+      }
       overlay.innerHTML = `
-        <div style="position:absolute;left:50%;bottom:12px;transform:translateX(-50%);width:54px;">
-          <!-- logs -->
-          <svg width="54" height="18" viewBox="0 0 54 18" xmlns="http://www.w3.org/2000/svg" style="display:block;">
-            <ellipse cx="27" cy="16" rx="25" ry="5" fill="#2C1A0A" opacity="0.7"/>
-            <rect x="4"  y="8" width="22" height="7" rx="3.5" fill="#5C2E0A" transform="rotate(-18 15 11)"/>
-            <rect x="28" y="8" width="22" height="7" rx="3.5" fill="#6B3510" transform="rotate(18  39 11)"/>
+        <div style="position:absolute;left:50%;bottom:12px;transform:translateX(-50%);width:62px;">
+          <svg width="62" height="20" viewBox="0 0 62 20" xmlns="http://www.w3.org/2000/svg" style="display:block;">
+            <ellipse cx="31" cy="18" rx="28" ry="5" fill="#1A0A02" opacity="0.6"/>
+            <rect x="3"  y="8" width="26" height="8" rx="4" fill="#5C2E0A" transform="rotate(-18 16 12)"/>
+            <rect x="33" y="8" width="26" height="8" rx="4" fill="#6B3510" transform="rotate(18  47 12)"/>
           </svg>
-          <!-- flame layers -->
-          <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);width:28px;height:38px;">
-            <!-- outer flame -->
+          <div style="position:absolute;bottom:13px;left:50%;transform:translateX(-50%);width:34px;height:48px;">
             <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);
-              width:24px;height:34px;border-radius:50% 50% 30% 30%/60% 60% 40% 40%;
-              background:radial-gradient(ellipse at 50% 80%,#FF6B00,#FF3D00 40%,transparent 75%);
-              animation:flameFlicker 0.9s ease-in-out infinite alternate;
-              transform-origin:50% 100%;"></div>
-            <!-- mid flame -->
+              width:30px;height:44px;border-radius:50% 50% 30% 30%/60% 60% 40% 40%;
+              background:radial-gradient(ellipse at 50% 85%,#FF4500,#FF0000 35%,transparent 72%);
+              animation:flameFlicker 0.95s ease-in-out infinite alternate;transform-origin:50% 100%;"></div>
             <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);
-              width:16px;height:26px;border-radius:50% 50% 30% 30%/60% 60% 40% 40%;
-              background:radial-gradient(ellipse at 50% 80%,#FFB300,#FF6B00 50%,transparent 80%);
-              animation:flameFlicker 0.7s 0.15s ease-in-out infinite alternate-reverse;
-              transform-origin:50% 100%;"></div>
-            <!-- core -->
+              width:20px;height:32px;border-radius:50% 50% 30% 30%/60% 60% 40% 40%;
+              background:radial-gradient(ellipse at 50% 85%,#FFB300,#FF6B00 45%,transparent 78%);
+              animation:flameFlicker 0.72s 0.1s ease-in-out infinite alternate-reverse;transform-origin:50% 100%;"></div>
             <div style="position:absolute;bottom:2px;left:50%;transform:translateX(-50%);
-              width:8px;height:14px;border-radius:50% 50% 30% 30%/60% 60% 40% 40%;
-              background:radial-gradient(ellipse at 50% 80%,#FFFDE7,#FFD600 60%,transparent 85%);
-              animation:flameFlicker 0.55s 0.05s ease-in-out infinite alternate;
-              transform-origin:50% 100%;"></div>
+              width:10px;height:18px;border-radius:50% 50% 30% 30%/60% 60% 40% 40%;
+              background:radial-gradient(ellipse at 50% 85%,#FFFDE7,#FFD600 55%,transparent 82%);
+              animation:flameFlicker 0.5s 0.05s ease-in-out infinite alternate;transform-origin:50% 100%;"></div>
           </div>
-          <!-- ground glow -->
           <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);
-            width:70px;height:18px;border-radius:50%;
-            background:radial-gradient(ellipse,rgba(255,100,0,0.28),transparent 70%);
+            width:86px;height:22px;border-radius:50%;
+            background:radial-gradient(ellipse,rgba(255,90,0,0.32),transparent 70%);
             animation:fireflyPulse 1.1s ease-in-out infinite;"></div>
-        </div>`;
+        </div>
+        ${smoke}`;
 
     } else if (id === 'foxes') {
-      // A small SVG fox sitting at the base of the tree
       overlay.innerHTML = `
-        <svg style="position:absolute;bottom:14px;left:calc(50% + 44px);width:36px;height:36px;overflow:visible;
-          animation:treeHeroSway 7s 1s ease-in-out infinite;transform-origin:50% 100%;opacity:0.92;"
-          viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
-          <!-- body -->
-          <ellipse cx="18" cy="26" rx="9" ry="6" fill="#D4622A"/>
-          <!-- tail -->
-          <path d="M9,28 C2,24 0,18 4,14 C6,12 9,15 9,20 C9,23 10,26 9,28Z" fill="#D4622A"/>
-          <path d="M4,14 C5,12 7,13 8,16 C8,18 7,20 7,22" fill="#F0F0F0" stroke="none" opacity="0.7"/>
-          <!-- head -->
-          <circle cx="18" cy="18" r="7" fill="#D4622A"/>
-          <!-- ears -->
-          <polygon points="13,13 11,6 16,11" fill="#D4622A"/>
-          <polygon points="13,13 11,7 15,12" fill="#C0441A"/>
-          <polygon points="23,13 25,6 20,11" fill="#D4622A"/>
-          <polygon points="23,13 25,7 21,12" fill="#C0441A"/>
-          <!-- face -->
-          <ellipse cx="18" cy="20" rx="4" ry="3" fill="#F5C09A"/>
-          <circle cx="15.5" cy="16.5" r="1.5" fill="#1A0A00"/>
-          <circle cx="20.5" cy="16.5" r="1.5" fill="#1A0A00"/>
-          <circle cx="16" cy="16" r="0.5" fill="white" opacity="0.8"/>
-          <circle cx="21" cy="16" r="0.5" fill="white" opacity="0.8"/>
-          <ellipse cx="18" cy="20" rx="1.2" ry="0.8" fill="#C0441A"/>
+        <svg style="position:absolute;bottom:12px;left:calc(50% + 36px);width:44px;height:44px;overflow:visible;opacity:0.94;"
+          viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
+          <g style="animation:foxTailWag 1.8s ease-in-out infinite;transform-origin:22px 32px;">
+            <path d="M12,34 C3,29 0,20 4,14 C6,11 10,14 11,20 C11,25 12,30 12,34Z" fill="#D4622A"/>
+            <path d="M4,14 C5,11 8,13 9,17 C9,20 8,23 8,26" fill="#F0F0F0" opacity="0.75"/>
+          </g>
+          <ellipse cx="22" cy="32" rx="10" ry="7" fill="#D4622A"/>
+          <circle cx="22" cy="22" r="8" fill="#D4622A"/>
+          <polygon points="16,17 14,9 20,15" fill="#D4622A"/>
+          <polygon points="16,17 14,10 19,15" fill="#C0441A"/>
+          <polygon points="28,17 30,9 24,15" fill="#D4622A"/>
+          <polygon points="28,17 30,10 25,15" fill="#C0441A"/>
+          <ellipse cx="22" cy="24" rx="4.5" ry="3.5" fill="#F5C09A"/>
+          <circle cx="19" cy="20" r="1.8" fill="#1A0A00"/>
+          <circle cx="25" cy="20" r="1.8" fill="#1A0A00"/>
+          <circle cx="19.5" cy="19.5" r="0.6" fill="white" opacity="0.88"/>
+          <circle cx="25.5" cy="19.5" r="0.6" fill="white" opacity="0.88"/>
+          <ellipse cx="22" cy="24" rx="1.4" ry="1" fill="#C0441A"/>
+          <line x1="18" y1="24" x2="13" y2="22.5" stroke="#C0441A" stroke-width="0.65" opacity="0.7"/>
+          <line x1="18" y1="25" x2="13" y2="25"   stroke="#C0441A" stroke-width="0.65" opacity="0.7"/>
+          <line x1="26" y1="24" x2="31" y2="22.5" stroke="#C0441A" stroke-width="0.65" opacity="0.7"/>
+          <line x1="26" y1="25" x2="31" y2="25"   stroke="#C0441A" stroke-width="0.65" opacity="0.7"/>
+        </svg>
+        <svg style="position:absolute;bottom:10px;left:calc(50% - 68px);width:28px;height:28px;overflow:visible;opacity:0.78;"
+          viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
+          <g style="animation:foxTailWag 2.1s 0.4s ease-in-out infinite;transform-origin:7px 20px;">
+            <path d="M7,20 C1,17 -1,11 2,8" fill="none" stroke="#D4622A" stroke-width="4" stroke-linecap="round"/>
+            <path d="M2,8 C3,6 5,7 5,10" fill="none" stroke="#F0F0F0" stroke-width="1.5" opacity="0.7"/>
+          </g>
+          <ellipse cx="14" cy="20" rx="7" ry="5" fill="#D4622A"/>
+          <circle cx="14" cy="13" r="6" fill="#D4622A"/>
+          <polygon points="10,9 8,3 13,8" fill="#D4622A"/>
+          <polygon points="10,9 8,4 12,8" fill="#C0441A"/>
+          <polygon points="18,9 20,3 15,8" fill="#D4622A"/>
+          <polygon points="18,9 20,4 16,8" fill="#C0441A"/>
+          <ellipse cx="14" cy="15" rx="3.2" ry="2.5" fill="#F5C09A"/>
+          <circle cx="12" cy="12" r="1.4" fill="#1A0A00"/>
+          <circle cx="16" cy="12" r="1.4" fill="#1A0A00"/>
+          <circle cx="12.4" cy="11.6" r="0.45" fill="white" opacity="0.88"/>
+          <circle cx="16.4" cy="11.6" r="0.45" fill="white" opacity="0.88"/>
         </svg>`;
 
     } else if (id === 'owls') {
-      // Two owls perched on branches, one larger than the other
-      const makeOwl = (x, bot, sz, del) => `
-        <svg style="position:absolute;left:${x};bottom:${bot}px;width:${sz}px;height:${sz}px;overflow:visible;
-          animation:owlBlink 4s ${del}s ease-in-out infinite;opacity:0.9;"
-          viewBox="0 0 28 32" xmlns="http://www.w3.org/2000/svg">
-          <defs><style>
-            @keyframes owlBlink {
-              0%,44%,56%,100% { opacity:0.9; }
-              48%,52% { opacity:0.85; }
-            }
-          </style></defs>
-          <!-- body -->
-          <ellipse cx="14" cy="22" rx="8" ry="9" fill="#7B5E3A"/>
-          <ellipse cx="14" cy="22" rx="5" ry="7" fill="#F5E6C8" opacity="0.7"/>
-          <!-- wings -->
-          <ellipse cx="7"  cy="22" rx="4" ry="7" fill="#6B4E2A" transform="rotate(-8 7 22)"/>
-          <ellipse cx="21" cy="22" rx="4" ry="7" fill="#6B4E2A" transform="rotate(8 21 22)"/>
-          <!-- head -->
-          <circle cx="14" cy="11" r="8" fill="#8B6840"/>
-          <!-- ear tufts -->
-          <polygon points="10,5 8,0 12,4" fill="#7B5830"/>
-          <polygon points="18,5 20,0 16,4" fill="#7B5830"/>
-          <!-- face disc -->
-          <ellipse cx="14" cy="12" rx="6" ry="5.5" fill="#F0DEB0" opacity="0.75"/>
-          <!-- eyes -->
-          <circle cx="11" cy="10" r="3" fill="#FFD700" stroke="#2A1A00" stroke-width="0.5"/>
-          <circle cx="17" cy="10" r="3" fill="#FFD700" stroke="#2A1A00" stroke-width="0.5"/>
-          <circle cx="11" cy="10" r="1.6" fill="#1A0800"/>
-          <circle cx="17" cy="10" r="1.6" fill="#1A0800"/>
-          <circle cx="11.6" cy="9.4" r="0.6" fill="white"/>
-          <circle cx="17.6" cy="9.4" r="0.6" fill="white"/>
-          <!-- beak -->
-          <polygon points="14,12 12.5,14.5 15.5,14.5" fill="#C89040"/>
-          <!-- feet / perch suggestion -->
-          <line x1="11" y1="30" x2="9"  y2="32" stroke="#6B4E2A" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="11" y1="30" x2="11" y2="32" stroke="#6B4E2A" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="17" y1="30" x2="15" y2="32" stroke="#6B4E2A" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="17" y1="30" x2="19" y2="32" stroke="#6B4E2A" stroke-width="1.5" stroke-linecap="round"/>
+      const makeOwl = (x, bot, sz, del, tiltDel) => `
+        <svg style="position:absolute;left:${x};bottom:${bot}px;width:${sz}px;height:${sz*1.2}px;overflow:visible;opacity:0.92;"
+          viewBox="0 0 32 38" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="16" cy="27" rx="9" ry="10" fill="#7B5E3A"/>
+          <ellipse cx="16" cy="27" rx="6"  ry="8"  fill="#F5E6C8" opacity="0.65"/>
+          <ellipse cx="8"  cy="26" rx="5"  ry="9"  fill="#6B4E2A" transform="rotate(-10 8 26)"/>
+          <ellipse cx="24" cy="26" rx="5"  ry="9"  fill="#6B4E2A" transform="rotate(10 24 26)"/>
+          <path d="M6,23 C7,25 8,27 7,29" fill="none" stroke="#5A3E1A" stroke-width="0.8" opacity="0.45"/>
+          <path d="M8,21 C9,24 9,27 8,29"  fill="none" stroke="#5A3E1A" stroke-width="0.8" opacity="0.45"/>
+          <g style="animation:headTilt ${2.8+tiltDel}s ${del}s ease-in-out infinite;transform-origin:16px 14px;">
+            <circle cx="16" cy="13" r="9" fill="#8B6840"/>
+            <polygon points="11,6 9,0 14,5" fill="#7B5830"/>
+            <polygon points="11.5,5.5 9.5,0.5 13.5,4.5" fill="#A07040" opacity="0.5"/>
+            <polygon points="21,6 23,0 18,5" fill="#7B5830"/>
+            <polygon points="20.5,5.5 22.5,0.5 18.5,4.5" fill="#A07040" opacity="0.5"/>
+            <ellipse cx="16" cy="14" rx="7" ry="6" fill="#F0DEB0" opacity="0.7"/>
+            <circle cx="12.5" cy="12" r="3.2" fill="#FFD700" stroke="#2A1A00" stroke-width="0.6"/>
+            <circle cx="19.5" cy="12" r="3.2" fill="#FFD700" stroke="#2A1A00" stroke-width="0.6"/>
+            <circle cx="12.5" cy="12" r="1.8" fill="#1A0800"/>
+            <circle cx="19.5" cy="12" r="1.8" fill="#1A0800"/>
+            <circle cx="13.1" cy="11.4" r="0.65" fill="white"/>
+            <circle cx="20.1" cy="11.4" r="0.65" fill="white"/>
+            <polygon points="16,14.5 14,17.5 18,17.5" fill="#C89040"/>
+          </g>
+          <line x1="12" y1="36" x2="10" y2="38" stroke="#6B4E2A" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="12" y1="36" x2="12" y2="38" stroke="#6B4E2A" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="20" y1="36" x2="18" y2="38" stroke="#6B4E2A" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="20" y1="36" x2="22" y2="38" stroke="#6B4E2A" stroke-width="1.5" stroke-linecap="round"/>
         </svg>`;
       overlay.innerHTML =
-        makeOwl('calc(50% - 52px)', 55, 32, 0) +
-        makeOwl('calc(50% + 30px)', 72, 24, 1.8);
+        makeOwl('calc(50% - 58px)', 58, 34, 0,   0) +
+        makeOwl('calc(50% + 28px)', 74, 26, 1.6, 0.5);
 
     } else if (id === 'rainbow') {
-      // Pastel rainbow arc over the canopy, slow fade in/out
+      const rbBands = ['#FF4444','#FF8C00','#FFE000','#44CC44','#4488FF','#6644CC','#AA44DD'];
+      const rbArcs = rbBands.map((col,i) => {
+        const r = 82-(i*7);
+        return `<path d="M ${18+i*3},92 A ${r},${r*0.72} 0 0 1 ${182-i*3},92"
+          fill="none" stroke="${col}" stroke-width="6.5" stroke-opacity="${0.44-i*0.01}" stroke-linecap="round"/>`;
+      }).join('');
+      const rbRays = Array.from({length:4},(_,i) =>
+        `<rect x="${30+i*16}" y="8" width="4" height="80" rx="2" fill="rgba(255,255,220,0.055)"
+          style="animation:godRay ${3+i*0.7}s ${i*0.6}s ease-in-out infinite;" transform="skewX(-8)"/>`
+      ).join('');
       overlay.innerHTML = `
-        <svg style="position:absolute;left:0;top:0;width:100%;height:60%;overflow:visible;pointer-events:none;"
-             viewBox="0 0 200 80" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <radialGradient id="rbg" cx="50%" cy="100%" r="70%" gradientUnits="userSpaceOnUse">
-              <stop offset="0%"   stop-color="#FF6B6B" stop-opacity="0.55"/>
-              <stop offset="16%"  stop-color="#FFA94D" stop-opacity="0.50"/>
-              <stop offset="33%"  stop-color="#FFE066" stop-opacity="0.45"/>
-              <stop offset="50%"  stop-color="#8CE99A" stop-opacity="0.45"/>
-              <stop offset="66%"  stop-color="#74C0FC" stop-opacity="0.45"/>
-              <stop offset="83%"  stop-color="#A5B4FC" stop-opacity="0.45"/>
-              <stop offset="100%" stop-color="#DA77F2" stop-opacity="0.40"/>
-            </radialGradient>
-          </defs>
-          <!-- Rainbow bands as concentric arcs -->
-          <path d="M 8,78 A 92,78 0 0 1 192,78" fill="none" stroke="#FF6B6B" stroke-width="5" stroke-opacity="0.45" stroke-linecap="round"/>
-          <path d="M 14,78 A 86,72 0 0 1 186,78" fill="none" stroke="#FFA94D" stroke-width="5" stroke-opacity="0.42" stroke-linecap="round"/>
-          <path d="M 20,78 A 80,66 0 0 1 180,78" fill="none" stroke="#FFE066" stroke-width="5" stroke-opacity="0.42" stroke-linecap="round"/>
-          <path d="M 26,78 A 74,60 0 0 1 174,78" fill="none" stroke="#8CE99A" stroke-width="5" stroke-opacity="0.42" stroke-linecap="round"/>
-          <path d="M 32,78 A 68,54 0 0 1 168,78" fill="none" stroke="#74C0FC" stroke-width="5" stroke-opacity="0.42" stroke-linecap="round"/>
-          <path d="M 38,78 A 62,48 0 0 1 162,78" fill="none" stroke="#A5B4FC" stroke-width="5" stroke-opacity="0.40" stroke-linecap="round"/>
-          <path d="M 44,78 A 56,42 0 0 1 156,78" fill="none" stroke="#DA77F2" stroke-width="5" stroke-opacity="0.38" stroke-linecap="round"/>
-          <animateTransform attributeName="transform" type="scale" values="1;1.012;1" dur="6s" repeatCount="indefinite" additive="sum"/>
+        <svg style="position:absolute;left:0;top:0;width:100%;height:65%;overflow:visible;pointer-events:none;"
+          viewBox="0 0 200 100" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg">
+          ${rbRays}${rbArcs}
         </svg>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:20%;
+          background:linear-gradient(to top,rgba(200,230,255,0.1),transparent);pointer-events:none;"></div>
         <div style="position:absolute;inset:0;
-          background:radial-gradient(ellipse 80% 30% at 50% 0%,rgba(200,180,255,0.07),transparent 70%);
-          animation:fireflyPulse 5s ease-in-out infinite;pointer-events:none;"></div>`;
+          background:radial-gradient(ellipse 100% 40% at 50% 0%,rgba(180,160,255,0.06),transparent 70%);
+          animation:fireflyPulse 6s ease-in-out infinite;pointer-events:none;"></div>`;
 
     } else if (id === 'moonlight') {
-      // Silver moon disc top-right + silver shimmer wash over canopy
+      let stars = '';
+      for (let i = 0; i < 14; i++) {
+        const sx  = 4 + Math.random() * 88;
+        const sy  = 3 + Math.random() * 52;
+        const ss  = 0.8 + Math.random() * 1.4;
+        const sd  = 1.8 + Math.random() * 3;
+        const sdel= Math.random() * 5;
+        stars += `<div style="position:absolute;left:${sx}%;top:${sy}%;
+          width:${ss}px;height:${ss}px;border-radius:50%;background:white;
+          box-shadow:0 0 ${ss*2}px ${ss}px rgba(200,220,255,0.8);
+          animation:starWink ${sd}s ${sdel}s ease-in-out infinite;"></div>`;
+      }
       overlay.innerHTML = `
-        <div style="position:absolute;top:6%;right:10%;width:38px;height:38px;border-radius:50%;
-          background:radial-gradient(circle at 38% 38%,#F0F0FF 0%,#C8D4F0 45%,transparent 70%);
-          box-shadow:0 0 24px 8px rgba(180,200,255,0.35),0 0 50px 16px rgba(120,150,240,0.12);
-          animation:fireflyPulse 4s ease-in-out infinite;"></div>
-        <div style="position:absolute;top:5%;right:9%;width:42px;height:42px;border-radius:50%;
-          background:transparent;box-shadow:0 0 0 2.5px rgba(220,230,255,0.25);
-          animation:fireflyPulse 4s 0.6s ease-in-out infinite;"></div>
+        ${stars}
+        <div style="position:absolute;top:11%;right:14%;width:20px;height:58%;
+          background:linear-gradient(to bottom,rgba(180,210,255,0.11),transparent 80%);
+          transform:skewX(6deg);border-radius:0 0 50% 50%;
+          animation:godRay 5s ease-in-out infinite;pointer-events:none;"></div>
+        <div style="position:absolute;top:5%;right:8%;width:46px;height:46px;border-radius:50%;
+          background:radial-gradient(circle at 38% 38%,#F4F4FF 0%,#C8D4F8 40%,#A0B4E8 70%,transparent 90%);
+          box-shadow:0 0 22px 9px rgba(180,200,255,0.42),0 0 52px 20px rgba(120,150,240,0.16);
+          animation:fireflyPulse 4.5s ease-in-out infinite;"></div>
+        <div style="position:absolute;top:6%;right:6.5%;width:42px;height:42px;border-radius:50%;
+          background:radial-gradient(circle at 62% 38%,rgba(8,12,30,0.42) 30%,transparent 62%);
+          pointer-events:none;"></div>
+        <div style="position:absolute;top:2%;right:5%;width:57px;height:57px;border-radius:50%;
+          box-shadow:0 0 0 2px rgba(200,220,255,0.18);
+          animation:fireflyPulse 4.5s 0.6s ease-in-out infinite;pointer-events:none;"></div>
+        <div style="position:absolute;top:-1%;right:2.5%;width:68px;height:68px;border-radius:50%;
+          box-shadow:0 0 0 1.5px rgba(180,200,255,0.09);
+          animation:fireflyPulse 4.5s 1.1s ease-in-out infinite;pointer-events:none;"></div>
         <div style="position:absolute;inset:0;
-          background:linear-gradient(180deg,rgba(160,180,255,0.06) 0%,rgba(100,130,220,0.03) 60%,transparent 100%);
+          background:linear-gradient(180deg,rgba(140,170,255,0.07) 0%,rgba(80,110,200,0.03) 50%,transparent 100%);
           pointer-events:none;"></div>`;
 
     } else if (id === 'northern_lights') {
-      // Sweeping aurora curtains — animated SVG bands
+      let nlStars = '';
+      for (let i = 0; i < 20; i++) {
+        const sx = Math.random()*98, sy = 2+Math.random()*30;
+        const ss = 0.6+Math.random()*1.2;
+        nlStars += `<circle cx="${sx}%" cy="${sy}%" r="${ss}" fill="rgba(255,255,255,${0.3+Math.random()*0.5})"
+          style="animation:starWink ${2+Math.random()*3}s ${Math.random()*4}s ease-in-out infinite;"/>`;
+      }
       overlay.innerHTML = `
-        <svg style="position:absolute;left:0;top:0;width:100%;height:55%;pointer-events:none;overflow:hidden;"
-             viewBox="0 0 200 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <svg style="position:absolute;left:0;top:0;width:100%;height:62%;pointer-events:none;overflow:hidden;"
+          viewBox="0 0 200 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <filter id="auroraBlur"><feGaussianBlur stdDeviation="3"/></filter>
+            <filter id="nlBlur"><feGaussianBlur stdDeviation="3.5"/></filter>
+            <linearGradient id="nlG1" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#00E5A0" stop-opacity="0.0"/>
+              <stop offset="20%"  stop-color="#00E5A0" stop-opacity="0.68"/>
+              <stop offset="55%"  stop-color="#00C4FF" stop-opacity="0.58"/>
+              <stop offset="80%"  stop-color="#A855F7" stop-opacity="0.52"/>
+              <stop offset="100%" stop-color="#A855F7" stop-opacity="0.0"/>
+            </linearGradient>
+            <linearGradient id="nlG2" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#A855F7" stop-opacity="0.0"/>
+              <stop offset="25%"  stop-color="#A855F7" stop-opacity="0.52"/>
+              <stop offset="60%"  stop-color="#00C4FF" stop-opacity="0.62"/>
+              <stop offset="85%"  stop-color="#00E5A0" stop-opacity="0.58"/>
+              <stop offset="100%" stop-color="#00E5A0" stop-opacity="0.0"/>
+            </linearGradient>
+            <linearGradient id="nlG3" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#FF6AB0" stop-opacity="0.0"/>
+              <stop offset="30%"  stop-color="#FF6AB0" stop-opacity="0.46"/>
+              <stop offset="65%"  stop-color="#A855F7" stop-opacity="0.52"/>
+              <stop offset="100%" stop-color="#00E5A0" stop-opacity="0.0"/>
+            </linearGradient>
           </defs>
-          <g filter="url(#auroraBlur)" opacity="0.65">
-            <path d="M0,60 C40,30 60,70 100,45 C140,20 160,60 200,35 L200,55 C160,80 140,42 100,65 C60,88 40,52 0,80Z"
-              fill="url(#auroraG1)">
-              <animateTransform attributeName="transform" type="translate" values="0,0;8,-4;0,0" dur="7s" repeatCount="indefinite"/>
+          <g filter="url(#nlBlur)">
+            <path d="M0,65 C35,28 65,72 100,44 C135,18 165,62 200,36 L200,56 C165,82 135,40 100,64 C65,88 35,50 0,82Z" fill="url(#nlG1)">
+              <animateTransform attributeName="transform" type="translate" values="0,0;10,-5;0,0" dur="8s" repeatCount="indefinite"/>
             </path>
-            <path d="M0,50 C50,20 80,60 120,35 C160,12 180,52 200,28 L200,44 C180,68 160,30 120,53 C80,76 50,38 0,66Z"
-              fill="url(#auroraG2)">
-              <animateTransform attributeName="transform" type="translate" values="0,0;-6,2;0,0" dur="9s" repeatCount="indefinite"/>
+            <path d="M0,52 C45,18 80,62 120,36 C158,12 180,54 200,30 L200,46 C180,70 158,30 120,54 C80,78 45,36 0,68Z" fill="url(#nlG2)">
+              <animateTransform attributeName="transform" type="translate" values="0,0;-8,3;0,0" dur="10s" repeatCount="indefinite"/>
+            </path>
+            <path d="M0,72 C30,45 70,80 110,56 C148,34 175,68 200,48 L200,64 C175,84 148,52 110,72 C70,92 30,62 0,88Z" fill="url(#nlG3)">
+              <animateTransform attributeName="transform" type="translate" values="0,0;6,-2;0,0" dur="12s" repeatCount="indefinite"/>
             </path>
           </g>
-          <defs>
-            <linearGradient id="auroraG1" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%"   stop-color="#00E5A0" stop-opacity="0.7"/>
-              <stop offset="40%"  stop-color="#00C4FF" stop-opacity="0.6"/>
-              <stop offset="70%"  stop-color="#A855F7" stop-opacity="0.55"/>
-              <stop offset="100%" stop-color="#00E5A0" stop-opacity="0.5"/>
-            </linearGradient>
-            <linearGradient id="auroraG2" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%"   stop-color="#A855F7" stop-opacity="0.5"/>
-              <stop offset="35%"  stop-color="#00C4FF" stop-opacity="0.55"/>
-              <stop offset="65%"  stop-color="#00E5A0" stop-opacity="0.6"/>
-              <stop offset="100%" stop-color="#FF6AB0" stop-opacity="0.45"/>
-            </linearGradient>
-          </defs>
+          ${nlStars}
         </svg>`;
 
     } else if (id === 'golden_hour') {
-      // Warm amber-gold sky wash + horizon glow + dust motes
-      let motes = '';
-      for (let i = 0; i < 10; i++) {
-        const x = 5 + Math.random() * 90, bot = 15 + Math.random() * 55;
-        const sz = 2 + Math.random() * 3, dur = 5 + Math.random() * 5, del = Math.random() * 6;
-        motes += `<div style="position:absolute;left:${x}%;bottom:${bot}%;width:${sz}px;height:${sz}px;border-radius:50%;
-          background:rgba(255,200,80,0.55);
-          animation:thFloat ${dur}s ${del}s ease-in-out infinite;
-          --fx:${(Math.random()-0.5)*20}px;--fx2:${(Math.random()-0.5)*14}px;
-          --fr:0deg;--fr2:0deg;
-          box-shadow:0 0 4px 2px rgba(255,200,80,0.3);"></div>`;
-      }
-      overlay.innerHTML = `
-        <div style="position:absolute;inset:0;
-          background:linear-gradient(180deg,rgba(255,140,20,0.12) 0%,rgba(255,180,60,0.07) 40%,transparent 75%);
-          pointer-events:none;"></div>
-        <div style="position:absolute;bottom:0;left:0;right:0;height:30%;
-          background:radial-gradient(ellipse 100% 100% at 50% 100%,rgba(255,160,40,0.18),transparent 70%);
-          pointer-events:none;"></div>
-        ${motes}`;
-
-    } else if (id === 'thunderstorm') {
-      // Dark cloud layer + lightning flash + rain streaks
-      let rain = '';
-      for (let i = 0; i < 18; i++) {
-        const x = Math.random() * 100, bot = 10 + Math.random() * 75;
-        const dur = 0.6 + Math.random() * 0.8, del = Math.random() * 2;
-        rain += `<div style="position:absolute;left:${x}%;bottom:${bot}%;
-          width:1.5px;height:${8+Math.random()*10}px;
-          background:linear-gradient(to bottom,transparent,rgba(180,210,255,0.5),transparent);
-          animation:rainFall ${dur}s ${del}s linear infinite;
-          transform:rotate(8deg);"></div>`;
-      }
-      overlay.innerHTML = `
-        <div style="position:absolute;top:0;left:0;right:0;height:32%;
-          background:linear-gradient(180deg,rgba(10,10,30,0.55) 0%,rgba(20,20,50,0.25) 70%,transparent 100%);
-          pointer-events:none;"></div>
-        <div id="lightning-${id}" style="position:absolute;inset:0;
-          background:rgba(200,220,255,0);pointer-events:none;
-          animation:lightningFlash 6s 1.5s ease-in-out infinite;"></div>
-        ${rain}`;
-
-    } else if (id === 'snow') {
-      // Layered snowfall — large slow flakes + small fast ones + ground drift
-      let flakes = '';
-      for (let i = 0; i < 28; i++) {
-        const x   = Math.random() * 105;
-        const sz  = i < 10 ? 5 + Math.random() * 5 : 2 + Math.random() * 3;
-        const dur = i < 10 ? 8 + Math.random() * 7 : 5 + Math.random() * 5;
-        const del = Math.random() * 9;
-        const sway= (Math.random() - 0.5) * 28;
-        const opacity = 0.55 + Math.random() * 0.4;
-        flakes += `<div style="position:absolute;left:${x}%;top:-8px;
+      let ghMotes = '';
+      for (let i = 0; i < 22; i++) {
+        const x=4+Math.random()*92, bot=6+Math.random()*68;
+        const sz=1.5+Math.random()*3.5, dur=5+Math.random()*6, del=Math.random()*7;
+        ghMotes += `<div style="position:absolute;left:${x}%;bottom:${bot}%;
           width:${sz}px;height:${sz}px;border-radius:50%;
-          background:radial-gradient(circle,rgba(255,255,255,${opacity}),rgba(220,235,255,0.4) 60%,transparent 80%);
-          box-shadow:0 0 ${sz}px ${sz/2}px rgba(220,235,255,0.25);
-          animation:snowFall ${dur}s ${del}s linear infinite;
-          --sw:${sway}px;"></div>`;
-      }
-      // ground snow accumulation
-      flakes += `<div style="position:absolute;bottom:0;left:0;right:0;height:18px;
-        background:radial-gradient(ellipse 100% 100% at 50% 100%,rgba(230,240,255,0.35) 0%,transparent 80%);
-        pointer-events:none;"></div>`;
-      // subtle blue-grey sky tint
-      flakes += `<div style="position:absolute;inset:0;
-        background:linear-gradient(180deg,rgba(180,200,240,0.08) 0%,transparent 60%);
-        pointer-events:none;"></div>`;
-      overlay.innerHTML = flakes;
-
-    } else if (id === 'autumn') {
-      // Warm tumbling autumn leaves in orange/red/brown/gold, with rotation and drift
-      const leafD   = 'M0-9 C5-7 9-2 7,4 C4,9 -4,9 -7,4 C-9,-2 -5,-7 0-9Z';
-      const palettes = ['#D4610A','#B33A1C','#E8890C','#9B2A0A','#C45820','#8B4513','#D4860A','#A0522D'];
-      let html = '';
-      for (let i = 0; i < 16; i++) {
-        const x   = 5  + Math.random() * 90;
-        const sz  = 9  + Math.random() * 9;
-        const dur = 6  + Math.random() * 7;
-        const del = Math.random() * 8;
-        const px  = (Math.random() - 0.5) * 60;
-        const px2 = (Math.random() - 0.5) * 50;
-        const pr  = 120 + Math.random() * 240;
-        const pr2 = pr  + 100 + Math.random() * 180;
-        const col = palettes[i % palettes.length];
-        html += `<svg style="position:absolute;left:${x}%;top:-6px;overflow:visible;
-          width:${sz}px;height:${sz}px;opacity:${0.65 + Math.random() * 0.3};
-          animation:leafTumble ${dur}s ${del}s ease-in-out infinite;
-          --px:${px}px;--px2:${px2}px;--pr:${Math.round(pr)}deg;--pr2:${Math.round(pr2)}deg;"
-          viewBox="-10 -10 20 20" xmlns="http://www.w3.org/2000/svg">
-          <path d="${leafD}" fill="${col}"/>
-          <line x1="0" y1="-8" x2="0" y2="8" stroke="${col}aa" stroke-width="0.8"/>
-          </svg>`;
-      }
-      // warm amber ground-glow
-      html += `<div style="position:absolute;bottom:0;left:0;right:0;height:28px;
-        background:radial-gradient(ellipse 90% 100% at 50% 100%,rgba(180,80,20,0.14),transparent 70%);
-        pointer-events:none;"></div>`;
-      overlay.innerHTML = html;
-
-    } else if (id === 'spring') {
-      // Rising dandelion seeds + small wildflower petals + pale green wash
-      const seedPath = 'M0,0 L0,-8 M-3,-7 L0,-9 L3,-7 M-2,-9 L0,-11 L2,-9';
-      let html = '';
-      // dandelion seeds — rise and drift
-      for (let i = 0; i < 10; i++) {
-        const x   = 8 + Math.random() * 84;
-        const sz  = 9 + Math.random() * 7;
-        const dur = 8 + Math.random() * 8;
-        const del = Math.random() * 9;
-        const fx  = (Math.random() - 0.5) * 40;
-        const fx2 = (Math.random() - 0.5) * 30;
-        html += `<svg style="position:absolute;left:${x}%;bottom:5%;overflow:visible;
-          width:${sz}px;height:${sz*1.5}px;opacity:0.72;
-          animation:seedRise ${dur}s ${del}s ease-in-out infinite;
-          --fx:${fx}px;--fx2:${fx2}px;"
-          viewBox="-5 -12 10 16" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="0" cy="0" r="1.2" fill="rgba(255,230,80,0.9)"/>
-          <line x1="0" y1="0" x2="0" y2="-7" stroke="rgba(255,255,255,0.6)" stroke-width="0.7"/>
-          <line x1="-3" y1="-6" x2="0" y2="-9" stroke="rgba(255,255,255,0.5)" stroke-width="0.5"/>
-          <line x1="3"  y1="-6" x2="0" y2="-9" stroke="rgba(255,255,255,0.5)" stroke-width="0.5"/>
-          <line x1="0"  y1="-6" x2="0" y2="-10" stroke="rgba(255,255,255,0.55)" stroke-width="0.5"/>
-          </svg>`;
-      }
-      // small wildflower petals drifting down
-      const petalCols = ['#FFE082','#FFFFFF','#FFAECF','#B5EAD7','#C7F2A4'];
-      for (let i = 0; i < 8; i++) {
-        const x   = 5  + Math.random() * 90;
-        const sz  = 7  + Math.random() * 6;
-        const dur = 7  + Math.random() * 6;
-        const del = Math.random() * 9;
-        const px  = (Math.random() - 0.5) * 40;
-        const px2 = (Math.random() - 0.5) * 30;
-        const pr  = 60 + Math.random() * 200;
-        const col = petalCols[i % petalCols.length];
-        html += `<svg style="position:absolute;left:${x}%;top:-4px;overflow:visible;
-          width:${sz}px;height:${sz}px;opacity:0.78;
-          animation:petalDrift ${dur}s ${del}s ease-in-out infinite;
-          --px:${px}px;--px2:${px2}px;--pr:${Math.round(pr)}deg;--pr2:${Math.round(pr + 140)}deg;"
-          viewBox="-8 -8 16 16" xmlns="http://www.w3.org/2000/svg">
-          <path d="M0-7 C4-5 5 0 0 7 C-5 0-4-5 0-7Z" fill="${col}"/>
-          </svg>`;
-      }
-      // soft green sky tint
-      html += `<div style="position:absolute;inset:0;
-        background:linear-gradient(180deg,rgba(120,200,100,0.06) 0%,transparent 55%);
-        pointer-events:none;"></div>`;
-      overlay.innerHTML = html;
-
-    } else if (id === 'summer') {
-      // Sun disc top-right + heat shimmer + golden dust motes + warm sky
-      let motes = '';
-      for (let i = 0; i < 14; i++) {
-        const x   = 5 + Math.random() * 90;
-        const bot = 8 + Math.random() * 65;
-        const sz  = 2 + Math.random() * 3.5;
-        const dur = 5 + Math.random() * 6;
-        const del = Math.random() * 7;
-        motes += `<div style="position:absolute;left:${x}%;bottom:${bot}%;
-          width:${sz}px;height:${sz}px;border-radius:50%;
-          background:radial-gradient(circle,rgba(255,220,80,0.7),rgba(255,180,40,0.3) 60%,transparent 80%);
-          box-shadow:0 0 ${sz*2}px ${sz}px rgba(255,200,60,0.18);
+          background:radial-gradient(circle,rgba(255,220,80,0.8),rgba(255,160,30,0.3) 60%,transparent 80%);
+          box-shadow:0 0 ${sz*3}px ${sz}px rgba(255,200,50,0.22);
           animation:thFloat ${dur}s ${del}s ease-in-out infinite;
-          --fx:${(Math.random()-0.5)*20}px;--fx2:${(Math.random()-0.5)*14}px;
-          --fr:0deg;--fr2:0deg;"></div>`;
+          --fx:${(Math.random()-0.5)*22}px;--fx2:${(Math.random()-0.5)*16}px;--fr:0deg;--fr2:0deg;"></div>`;
       }
-      // sun disc
-      const sunRays = Array.from({length:8},(_,i)=>{
-        const a = (i/8)*360;
-        return `<line x1="0" y1="-14" x2="0" y2="-20" stroke="rgba(255,220,80,0.5)" stroke-width="1.5"
-          transform="rotate(${a})" stroke-linecap="round"/>`;
+      const ghShafts = Array.from({length:6},(_,i) => `
+        <div style="position:absolute;top:0;right:${12+i*6}%;width:${4+i*1.5}px;height:70%;
+          background:linear-gradient(to bottom,rgba(255,200,80,0.13),transparent 80%);
+          transform:skewX(${-12+i*4}deg);border-radius:0 0 50% 50%;
+          animation:godRay ${3.5+i*0.6}s ${i*0.5}s ease-in-out infinite;pointer-events:none;"></div>`
+      ).join('');
+      const ghRays = Array.from({length:12},(_,i) => {
+        const a=i*30, long=i%3===0;
+        return `<line x1="0" y1="${long?-14:-12}" x2="0" y2="${long?-24:-20}"
+          stroke="rgba(255,220,80,${long?0.55:0.4})" stroke-width="${long?2:1.2}" stroke-linecap="round" transform="rotate(${a})"/>`;
       }).join('');
       overlay.innerHTML = `
-        <svg style="position:absolute;top:5%;right:8%;width:44px;height:44px;overflow:visible;
-          animation:fireflyPulse 4s ease-in-out infinite;filter:drop-shadow(0 0 10px rgba(255,200,60,0.5));"
-          viewBox="-22 -22 44 44" xmlns="http://www.w3.org/2000/svg">
-          ${sunRays}
-          <circle cx="0" cy="0" r="9" fill="radial-gradient(circle,#FFE580,#FFC200)"/>
-          <circle cx="0" cy="0" r="9" fill="#FFE066"/>
-          <circle cx="0" cy="0" r="7" fill="#FFF0A0"/>
+        ${ghShafts}
+        <svg style="position:absolute;top:4%;right:6%;width:54px;height:54px;overflow:visible;
+          filter:drop-shadow(0 0 16px rgba(255,200,50,0.65));"
+          viewBox="-27 -27 54 54" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="0" cy="0" r="19" fill="none" stroke="rgba(255,200,60,0.10)" stroke-width="3.5"
+            style="animation:fireflyPulse 3.2s ease-in-out infinite;"/>
+          <circle cx="0" cy="0" r="14" fill="none" stroke="rgba(255,220,80,0.16)" stroke-width="2.5"
+            style="animation:fireflyPulse 3.2s 0.4s ease-in-out infinite;"/>
+          ${ghRays}
+          <circle cx="0" cy="0" r="11" fill="#FFD700"/>
+          <circle cx="0" cy="0" r="9"  fill="#FFE566"/>
+          <circle cx="0" cy="0" r="7"  fill="#FFF3A0"/>
+          <circle cx="-3" cy="-3" r="3.5" fill="rgba(255,255,220,0.55)"/>
         </svg>
         <div style="position:absolute;inset:0;
-          background:linear-gradient(180deg,rgba(255,160,30,0.10) 0%,rgba(255,200,60,0.05) 45%,transparent 80%);
+          background:linear-gradient(180deg,rgba(255,140,20,0.11) 0%,rgba(255,190,60,0.05) 45%,transparent 80%);
           pointer-events:none;"></div>
-        <div style="position:absolute;bottom:0;left:0;right:0;height:25%;
-          background:radial-gradient(ellipse 100% 100% at 50% 100%,rgba(255,150,30,0.14),transparent 70%);
+        <div style="position:absolute;bottom:0;left:0;right:0;height:28%;
+          background:radial-gradient(ellipse 100% 100% at 50% 100%,rgba(255,140,30,0.18),transparent 70%);
           pointer-events:none;"></div>
-        ${motes}`;
+        ${ghMotes}`;
+
+    } else if (id === 'thunderstorm') {
+      let tsRain = '';
+      for (let i = 0; i < 30; i++) {
+        const x=Math.random()*102, bot=8+Math.random()*78;
+        const dur=0.5+Math.random()*0.65, del=Math.random()*2.5, len=6+Math.random()*12;
+        tsRain += `<div style="position:absolute;left:${x}%;bottom:${bot}%;
+          width:1px;height:${len}px;
+          background:linear-gradient(to bottom,transparent,rgba(180,210,255,0.55),transparent);
+          animation:rainFall ${dur}s ${del}s linear infinite;transform:rotate(9deg);"></div>`;
+      }
+      overlay.innerHTML = `
+        <svg style="position:absolute;top:0;left:0;width:100%;height:36%;overflow:visible;pointer-events:none;"
+          viewBox="0 0 200 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <defs><filter id="tsBlur"><feGaussianBlur stdDeviation="2"/></filter></defs>
+          <g filter="url(#tsBlur)">
+            <ellipse cx="50"  cy="46" rx="44" ry="24" fill="rgba(18,18,38,0.74)"/>
+            <ellipse cx="112" cy="40" rx="58" ry="30" fill="rgba(14,14,34,0.80)"/>
+            <ellipse cx="170" cy="48" rx="40" ry="22" fill="rgba(18,18,40,0.70)"/>
+            <ellipse cx="80"  cy="30" rx="36" ry="22" fill="rgba(22,22,48,0.66)"/>
+            <ellipse cx="142" cy="28" rx="40" ry="24" fill="rgba(18,18,44,0.64)"/>
+          </g>
+        </svg>
+        <svg style="position:absolute;top:28%;left:41%;width:30px;height:52px;overflow:visible;
+          animation:lightningFlash 6s 0.8s steps(1) infinite;opacity:0;
+          filter:drop-shadow(0 0 10px rgba(200,220,255,0.95));"
+          viewBox="0 0 22 44" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="13,0 5,22 11,22 9,44 17,18 11,18" fill="rgba(220,235,255,0.97)"/>
+        </svg>
+        <div style="position:absolute;inset:0;background:rgba(200,220,255,0);pointer-events:none;
+          animation:lightningFlash 6s 1.5s ease-in-out infinite;"></div>
+        <div style="position:absolute;inset:0;
+          background:linear-gradient(180deg,rgba(10,10,30,0.36) 0%,rgba(15,15,40,0.14) 40%,transparent 68%);
+          pointer-events:none;"></div>
+        ${tsRain}`;
+
+    } else if (id === 'snow') {
+      let snowFlakes = '';
+      for (let i = 0; i < 42; i++) {
+        const layer = i < 14 ? 'L' : i < 28 ? 'M' : 'S';
+        const sz  = layer==='L' ? 6+Math.random()*5  : layer==='M' ? 3+Math.random()*3  : 1.5+Math.random()*2;
+        const dur = layer==='L' ? 9+Math.random()*8  : layer==='M' ? 6+Math.random()*6  : 4+Math.random()*4;
+        const opa = layer==='L' ? 0.7+Math.random()*0.25 : layer==='M' ? 0.55+Math.random()*0.3 : 0.4+Math.random()*0.35;
+        const x   = Math.random()*108 - 4;
+        const sw  = (Math.random()-0.5)*32;
+        const del = Math.random()*11;
+        snowFlakes += `<div style="position:absolute;left:${x}%;top:-6px;
+          width:${sz}px;height:${sz}px;border-radius:50%;
+          background:radial-gradient(circle,rgba(255,255,255,${opa}),rgba(210,230,255,0.4) 65%,transparent 85%);
+          box-shadow:0 0 ${sz*1.5}px ${sz*0.6}px rgba(200,220,255,0.22);
+          animation:snowFall ${dur}s ${del}s linear infinite;--sw:${sw}px;"></div>`;
+      }
+      overlay.innerHTML = snowFlakes +
+        `<svg style="position:absolute;bottom:0;left:0;width:100%;height:28px;overflow:hidden;"
+          viewBox="0 0 200 28" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0,28 C20,20 40,14 60,18 C80,22 100,12 120,16 C140,20 160,10 180,15 C190,17 196,22 200,28Z"
+            fill="rgba(220,235,255,0.38)"/>
+          <path d="M0,28 C25,22 50,18 75,20 C100,22 130,16 155,19 C170,21 188,24 200,28Z"
+            fill="rgba(230,240,255,0.22)"/>
+        </svg>
+        <div style="position:absolute;inset:0;
+          background:radial-gradient(ellipse 130% 130% at 50% 50%,transparent 58%,rgba(180,210,255,0.08) 78%,rgba(160,200,255,0.14) 100%);
+          pointer-events:none;"></div>
+        <div style="position:absolute;inset:0;
+          background:linear-gradient(180deg,rgba(160,190,240,0.09) 0%,transparent 55%);
+          pointer-events:none;"></div>`;
+
+    } else if (id === 'autumn') {
+      const autPal   = ['#D4610A','#B33A1C','#E8890C','#9B2A0A','#C45820','#8B4513','#D4860A','#A0522D','#CC6600'];
+      const leafPaths = [
+        'M0-10 C6-8 10-2 8,5 C5,10 -5,10 -8,5 C-10,-2 -6,-8 0-10Z',
+        'M0-10 C4-6 8,-1 5,6 C2,10 -2,10 -5,6 C-8,-1 -4,-6 0-10Z M1,-3 C4,0 3,4 0,5',
+        'M0-10 C3-7 6,-3 4,4 C2,8 -2,8 -4,4 C-6,-3 -3,-7 0-10Z',
+      ];
+      let autHtml = '';
+      for (let i = 0; i < 24; i++) {
+        const x=3+Math.random()*94, sz=9+Math.random()*9;
+        const dur=7+Math.random()*8, del=Math.random()*11;
+        const px=(Math.random()-0.5)*65, px2=(Math.random()-0.5)*55;
+        const pr=100+Math.random()*260, pr2=pr+100+Math.random()*200;
+        const col=autPal[i%autPal.length], path=leafPaths[i%3];
+        autHtml += `<svg style="position:absolute;left:${x}%;top:-6px;overflow:visible;
+          width:${sz}px;height:${sz}px;opacity:${0.6+Math.random()*0.35};
+          animation:leafTumble ${dur}s ${del}s ease-in-out infinite;
+          --px:${px}px;--px2:${px2}px;--pr:${Math.round(pr)}deg;--pr2:${Math.round(pr2)}deg;"
+          viewBox="-11 -11 22 22" xmlns="http://www.w3.org/2000/svg">
+          <path d="${path}" fill="${col}"/>
+          <line x1="0" y1="-9" x2="0" y2="8" stroke="${col}88" stroke-width="0.7"/>
+          </svg>`;
+      }
+      const pileDat = [[-58,7,1.0],[-40,10,0.88],[-22,5,0.92],[0,9,0.80],[20,6,0.94],[38,10,0.76],[54,7,0.66]];
+      const pileSVG = `<svg style="position:absolute;bottom:0;left:50%;overflow:visible;" viewBox="0 0 0 0" xmlns="http://www.w3.org/2000/svg">
+        ${pileDat.map(([x,y,op],i)=>`<g transform="translate(${x},${-y}) rotate(${-30+i*10}) scale(1.1)">
+          <path d="${leafPaths[i%3]}" fill="${autPal[i%autPal.length]}" opacity="${op}"/></g>`).join('')}
+      </svg>`;
+      autHtml += `<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(170,70,10,0.06) 0%,transparent 58%);pointer-events:none;"></div>`;
+      overlay.innerHTML = autHtml + pileSVG;
+
+    } else if (id === 'spring') {
+      let spHtml = '';
+      for (let i = 0; i < 16; i++) {
+        const x=6+Math.random()*88, sz=10+Math.random()*8;
+        const dur=9+Math.random()*9, del=Math.random()*11;
+        const fx=(Math.random()-0.5)*44, fx2=(Math.random()-0.5)*32;
+        spHtml += `<svg style="position:absolute;left:${x}%;bottom:${4+Math.random()*15}%;overflow:visible;
+          width:${sz}px;height:${sz*1.6}px;opacity:${0.65+Math.random()*0.3};
+          animation:seedRise ${dur}s ${del}s ease-in-out infinite;--fx:${fx}px;--fx2:${fx2}px;"
+          viewBox="-6 -14 12 18" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="0" cy="0" r="1.4" fill="rgba(255,230,80,0.9)"/>
+          <line x1="0" y1="0"  x2="0"    y2="-8"  stroke="rgba(255,255,255,0.65)" stroke-width="0.7"/>
+          <line x1="-3.5" y1="-7" x2="0" y2="-10" stroke="rgba(255,255,255,0.5)"  stroke-width="0.55"/>
+          <line x1="3.5"  y1="-7" x2="0" y2="-10" stroke="rgba(255,255,255,0.5)"  stroke-width="0.55"/>
+          <line x1="0"    y1="-7" x2="0" y2="-11" stroke="rgba(255,255,255,0.6)"  stroke-width="0.55"/>
+          <line x1="-2"   y1="-9" x2="0" y2="-11" stroke="rgba(255,255,255,0.4)"  stroke-width="0.45"/>
+          <line x1="2"    y1="-9" x2="0" y2="-11" stroke="rgba(255,255,255,0.4)"  stroke-width="0.45"/>
+          <circle cx="-3.5" cy="-7"  r="1"   fill="rgba(255,255,255,0.72)"/>
+          <circle cx="3.5"  cy="-7"  r="1"   fill="rgba(255,255,255,0.72)"/>
+          <circle cx="0"    cy="-11" r="1.1" fill="rgba(255,255,255,0.78)"/>
+          <circle cx="-2"   cy="-9"  r="0.7" fill="rgba(255,255,255,0.62)"/>
+          <circle cx="2"    cy="-9"  r="0.7" fill="rgba(255,255,255,0.62)"/>
+          </svg>`;
+      }
+      const spCols = ['#FFE082','#FFFFFF','#FFAECF','#B5EAD7','#C7F2A4','#FFC0CB','#E8F5E9'];
+      for (let i = 0; i < 14; i++) {
+        const x=4+Math.random()*92, sz=8+Math.random()*7;
+        const dur=7+Math.random()*6, del=Math.random()*11;
+        const px=(Math.random()-0.5)*44, px2=(Math.random()-0.5)*32;
+        const pr=60+Math.random()*220, col=spCols[i%spCols.length];
+        const p5=Array.from({length:5},(_,p)=>`<ellipse cx="0" cy="-4.5" rx="2" ry="4.5" fill="${col}" opacity="0.85" transform="rotate(${p*72})"/>`).join('');
+        spHtml += `<svg style="position:absolute;left:${x}%;top:-6px;overflow:visible;
+          width:${sz}px;height:${sz}px;opacity:0.82;
+          animation:petalDrift ${dur}s ${del}s ease-in-out infinite;
+          --px:${px}px;--px2:${px2}px;--pr:${Math.round(pr)}deg;--pr2:${Math.round(pr+150)}deg;"
+          viewBox="-9 -9 18 18" xmlns="http://www.w3.org/2000/svg">
+          ${p5}<circle cx="0" cy="0" r="2" fill="#FFE082"/></svg>`;
+      }
+      spHtml += `<svg style="position:absolute;bottom:14px;left:calc(50% - 50px);width:18px;height:18px;overflow:visible;opacity:0.86;"
+        viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="9" cy="11" rx="7" ry="6" fill="#CC2200"/>
+        <ellipse cx="9" cy="7"  rx="4" ry="4" fill="#1A1A1A"/>
+        <line x1="9" y1="5" x2="9" y2="17" stroke="#1A1A1A" stroke-width="0.8"/>
+        <circle cx="6"  cy="11" r="1.3" fill="#1A1A1A"/>
+        <circle cx="12" cy="11" r="1.3" fill="#1A1A1A"/>
+        <circle cx="7"  cy="14" r="1"   fill="#1A1A1A"/>
+        <circle cx="11" cy="14" r="1"   fill="#1A1A1A"/>
+        <circle cx="8.2" cy="6.5" r="0.6" fill="white" opacity="0.7"/>
+        </svg>
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(100,200,80,0.07) 0%,transparent 52%);pointer-events:none;"></div>`;
+      overlay.innerHTML = spHtml;
+
+    } else if (id === 'summer') {
+      let suMotes = '';
+      for (let i = 0; i < 22; i++) {
+        const x=4+Math.random()*92, bot=6+Math.random()*70;
+        const sz=1.5+Math.random()*3, dur=5+Math.random()*7, del=Math.random()*8;
+        suMotes += `<div style="position:absolute;left:${x}%;bottom:${bot}%;
+          width:${sz}px;height:${sz}px;border-radius:50%;
+          background:radial-gradient(circle,rgba(255,230,80,0.75),rgba(255,180,40,0.3) 60%,transparent 85%);
+          box-shadow:0 0 ${sz*2.5}px ${sz}px rgba(255,200,50,0.2);
+          animation:thFloat ${dur}s ${del}s ease-in-out infinite;
+          --fx:${(Math.random()-0.5)*22}px;--fx2:${(Math.random()-0.5)*16}px;--fr:0deg;--fr2:0deg;"></div>`;
+      }
+      const suShimmers = Array.from({length:3},(_,i) => `
+        <div style="position:absolute;bottom:${18+i*15}%;left:${8+i*14}%;right:${4+i*10}%;
+          height:2px;border-radius:2px;
+          background:linear-gradient(90deg,transparent,rgba(255,200,60,0.2),transparent);
+          animation:heatShimmer ${1.8+i*0.4}s ${i*0.5}s ease-in-out infinite;pointer-events:none;"></div>`
+      ).join('');
+      const suRays = Array.from({length:12},(_,i)=>{
+        const a=i*30, long=i%3===0;
+        return `<line x1="0" y1="${long?-14:-12}" x2="0" y2="${long?-26:-21}"
+          stroke="rgba(255,220,80,${long?0.55:0.38})" stroke-width="${long?2:1.2}" stroke-linecap="round" transform="rotate(${a})"/>`;
+      }).join('');
+      overlay.innerHTML = `
+        ${suShimmers}
+        <svg style="position:absolute;top:4%;right:7%;width:58px;height:58px;overflow:visible;
+          filter:drop-shadow(0 0 18px rgba(255,210,40,0.68));"
+          viewBox="-29 -29 58 58" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="0" cy="0" r="23" fill="none" stroke="rgba(255,200,60,0.08)" stroke-width="4"
+            style="animation:fireflyPulse 3.5s ease-in-out infinite;"/>
+          <circle cx="0" cy="0" r="17" fill="none" stroke="rgba(255,215,70,0.13)" stroke-width="3"
+            style="animation:fireflyPulse 3.5s 0.5s ease-in-out infinite;"/>
+          ${suRays}
+          <circle cx="0" cy="0" r="11" fill="#FFD700"/>
+          <circle cx="0" cy="0" r="9"  fill="#FFE566"/>
+          <circle cx="0" cy="0" r="7"  fill="#FFF3A0"/>
+          <circle cx="-3" cy="-3" r="3.5" fill="rgba(255,255,220,0.55)"/>
+        </svg>
+        <div style="position:absolute;inset:0;
+          background:linear-gradient(180deg,rgba(255,150,20,0.10) 0%,rgba(255,200,60,0.05) 42%,transparent 78%);
+          pointer-events:none;"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:28%;
+          background:radial-gradient(ellipse 100% 100% at 50% 100%,rgba(255,140,20,0.18),transparent 70%);
+          pointer-events:none;"></div>
+        ${suMotes}`;
     }
 
     scene.appendChild(overlay);
