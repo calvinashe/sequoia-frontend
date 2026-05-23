@@ -7256,12 +7256,20 @@ function updateStreak() {
   if (last === today) { /* no change */ }
   else if (last === prevDay()) streak++;
   else {
-    // Streak is breaking — save it before resetting so user can repair
-    if (streak > 2) {
-      localStorage.setItem('sq_streak_before_break', String(streak));
-      localStorage.setItem('sq_streak_break_date', today);
+    // Check if streak freeze was used yesterday — if so, treat as if user studied
+    const freezeDate = localStorage.getItem('sq_freeze_date');
+    if (freezeDate === prevDay()) {
+      // Freeze active: don't break streak, just increment
+      streak++;
+      localStorage.removeItem('sq_freeze_date'); // freeze consumed
+    } else {
+      // Streak is breaking — save it before resetting so user can repair
+      if (streak > 2) {
+        localStorage.setItem('sq_streak_before_break', String(streak));
+        localStorage.setItem('sq_streak_break_date', today);
+      }
+      streak = 1;
     }
-    streak = 1;
   }
   localStorage.setItem('sq_streak', streak);
   localStorage.setItem('sq_last_study', today);
@@ -9012,9 +9020,10 @@ function aiQuickPick() {
   document.getElementById('aipick-reason').innerHTML  = reason;
 
   // Meta tags
-  const urgTag  = days !== null && days < 0 ? `<span class="aipick-tag hot">⚠ Overdue</span>`
-    : days < 1 ? `<span class="aipick-tag hot">🔥 Due Today</span>`
-    : days < 2 ? `<span class="aipick-tag hot">⚡ Due Tomorrow</span>`
+  const urgTag  = days === null ? `<span class="aipick-tag">📅 No due date</span>`
+    : days < 0  ? `<span class="aipick-tag hot">⚠ Overdue</span>`
+    : days < 1  ? `<span class="aipick-tag hot">🔥 Due Today</span>`
+    : days < 2  ? `<span class="aipick-tag hot">⚡ Due Tomorrow</span>`
     : `<span class="aipick-tag">📅 ${dueStr.charAt(0).toUpperCase() + dueStr.slice(1)}</span>`;
   const wtTag   = `<span class="aipick-tag weight">⚖ ${Math.round(a.weight_pct)}% weight</span>`;
   const crsTag  = `<span class="aipick-tag">📚 ${a.course}</span>`;
@@ -9794,11 +9803,11 @@ function _showIOSNotifGuide() {
 async function testPush() {
   if (!currentUser) { showToast('Sign in first.'); return; }
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') { showToast('Enable push notifications first.'); return; }
+  const btn = document.getElementById('notif-test-btn');
   try {
     const reg = await navigator.serviceWorker.ready;
     const sub = await reg.pushManager.getSubscription();
     if (!sub) { showToast('No subscription found — click Enable push notifications first.'); return; }
-    const btn = document.getElementById('notif-test-btn');
     if (btn) { btn.textContent = 'Sending…'; btn.disabled = true; }
     const idToken = await currentUser.getIdToken();
     const res = await fetch(API + '/test-push', {
@@ -10016,9 +10025,9 @@ function _friendCode(uid) {
 }
 
 function _stageEmoji(xp) {
-  if (xp >= 9000) return STAGE_EMOJI[3];
-  if (xp >= 3000) return STAGE_EMOJI[2];
-  if (xp >= 1200) return STAGE_EMOJI[1];
+  if (xp >= 10000) return STAGE_EMOJI[3];
+  if (xp >= 4800)  return STAGE_EMOJI[2];
+  if (xp >= 1200)  return STAGE_EMOJI[1];
   return STAGE_EMOJI[0];
 }
 
@@ -10042,6 +10051,8 @@ async function _upsertPublicProfile() {
 let _frLoaded = false;
 async function loadFriendsScreen() {
   if (!currentUser) return;
+  if (_frLoaded) return; // already loaded this session — avoid re-fetching on every nav
+  _frLoaded = true;
   const uid  = currentUser.uid;
   const code = _friendCode(uid);
 
@@ -10063,21 +10074,24 @@ async function loadFriendsScreen() {
   const titleEl  = document.getElementById('fr-lb-title');
   listEl.innerHTML = '<div class="fr-loading">Loading leaderboard…</div>';
 
-  let friends = [];
+  let friends = [], profiles = [];
   try {
     const userDoc = await db.collection('users').doc(uid).get({ source: 'server' });
     friends = (userDoc.exists ? userDoc.data().friends : null) || [];
-  } catch(e) { friends = []; }
 
-  // Build leaderboard: me + friends
-  const uids = [uid, ...friends.filter(f => f !== uid)];
-  const profiles = [];
-  await Promise.all(uids.map(async id => {
-    try {
-      const d = await db.collection('public_profiles').doc(id).get();
-      if (d.exists) profiles.push({ uid: id, ...d.data() });
-    } catch(e) {}
-  }));
+    // Build leaderboard: me + friends
+    const uids = [uid, ...friends.filter(f => f !== uid)];
+    await Promise.all(uids.map(async id => {
+      try {
+        const d = await db.collection('public_profiles').doc(id).get();
+        if (d.exists) profiles.push({ uid: id, ...d.data() });
+      } catch(e) {}
+    }));
+  } catch(e) {
+    _frLoaded = false; // allow retry on next nav
+    listEl.innerHTML = `<div class="fr-empty">Couldn't load leaderboard — check your connection.</div>`;
+    return;
+  }
 
   // Sort by XP descending
   profiles.sort((a, b) => (b.xp || 0) - (a.xp || 0));
@@ -10125,8 +10139,6 @@ async function loadFriendsScreen() {
       <div class="fr-row-xp">${(p.xp || 0).toLocaleString()}</div>
     </div>`;
   }).join('');
-
-  _frLoaded = true;
 }
 
 async function addFriend() {
@@ -10383,12 +10395,24 @@ async function openCustomerPortal() {
 function _checkUpgradeRedirect() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('upgraded') === '1') {
-    // Clean URL
     history.replaceState({}, '', window.location.pathname);
-    // Show success toast — Firestore tier will update via webhook within seconds
-    setTimeout(() => {
-      showToast('🌲 Welcome to Premium! Your trial has started.', 4000);
-    }, 800);
+    setTimeout(() => showToast('🌲 Welcome to Premium! Your trial has started.', 4000), 800);
+    // Webhook updates Firestore within seconds — poll until tier flips to premium
+    let attempts = 0;
+    const poll = setInterval(async () => {
+      attempts++;
+      if (attempts > 8) { clearInterval(poll); return; } // give up after ~16s
+      if (!currentUser) return;
+      try {
+        const doc = await db.collection('users').doc(currentUser.uid).get({ source: 'server' });
+        if (doc.exists && doc.data().tier === 'premium') {
+          clearInterval(poll);
+          localStorage.setItem('sq_tier', 'premium');
+          setUserTier('premium');
+          showToast('✦ Premium features unlocked!', 3000);
+        }
+      } catch(_) {}
+    }, 2000);
   }
 }
 
