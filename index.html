@@ -886,6 +886,33 @@ body {
 .empty-state p  { font-size:13px; color:rgba(255,255,255,0.65); line-height:1.5; }
 .empty-state .es-retry { margin-top:16px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:700; padding:9px 22px; border-radius:100px; border:none; background:var(--g3); color:#fff; cursor:pointer; transition:background .18s; }
 .empty-state .es-retry:hover { background:var(--g4); }
+/* Break / all-caught-up state */
+.es-break { padding:36px 20px 40px; }
+.es-streak-risk {
+  margin:14px auto 0; max-width:280px; font-size:13px; line-height:1.5;
+  color:rgba(255,190,80,0.95); background:rgba(212,136,43,0.12);
+  border:1px solid rgba(212,136,43,0.3); border-radius:12px; padding:10px 14px;
+}
+.es-streak-risk strong { color:#FFD070; }
+.es-streak-safe {
+  margin:14px auto 0; max-width:280px; font-size:13px;
+  color:rgba(130,216,76,0.9); font-weight:600;
+}
+.es-break-actions { display:flex; flex-direction:column; gap:10px; margin-top:20px; align-items:center; }
+.es-pomo-btn {
+  padding:13px 28px; border-radius:100px; border:none;
+  background:linear-gradient(135deg,#266018,#4CA130,#5EC03C);
+  color:#fff; font-family:'DM Sans',sans-serif; font-size:15px; font-weight:800;
+  cursor:pointer; transition:all .22s; box-shadow:0 6px 24px rgba(76,161,48,0.4);
+  min-width:200px;
+}
+.es-pomo-btn:hover { transform:scale(1.04) translateY(-1px); box-shadow:0 10px 32px rgba(76,161,48,0.55); }
+.es-add-btn {
+  background:none; border:1px solid rgba(255,255,255,0.12); border-radius:100px;
+  color:rgba(255,255,255,0.45); font-family:'DM Sans',sans-serif; font-size:13px;
+  font-weight:600; padding:10px 24px; cursor:pointer; transition:all .2s; min-width:200px;
+}
+.es-add-btn:hover { border-color:rgba(76,161,48,0.4); color:rgba(130,204,85,0.85); }
 .loading-state { padding:40px 20px; text-align:center; color:rgba(255,255,255,0.60); font-size:13px; }
 .spin { display:inline-block; animation:spin 1.2s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
@@ -7320,14 +7347,36 @@ function renderAssignments(list, _skipCal) {
   const el = document.getElementById('assign-list');
   const fl = filteredList();
   if (!fl.length) {
-    const msgs = {
-      done:   ['<svg viewBox="0 0 40 40" width="40" height="40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="#4A9028" opacity="0.15"/><path d="M12 20l5 5 11-11" stroke="#4A9028" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>', 'Nothing completed yet',   'Mark assignments done as you finish them.'],
-      today:  ['<svg viewBox="0 0 40 40" width="40" height="40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="#4A9028" opacity="0.12"/><rect x="10" y="8" width="20" height="22" rx="3" stroke="#4A9028" stroke-width="1.8"/><line x1="10" y1="15" x2="30" y2="15" stroke="#4A9028" stroke-width="1.5"/></svg>', 'Nothing due soon!', "You're on top of it."],
-      high:   ['<svg viewBox="0 0 40 40" width="40" height="40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="#4A9028" opacity="0.12"/><path d="M20 10v12M20 26v2" stroke="#4A9028" stroke-width="2.2" stroke-linecap="round"/></svg>', 'No high-weight items', 'Nothing major due right now.'],
-      all:    ['<svg viewBox="0 0 40 40" width="40" height="40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="#4A9028" opacity="0.12"/><path d="M20 8v24M8 20h24" stroke="#4A9028" stroke-width="2" stroke-linecap="round" opacity="0.3"/><path d="M13 20l5 5 9-9" stroke="#4A9028" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>', 'All caught up!', "You've completed everything. Enjoy the break."],
-    };
-    const [icon, title, sub] = msgs[activeFilter] || msgs.all;
-    el.innerHTML = `<div class="empty-state"><div class="es-icon">${icon}</div><h3>${title}</h3><p>${sub}</p></div>`;
+    if (activeFilter === 'all') {
+      // "All caught up" — drive users into Pomodoro to keep streak alive
+      const streak  = getStreak();
+      const today   = _localDateStr();
+      const studied = localStorage.getItem('sq_last_study') === today;
+      const streakLine = streak > 0 && !studied
+        ? `<div class="es-streak-risk">🔥 You have a <strong>${streak}-day streak</strong> — do a session to keep it alive.</div>`
+        : streak > 0
+          ? `<div class="es-streak-safe">✅ Streak safe today — ${streak} days and counting.</div>`
+          : '';
+      el.innerHTML = `
+        <div class="empty-state es-break">
+          <div class="es-icon">🌲</div>
+          <h3>All caught up!</h3>
+          <p>No pending assignments. Use the time to stay sharp.</p>
+          ${streakLine}
+          <div class="es-break-actions">
+            <button class="es-pomo-btn" onclick="showScreen(2)">⏱ Start a Focus Session</button>
+            <button class="es-add-btn" onclick="openAddAssign()">+ Add your own task</button>
+          </div>
+        </div>`;
+    } else {
+      const msgs = {
+        done:  ['<svg viewBox="0 0 40 40" width="40" height="40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="#4A9028" opacity="0.15"/><path d="M12 20l5 5 11-11" stroke="#4A9028" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>', 'Nothing completed yet',   'Mark assignments done as you finish them.'],
+        today: ['<svg viewBox="0 0 40 40" width="40" height="40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="#4A9028" opacity="0.12"/><rect x="10" y="8" width="20" height="22" rx="3" stroke="#4A9028" stroke-width="1.8"/><line x1="10" y1="15" x2="30" y2="15" stroke="#4A9028" stroke-width="1.5"/></svg>', 'Nothing due soon!', "You're on top of it."],
+        high:  ['<svg viewBox="0 0 40 40" width="40" height="40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="#4A9028" opacity="0.12"/><path d="M20 10v12M20 26v2" stroke="#4A9028" stroke-width="2.2" stroke-linecap="round"/></svg>', 'No high-weight items', 'Nothing major due right now.'],
+      };
+      const [icon, title, sub] = msgs[activeFilter] || msgs.done;
+      el.innerHTML = `<div class="empty-state"><div class="es-icon">${icon}</div><h3>${title}</h3><p>${sub}</p></div>`;
+    }
     return;
   }
   const FREE_ASSIGN_LIMIT = 5;
