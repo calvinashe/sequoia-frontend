@@ -270,6 +270,14 @@ body {
 }
 .al-demo-link:hover { color:var(--g2); }
 
+/* Share-referral banner */
+.al-ref-banner {
+  width:100%; text-align:center; font-size:13px; font-weight:600;
+  color:rgba(28,58,28,0.75); background:rgba(76,161,48,0.1);
+  border:1px solid rgba(76,161,48,0.25); border-radius:12px;
+  padding:10px 16px; margin-bottom:16px; line-height:1.4;
+}
+
 /* Benefit chips strip at the bottom */
 .al-benefits {
   display:flex; flex-wrap:wrap; gap:8px;
@@ -3969,8 +3977,12 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
     </div>
 
     <!-- Hero -->
-    <h1 class="al-headline">The study app<br>that grows as you do.</h1>
-    <p class="al-sub">Connect Canvas, tackle what matters most, and watch your Sequoia grow all semester long.</p>
+    <h1 class="al-headline" id="al-headline">The study app<br>that grows as you do.</h1>
+    <p class="al-sub" id="al-sub">Connect Canvas, tackle what matters most, and watch your Sequoia grow all semester long.</p>
+    <!-- Share-referral banner (shown when ?ref=share is in URL) -->
+    <div class="al-ref-banner" id="al-ref-banner" style="display:none">
+      📤 You just saw someone's semester stats — here's how to track yours.
+    </div>
 
     <!-- Primary CTA — Google -->
     <button class="al-google-btn" id="al-google-btn" onclick="signInWithGoogle()">
@@ -3987,9 +3999,6 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
 
     <!-- Global auth error (visible even when email form is collapsed) -->
     <div class="auth-err" id="auth-global-err" style="width:100%;margin-top:4px;margin-bottom:0"></div>
-
-    <!-- Pricing -->
-    <p class="al-price">Free to start &nbsp;·&nbsp; <strong>Premium $7.99/mo</strong> &nbsp;·&nbsp; Cancel anytime</p>
 
     <!-- Divider -->
     <div class="al-divider">or</div>
@@ -4020,6 +4029,9 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
 
     <!-- Demo link -->
     <button class="al-demo-link" onclick="loadDemoFromAuth()">🌱 Try Demo Mode — no account needed</button>
+
+    <!-- Pricing (below demo so free value is shown before the price) -->
+    <p class="al-price">Free to start &nbsp;·&nbsp; <strong>Premium $7.99/mo</strong> &nbsp;·&nbsp; Cancel anytime</p>
 
     <!-- Benefit chips -->
     <div class="al-benefits">
@@ -4226,8 +4238,8 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
       <div class="ob-wake" id="ob-wake">
         <span>⏳</span>
         <div>
-          <strong>Waking up the server…</strong><br>
-          First load can take up to 30 sec — we're on a free host. Hang tight!
+          <strong>Connecting to Canvas…</strong><br>
+          This can take up to 30 seconds on first load. Hang tight!
         </div>
       </div>
 
@@ -6291,8 +6303,16 @@ window.addEventListener('DOMContentLoaded', () => {
   fetch(`${API}/health`, { signal: AbortSignal.timeout ? AbortSignal.timeout(90000) : undefined }).catch(() => {});
   _checkUpgradeRedirect();  // show success toast if returning from Stripe
 
-  // Auto-launch demo mode when ?demo=1 is in the URL
+  // Personalize auth screen for visitors arriving from a shared stats card
   const _urlParams = new URLSearchParams(window.location.search);
+  if (_urlParams.get('ref') === 'share') {
+    const banner = document.getElementById('al-ref-banner');
+    if (banner) banner.style.display = '';
+    // Track the referral source
+    track('referral_share_landing');
+  }
+
+  // Auto-launch demo mode when ?demo=1 is in the URL
   if (_urlParams.get('demo') === '1') {
     // Set isDemo immediately so the main auth handler won't overwrite demo data
     isDemo = true;
@@ -6356,6 +6376,15 @@ window.addEventListener('DOMContentLoaded', () => {
       setGreeting(localStorage.getItem('sq_name') || user.displayName || '');
       loadAssignments(token || '', url);
       loadCourses(token || '', url);
+    } else {
+      // Signed in but no Canvas connected — skip the hero pitch (they just saw it on auth
+      // screen) and land them directly on the Canvas connect step.
+      showOnboard(1);
+      // Pre-fill name from Google profile if available
+      const nameEl = document.getElementById('ob-name');
+      if (nameEl && !nameEl.value && user.displayName) {
+        nameEl.value = user.displayName.split(' ')[0];
+      }
     }
 
     // Sync Firestore data in background — updates UI when ready
@@ -10584,14 +10613,15 @@ function _revealReferralNudge() {
 
 // ── Share Sequoia itself (referral) ─────────────────────
 function shareSequoia() {
-  const text = 'This app grows a virtual sequoia tree as you study 🌲 It connects to Canvas and prioritizes your assignments by grade weight — actually useful. getsequoia.app';
+  const url  = 'https://getsequoia.app?ref=share';
+  const text = 'This app grows a virtual sequoia tree as you study 🌲 It connects to Canvas and prioritizes your assignments by grade weight — actually useful.';
   if (navigator.share) {
-    navigator.share({ title: 'Sequoia — study app', text, url: 'https://getsequoia.app' }).catch(() => {});
+    navigator.share({ title: 'Sequoia — study app', text, url }).catch(() => {});
   } else {
-    navigator.clipboard?.writeText('https://getsequoia.app').then(() => {
+    navigator.clipboard?.writeText(url).then(() => {
       _showInfoToast('🔗 Link copied — share it with a friend!');
     }).catch(() => {
-      window.open('https://getsequoia.app', '_blank', 'noopener');
+      window.open(url, '_blank', 'noopener');
     });
   }
 }
@@ -10617,7 +10647,7 @@ async function shareStatsCard() {
             await navigator.share({
               files: [file],
               title: 'My Sequoia Semester',
-              text: 'Grew my sequoia tree through a whole semester 🌲 Study app that actually prioritizes by what matters → getsequoia.app',
+              text: 'Grew my sequoia tree through a whole semester 🌲 Study app that actually prioritizes by what matters → getsequoia.app?ref=share',
             });
             btn.textContent = '✓ Shared!';
             _revealReferralNudge();
@@ -10684,7 +10714,7 @@ function shareToX() {
   const parts = ['just finished ' + sem + ' with Sequoia 🌲'];
   parts.push('it connects to Canvas and ranks assignments by grade weight so you always work on what matters most');
   if (stage) parts.push('grew my tree to ' + stage + ' — ' + xp.toLocaleString() + ' XP' + (hours ? ', ' + hours + ' studied' : ''));
-  parts.push('', 'getsequoia.app');
+  parts.push('', 'getsequoia.app?ref=share');
   const text = encodeURIComponent(parts.join('\n'));
   window.open('https://twitter.com/intent/tweet?text=' + text, '_blank', 'noopener,noreferrer');
   _revealReferralNudge();
