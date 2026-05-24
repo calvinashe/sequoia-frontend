@@ -968,7 +968,10 @@ body {
   font-size:14px; font-weight:700; color:var(--g1); margin-bottom:4px;
 }
 .wake-server-sub {
-  font-size:12px; color:var(--mid); line-height:1.6; margin-bottom:14px;
+  font-size:12px; color:var(--mid); line-height:1.6; margin-bottom:8px;
+}
+.wake-attempt {
+  font-size:11px; color:var(--mid); opacity:0.7; margin-bottom:10px;
 }
 @keyframes wn-pulse { 0%,100%{opacity:1} 50%{opacity:.55} }
 .wn-dot {
@@ -6582,7 +6585,8 @@ function disconnect() {
 // ── ASSIGNMENTS ─────────────────────────────────────────
 let _wakeInterval = null;
 
-function _wakeHTML() {
+function _wakeHTML(attempt, max) {
+  const attemptLabel = (attempt && max) ? `<div class="wake-attempt">Attempt ${attempt} of ${max}…</div>` : '';
   return `
 <div class="wake-tree-outer">
   <svg class="wake-tree-svg" viewBox="0 0 100 128" width="88" xmlns="http://www.w3.org/2000/svg">
@@ -6624,6 +6628,7 @@ function _wakeHTML() {
 </div>
 <div class="wake-server-label">Growing your Sequoia…</div>
 <div class="wake-server-sub">The server is waking up from sleep<br>— usually takes 20–40 sec on first visit.</div>
+${attemptLabel}
 <button class="wn-demo" onclick="loadDemo()"><span class="wn-dot"></span>Try Demo Mode while you wait</button>`;
 }
 
@@ -6801,7 +6806,7 @@ async function loadAssignments(token, url) {
         _applyAssignments(stale);
         showToast('Showing cached assignments — check your connection 📡');
       } else {
-        list.innerHTML = `<div class="empty-state"><div class="es-icon">📡</div><h3>Can't reach the server</h3><p>The Sequoia server may still be waking up — try again in a few seconds, or explore with Demo Mode.</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:4px"><button class="es-retry" onclick="loadAssignments('${esc(token)}','${esc(url)}')">Try Again</button><button class="es-retry" style="background:var(--g-pale);color:var(--g2)" onclick="loadDemo()">Try Demo Mode →</button></div></div>`;
+        list.innerHTML = `<div class="empty-state"><div class="es-icon">📡</div><h3>Can't reach the server</h3><p>The Sequoia server may still be waking up — try again in a few seconds, or explore with Demo Mode.</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:4px"><button class="es-retry" onclick="refreshAssignments()">Try Again</button><button class="es-retry" style="background:var(--g-pale);color:var(--g2)" onclick="loadDemo()">Try Demo Mode →</button></div></div>`;
       }
       return;
     }
@@ -7438,7 +7443,11 @@ function emptyState(icon, title, sub) {
 }
 
 function toggleDone(id, el, title, weight) {
-  if (completedIds.has(id)) return;
+  if (completedIds.has(id)) {
+    // Un-complete: only allowed while undo toast is still showing
+    if (_undoId === id) undoComplete();
+    return;
+  }
   completedIds.add(id);
   localStorage.setItem('sq_done', JSON.stringify([...completedIds]));
   saveUserData({ done_ids: [...completedIds] });
@@ -7664,7 +7673,12 @@ async function grantXP(amount, opts = {}) {
       }),
     });
     if (res.status === 429) { showToast('Slow down! XP will sync when you next open the app. 🌿', 3000); return; }
-    if (!res.ok) return;
+    if (!res.ok) {
+      // Roll back optimistic XP — server rejected the grant
+      _applyXPLocally(-amount);
+      _trackDailyXP(-amount);
+      return;
+    }
     const data = await res.json();
     if (!data.ok) return;
 
@@ -7678,6 +7692,11 @@ async function grantXP(amount, opts = {}) {
       document.getElementById('dash-xp-amt').textContent = serverXP.toLocaleString() + ' XP';
       // Also correct today's local tracking
       localStorage.setItem('sq_xp_today', data.daily_used);
+    }
+    // Update _undoXP to the server-confirmed granted amount so undoComplete
+    // subtracts the correct value even if the daily cap reduced the grant.
+    if (opts.assignment_id && _undoId === opts.assignment_id && typeof data.granted === 'number') {
+      _undoXP = data.granted;
     }
     if (data.capped && data.granted < data.raw) {
       const remaining = data.daily_cap - (data.daily_used - data.granted);
@@ -11353,7 +11372,7 @@ async function addFriend() {
     msg.textContent = `Added ${friendName}! 🌲`; msg.style.color = '#7ED458';
     input.value = '';
     track('friend_added');
-    setTimeout(() => loadFriendsScreen(), 800);
+    setTimeout(() => { _frLoaded = false; loadFriendsScreen(); }, 800);
   } catch(e) {
     msg.textContent = 'Something went wrong. Try again.'; msg.style.color = '#FF9878';
   }
