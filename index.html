@@ -2601,6 +2601,16 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
   width:100%; max-width:420px; margin-left:auto; margin-right:auto;
 }
 .wu-archive-link:hover { color:rgba(255,255,255,0.55); }
+.wu-referral-nudge {
+  text-align:center; margin-top:14px; font-size:13px;
+  color:rgba(255,255,255,0.38); font-weight:600;
+  animation:fadeInUp 0.5s ease both;
+}
+.wu-referral-link {
+  background:none; border:none; color:#82D84C; font-size:13px; font-weight:700;
+  cursor:pointer; padding:0; text-decoration:underline; text-underline-offset:3px;
+}
+.wu-referral-link:hover { color:#a4f060; }
 
 /* ── Archive overlay ── */
 #archive-overlay {
@@ -5400,6 +5410,10 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         <button class="share-x-btn" onclick="shareToX()" title="Share on X">𝕏</button>
         <button class="share-dl-btn" id="share-dl-btn" onclick="downloadStatsCard()" title="Save image">⬇️</button>
       </div>
+      <!-- post-share referral nudge (shown after first share) -->
+      <div class="wu-referral-nudge" id="wu-referral-nudge" style="display:none">
+        Know someone who'd love this? <button onclick="shareSequoia()" class="wu-referral-link">Share Sequoia →</button>
+      </div>
       <button class="wu-new-semester" onclick="newSemester()">🌱 Start a New Semester →</button>
       <button class="wu-archive-link" onclick="openArchive()">View Archive ↗</button>
     </div>
@@ -5541,6 +5555,16 @@ function saveUserData(updates) {
     db.collection('users').doc(currentUser.uid).set(payload, { merge: true }).catch(() => {});
   }, 400);
 }
+
+// Flush any pending Firestore writes when the page is about to unload.
+// The 400ms debounce can be cut short if the user swipes away or closes the tab.
+window.addEventListener('pagehide', () => {
+  if (!currentUser || isDemo || !Object.keys(_pendingSave).length) return;
+  clearTimeout(_saveTimer);
+  const payload = _pendingSave; _pendingSave = {};
+  // Use the synchronous Firestore set — best-effort, browser may allow it on pagehide
+  db.collection('users').doc(currentUser.uid).set(payload, { merge: true }).catch(() => {});
+});
 
 // Create initial Firestore doc for brand-new users (migrates any existing localStorage data)
 async function initNewUser(user, name) {
@@ -6564,7 +6588,7 @@ function skeletonRows() {
     </div>`).join('');
 }
 
-const _ASSIGN_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const _ASSIGN_CACHE_TTL = 20 * 60 * 1000; // 20 minutes — Canvas assignments don't change minute-to-minute
 
 function _getCachedAssignments() {
   try {
@@ -6648,62 +6672,95 @@ async function loadAssignments(token, url) {
 
   list.innerHTML = skeletonRows();
 
-  // After 8s still loading → show warm-up notice above the skeletons
+  // ── Retry loop: auto-retry on timeout/network errors so a cold Render dyno
+  //    wakes up and delivers assignments without the user lifting a finger.
+  //    Each attempt has a 24s timeout (Render typically wakes in 30-50s).
+  //    Max 4 attempts ≈ 100s total. HTTP errors (401, 4xx) bail out immediately.
+  const MAX_ATTEMPTS = 4;
+  let attempt = 0;
+
+  // Show warm-up notice after 8s of the first loading attempt
   const wakeTimer = setTimeout(() => {
     if (!list.querySelector('.sk-row')) return;
     const notice = document.createElement('div');
     notice.className = 'wake-notice'; notice.id = 'wake-notice';
-    notice.innerHTML = _wakeHTML();
+    notice.innerHTML = _wakeHTML(attempt, MAX_ATTEMPTS);
     list.insertBefore(notice, list.firstChild);
     _wakeInterval = setInterval(() => {
       const n = document.getElementById('wake-notice');
-      if (n) n.innerHTML = _wakeHTML();
+      if (n) n.innerHTML = _wakeHTML(attempt, MAX_ATTEMPTS);
     }, 6000);
   }, 8000);
 
-  try {
-    const ctrl = new AbortController();
-    const timeout = setTimeout(() => ctrl.abort(), 90000);
-    const hdrs = await _canvasHeaders(token, url);
-    const res  = await fetch(`${API}/assignments`, { headers: hdrs, signal: ctrl.signal });
-    clearTimeout(timeout);
+  const _clearWake = () => {
     clearTimeout(wakeTimer);
     clearInterval(_wakeInterval); _wakeInterval = null;
-    if (res.status === 429) {
-      list.innerHTML = `<div class="empty-state"><div class="es-icon">⏳</div><h3>Too many requests</h3><p>You've refreshed too quickly. Wait a moment and try again.</p><div style="margin-top:4px"><button class="es-retry" onclick="refreshAssignments()">Try Again</button></div></div>`;
-      return;
-    }
-    const data = await res.json();
-    if (!data.ok || data.error) {
-      const isTokenError = res.status === 401 || (data.error || '').toLowerCase().includes('token');
-      if (isTokenError) {
-        list.innerHTML = `<div class="empty-state"><div class="es-icon">🔑</div><h3>Canvas token expired</h3><p>Your Canvas access token is no longer valid. Generate a new one in Canvas and update it in Settings.</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:4px"><button class="es-retry" onclick="openSettings()">Update Token in Settings</button><button class="es-retry" style="background:var(--g-pale);color:var(--g2)" onclick="loadDemo()">Try Demo Mode →</button></div></div>`;
+  };
+
+  while (attempt < MAX_ATTEMPTS) {
+    try {
+      // Update the wake notice with current attempt number
+      if (attempt > 0) {
+        const n = document.getElementById('wake-notice');
+        if (n) n.innerHTML = _wakeHTML(attempt, MAX_ATTEMPTS);
+      }
+
+      const ctrl    = new AbortController();
+      const timeout = setTimeout(() => ctrl.abort(), 24000); // 24s per attempt
+      const hdrs    = await _canvasHeaders(token, url);
+      const res     = await fetch(`${API}/assignments`, { headers: hdrs, signal: ctrl.signal });
+      clearTimeout(timeout);
+      _clearWake();
+
+      if (res.status === 429) {
+        list.innerHTML = `<div class="empty-state"><div class="es-icon">⏳</div><h3>Too many requests</h3><p>You've refreshed too quickly. Wait a moment and try again.</p><div style="margin-top:4px"><button class="es-retry" onclick="refreshAssignments()">Try Again</button></div></div>`;
+        return;
+      }
+      const data = await res.json();
+      if (!data.ok || data.error) {
+        const isTokenError = res.status === 401 || (data.error || '').toLowerCase().includes('token');
+        if (isTokenError) {
+          list.innerHTML = `<div class="empty-state"><div class="es-icon">🔑</div><h3>Canvas token expired</h3><p>Your Canvas access token is no longer valid. Generate a new one in Canvas and update it in Settings.</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:4px"><button class="es-retry" onclick="openSettings()">Update Token in Settings</button><button class="es-retry" style="background:var(--g-pale);color:var(--g2)" onclick="loadDemo()">Try Demo Mode →</button></div></div>`;
+        } else {
+          list.innerHTML = `<div class="empty-state"><div class="es-icon">🔑</div><h3>Canvas error</h3><p>${esc(data.error || 'Something went wrong')}</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:4px"><button class="es-retry" onclick="refreshAssignments()">Try Again</button><button class="es-retry" style="background:var(--g-pale);color:var(--g2)" onclick="loadDemo()">Try Demo Mode →</button></div></div>`;
+        }
+        return; // don't retry HTTP errors — they're canvas/token issues
+      }
+      _setCachedAssignments(data.assignments || []);
+      _applyAssignments(data.assignments || []);
+      return; // ✅ success
+
+    } catch (e) {
+      const isRetryable = e.name === 'AbortError' || e instanceof TypeError;
+      attempt++;
+      if (isRetryable && attempt < MAX_ATTEMPTS) {
+        // Cold start — wait briefly then retry automatically
+        await new Promise(r => setTimeout(r, 1500));
+        continue;
+      }
+      // Final attempt or non-retryable error
+      _clearWake();
+      const stale = (() => { try { return JSON.parse(localStorage.getItem('sq_assign_cache') || 'null'); } catch { return null; } })();
+      if (stale) {
+        _applyAssignments(stale);
+        showToast('Showing cached assignments — check your connection 📡');
       } else {
-        list.innerHTML = `<div class="empty-state"><div class="es-icon">🔑</div><h3>Canvas error</h3><p>${esc(data.error || 'Something went wrong')}</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:4px"><button class="es-retry" onclick="refreshAssignments()">Try Again</button><button class="es-retry" style="background:var(--g-pale);color:var(--g2)" onclick="loadDemo()">Try Demo Mode →</button></div></div>`;
+        list.innerHTML = `<div class="empty-state"><div class="es-icon">📡</div><h3>Can't reach the server</h3><p>The Sequoia server may still be waking up — try again in a few seconds, or explore with Demo Mode.</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:4px"><button class="es-retry" onclick="loadAssignments('${esc(token)}','${esc(url)}')">Try Again</button><button class="es-retry" style="background:var(--g-pale);color:var(--g2)" onclick="loadDemo()">Try Demo Mode →</button></div></div>`;
       }
       return;
-    }
-    _setCachedAssignments(data.assignments || []);
-    _applyAssignments(data.assignments || []);
-  } catch (e) {
-    clearTimeout(wakeTimer);
-    clearInterval(_wakeInterval); _wakeInterval = null;
-    // If we have stale cache, use it rather than showing an error
-    const stale = (() => { try { return JSON.parse(localStorage.getItem('sq_assign_cache') || 'null'); } catch { return null; } })();
-    if (stale) {
-      _applyAssignments(stale);
-      showToast('Showing cached assignments — check your connection');
-    } else {
-      list.innerHTML = `<div class="empty-state"><div class="es-icon">📡</div><h3>Can't reach the server</h3><p>The Sequoia server may still be waking up — try again in a few seconds, or use Demo Mode to explore.</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:4px"><button class="es-retry" onclick="loadAssignments('${esc(token)}','${esc(url)}')">Try Again</button><button class="es-retry" style="background:var(--g-pale);color:var(--g2)" onclick="loadDemo()">Try Demo Mode →</button></div></div>`;
     }
   }
 }
 
-// Silent background refresh — updates cache + UI without any loading state
+// Silent background refresh — updates cache + UI without any loading state.
+// Uses a 30s abort so a sleeping Render dyno doesn't hang indefinitely.
 async function _refreshAssignmentsBackground(token, url) {
   try {
+    const ctrl = new AbortController();
+    const t    = setTimeout(() => ctrl.abort(), 30_000);
     const hdrs = await _canvasHeaders(token, url);
-    const res  = await fetch(`${API}/assignments`, { headers: hdrs });
+    const res  = await fetch(`${API}/assignments`, { headers: hdrs, signal: ctrl.signal });
+    clearTimeout(t);
     const data = await res.json();
     if (data.ok && data.assignments) {
       _setCachedAssignments(data.assignments);
@@ -10107,7 +10164,7 @@ function syncWrapUp() {
   document.getElementById('stat-sessions').textContent    = sessions;
   document.getElementById('stat-badge-stage-val').textContent = st.name;
 
-  // Name banner — personalised if we know the user's name; aurora gated to premium
+  // Name banner — personalised + aurora for premium; generic tagline for free
   const rawName = (localStorage.getItem('sq_name') || '').trim();
   const nameBanner = document.getElementById('sc-name-banner');
   if (nameBanner) {
@@ -10115,10 +10172,11 @@ function syncWrapUp() {
       nameBanner.textContent = rawName
         ? rawName.split(' ')[0] + "'s Semester 🌲"
         : 'A semester well grown. 🌲';
-      nameBanner.style.display = '';
     } else {
-      nameBanner.style.display = 'none';
+      // Free users still get a tagline so the card layout doesn't have a hole
+      nameBanner.textContent = 'A semester well grown. 🌲';
     }
+    nameBanner.style.display = '';
   }
   // Aurora layers — premium only
   const auroraEl = document.querySelector('.sc-aurora');
@@ -10299,6 +10357,10 @@ function startRegrow() {
   // ── Phase 4 (8s): Stats card slides up ──
   setTimeout(() => {
     syncWrapUp();
+    _initShareBtn();
+    // Reset referral nudge for a fresh run
+    const nudge = document.getElementById('wu-referral-nudge');
+    if (nudge) nudge.style.display = 'none';
     const post = document.getElementById('wu-post');
     post.style.display = 'block';
     requestAnimationFrame(() => requestAnimationFrame(() => post.classList.add('show')));
@@ -10389,8 +10451,29 @@ function closeNewSemesterModal() {
 }
 async function confirmNewSemester() {
   closeNewSemesterModal();
-  await saveSemesterToArchive();
+
+  // Show a "Saving…" state on the wrap-up screen while we archive
+  const postEl = document.getElementById('wu-post');
+  const origPointerEvents = postEl ? postEl.style.pointerEvents : '';
+  if (postEl) postEl.style.pointerEvents = 'none';
+
+  let saved = false;
+  try {
+    await saveSemesterToArchive();
+    saved = true;
+  } catch (e) {
+    // saveSemesterToArchive itself swallows errors, but just in case
+    saved = false;
+  }
+
+  if (postEl) postEl.style.pointerEvents = origPointerEvents;
+
   _resetSemesterState();
+
+  // Show archive-saved confirmation toast
+  if (saved && !isDemo) {
+    _showInfoToast('🌲 Semester saved to your archive!');
+  }
 }
 
 function _resetSemesterState() {
@@ -10407,6 +10490,8 @@ function _resetSemesterState() {
   document.getElementById('wu-stump').classList.remove('show');
   document.getElementById('wu-seedling').classList.remove('show');
   document.getElementById('wu-post').classList.remove('show');
+  const _nudgeEl = document.getElementById('wu-referral-nudge');
+  if (_nudgeEl) _nudgeEl.style.display = 'none';
   document.getElementById('wu-done-msg').classList.remove('show');
   document.getElementById('wu-release-btn').disabled = false;
   document.getElementById('wu-release-btn').textContent = '🌲 Release Your Tree to the Forest →';
@@ -10426,6 +10511,33 @@ function _resetSemesterState() {
 
 // Keep old name as alias (used by other potential call sites)
 function newSemester() { openNewSemesterModal(); }
+
+// ── Generic info toast (reusable) ────────────────────────
+function _showInfoToast(msg, durationMs = 3200) {
+  let el = document.getElementById('_info-toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = '_info-toast';
+    el.style.cssText = [
+      'position:fixed','bottom:90px','left:50%','transform:translateX(-50%) translateY(20px)',
+      'background:rgba(20,40,18,0.97)','border:1px solid rgba(76,161,48,0.4)',
+      'color:#c8f0a0','font-family:\'DM Sans\',sans-serif','font-size:14px','font-weight:700',
+      'padding:12px 22px','border-radius:100px','z-index:9999','pointer-events:none',
+      'box-shadow:0 8px 32px rgba(0,0,0,0.5)','opacity:0',
+      'transition:opacity 0.25s ease,transform 0.25s ease','white-space:nowrap',
+    ].join(';');
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.opacity = '0'; el.style.transform = 'translateX(-50%) translateY(20px)';
+  clearTimeout(el._timer);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    el.style.opacity = '1'; el.style.transform = 'translateX(-50%) translateY(0)';
+  }));
+  el._timer = setTimeout(() => {
+    el.style.opacity = '0'; el.style.transform = 'translateX(-50%) translateY(20px)';
+  }, durationMs);
+}
 
 // ── Capture the stats card to a canvas (shared by share + download) ──
 function _captureStatsCard() {
@@ -10455,6 +10567,35 @@ function _captureStatsCard() {
   });
 }
 
+// ── Set share button label based on Web Share API availability ──
+function _initShareBtn() {
+  const btn = document.getElementById('share-main-btn');
+  if (!btn) return;
+  // canShare with files is only available on mobile/supported browsers
+  const canNativeShare = !!(navigator.canShare);
+  btn.textContent = canNativeShare ? '📤 Share My Stats' : '💾 Save Stats Card';
+}
+
+// ── Show referral nudge after a successful share/save ────
+function _revealReferralNudge() {
+  const nudge = document.getElementById('wu-referral-nudge');
+  if (nudge) nudge.style.display = '';
+}
+
+// ── Share Sequoia itself (referral) ─────────────────────
+function shareSequoia() {
+  const text = 'This app grows a virtual sequoia tree as you study 🌲 It connects to Canvas and prioritizes your assignments by grade weight — actually useful. getsequoia.app';
+  if (navigator.share) {
+    navigator.share({ title: 'Sequoia — study app', text, url: 'https://getsequoia.app' }).catch(() => {});
+  } else {
+    navigator.clipboard?.writeText('https://getsequoia.app').then(() => {
+      _showInfoToast('🔗 Link copied — share it with a friend!');
+    }).catch(() => {
+      window.open('https://getsequoia.app', '_blank', 'noopener');
+    });
+  }
+}
+
 // ── Share via Web Share API (native sheet) → fallback download ──
 async function shareStatsCard() {
   const btn  = document.getElementById('share-main-btn');
@@ -10476,9 +10617,10 @@ async function shareStatsCard() {
             await navigator.share({
               files: [file],
               title: 'My Sequoia Semester',
-              text: 'A whole semester of growth — ranked by what matters. 🌲',
+              text: 'Grew my sequoia tree through a whole semester 🌲 Study app that actually prioritizes by what matters → getsequoia.app',
             });
             btn.textContent = '✓ Shared!';
+            _revealReferralNudge();
           } catch (shareErr) {
             // User cancelled — not an error, just restore
             btn.textContent = orig;
@@ -10498,6 +10640,7 @@ async function shareStatsCard() {
     console.warn('Share card error:', err);
     btn.textContent = orig;
     btn.disabled    = false;
+    _showInfoToast('⚠️ Couldn\'t generate image — try saving manually.');
   }
 }
 
@@ -10508,6 +10651,7 @@ function _triggerDownload(canvas, fileName, btn, orig) {
   a.click();
   btn.textContent = '✓ Saved!';
   btn.disabled    = false;
+  _revealReferralNudge();
   setTimeout(() => { btn.textContent = orig; }, 2400);
 }
 
@@ -10526,6 +10670,7 @@ async function downloadStatsCard() {
   } catch (err) {
     btn.textContent = orig;
     btn.disabled    = false;
+    _showInfoToast('⚠️ Couldn\'t generate image — try the main share button.');
   }
 }
 
@@ -10535,12 +10680,14 @@ function shareToX() {
   const sem   = document.getElementById('stats-sem')?.textContent || 'this semester';
   const stage = document.getElementById('stat-badge-stage-val')?.textContent || '';
   const hours = document.getElementById('stat-hours')?.textContent || '';
-  const parts = ['Just wrapped ' + sem + ' on Sequoia 🌲'];
-  if (stage) parts.push('Reached ' + stage + ' with ' + xp.toLocaleString() + ' XP');
-  if (hours)  parts.push(hours + ' of focused study');
-  parts.push('', 'Grow through every semester → getsequoia.app');
+  // Lead with what Sequoia IS so new viewers understand immediately
+  const parts = ['just finished ' + sem + ' with Sequoia 🌲'];
+  parts.push('it connects to Canvas and ranks assignments by grade weight so you always work on what matters most');
+  if (stage) parts.push('grew my tree to ' + stage + ' — ' + xp.toLocaleString() + ' XP' + (hours ? ', ' + hours + ' studied' : ''));
+  parts.push('', 'getsequoia.app');
   const text = encodeURIComponent(parts.join('\n'));
   window.open('https://twitter.com/intent/tweet?text=' + text, '_blank', 'noopener,noreferrer');
+  _revealReferralNudge();
 }
 
 // ── NOTIFICATIONS ────────────────────────────────────────
