@@ -2142,6 +2142,17 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 ══════════════════════════════════════════════════════════ */
 .wu-wrap { max-width:900px; margin:0 auto; padding:12px 20px 48px; }
 
+/* My Tree (sc3) — full-bleed scene on desktop so tree feels grounded */
+@media (min-width:641px) {
+  #sc3 .wu-wrap  { max-width:none; padding-left:0; padding-right:0; }
+  #sc3 .wu-scene { border-radius:0; }
+  #sc3 .wu-wrap > *:not(.wu-scene) {
+    max-width:1200px; margin-left:auto; margin-right:auto;
+    padding-left:clamp(20px,4vw,60px); padding-right:clamp(20px,4vw,60px);
+    box-sizing:border-box;
+  }
+}
+
 /* ══════════════════════════════════════════════════════════
    SCREEN 5 — FRIENDS & LEADERBOARD
 ══════════════════════════════════════════════════════════ */
