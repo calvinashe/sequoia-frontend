@@ -4352,7 +4352,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
             </div>
             <div class="ob-token-step">
               <div class="ob-token-step-num">4</div>
-              <span>Name it <em>"Sequoia"</em>, leave expiry blank, click <strong>Generate Token</strong> and copy it</span>
+              <span>Name it <em>"Sequoia"</em>, set the expiry date to <strong id="ob-expiry-date" style="color:#82CC55;cursor:pointer;" onclick="obCopyExpiry()" title="Click to copy"></strong> <button onclick="obCopyExpiry()" style="background:rgba(76,161,48,0.18);border:1px solid rgba(76,161,48,0.3);color:#82CC55;border-radius:6px;padding:2px 8px;font-size:10px;cursor:pointer;font-family:inherit;font-weight:700;" id="ob-copy-date-btn">copy</button>, then click <strong>Generate Token</strong> and copy it</span>
             </div>
             <div class="ob-token-tip">⚠ Copy it now — Canvas only shows it once.</div>
           </div>
@@ -5982,6 +5982,30 @@ function toggleTokenHelp(btn) {
   const steps = document.getElementById('ob-token-steps');
   const open  = steps.classList.toggle('open');
   btn.textContent = (open ? '▾' : '▸') + ' How to get your token';
+  // Populate the 120-day expiry date when first opened
+  const el = document.getElementById('ob-expiry-date');
+  if (el && !el.textContent) {
+    const d = new Date();
+    d.setDate(d.getDate() + 120);
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    el.textContent = months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+  }
+}
+function obCopyExpiry() {
+  const el = document.getElementById('ob-expiry-date');
+  const btn = document.getElementById('ob-copy-date-btn');
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    btn.textContent = '✓ copied!';
+    btn.style.color = '#82CC55';
+    setTimeout(() => { btn.textContent = 'copy'; }, 2000);
+  }).catch(() => {
+    // Fallback: select the text
+    const range = document.createRange();
+    range.selectNode(el);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+  });
 }
 function obToggleToken(btn) {
   const inp = document.getElementById('ob-token');
