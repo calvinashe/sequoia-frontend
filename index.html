@@ -3570,6 +3570,12 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
   #dash-hero-glow { z-index:2; }
   .assign-card, .courses-card { display:block; }
 
+  /* Priorities header — stack title above buttons on mobile */
+  .assign-header { flex-wrap:wrap; gap:8px; padding:14px 16px 0; }
+  .assign-title  { flex:1 0 100%; font-size:20px; }
+  .assign-header > div { gap:5px; }
+  .ai-pick-btn   { padding:6px 10px; font-size:12px; }
+
   /* Filter tabs — nowrap, scroll */
   .filter-tabs { padding:10px 14px; gap:5px; flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; position:relative; }
   .filter-tabs::-webkit-scrollbar { display:none; }
