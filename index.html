@@ -2062,6 +2062,7 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 .tree-stats-row {
   display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:16px;
 }
+#tsc-cap-chip { grid-column: span 2; }
 .tree-stat-chip {
   background:rgba(8,28,12,0.52);
   backdrop-filter:blur(14px) saturate(1.4);
@@ -8998,8 +8999,23 @@ function syncTreeScreen() {
     const clone = srcSvg.cloneNode(true);
     const scale = idx === 3 ? 1.55 : idx === 2 ? 1.6 : idx === 1 ? 1.7 : 1.8;
     const w     = parseFloat(srcSvg.getAttribute('width') || 130) * scale;
-    clone.setAttribute('width',  Math.round(w));
-    clone.setAttribute('height', Math.round(w * 1.4));
+    // Parse original viewBox
+    const vbParts = (srcSvg.getAttribute('viewBox') || '0 0 160 200').split(' ').map(Number);
+    const vbX = vbParts[0], vbY0 = vbParts[1], vbW = vbParts[2], vbHOrig = vbParts[3];
+    // Trim empty transparent headspace above tree per stage so it fills the hero
+    const topTrim = [95, 15, 0, 0][idx];
+    const vbH = vbHOrig - topTrim;
+    clone.setAttribute('viewBox', vbX + ' ' + (vbY0 + topTrim) + ' ' + vbW + ' ' + vbH);
+    // Cap SVG height to scene height so tree tip never clips at the top edge
+    const sceneH = (heroWrap.closest('.tree-hero-scene') || document.getElementById('th-scene'))?.offsetHeight || 380;
+    const maxH   = sceneH - 14 - 8; // 14px margin-bottom + 8px breathing room at top
+    let svgW = Math.round(w);
+    let svgH = Math.round(w * vbH / vbW);
+    if (svgH > maxH) { const f = maxH / svgH; svgH = maxH; svgW = Math.round(svgW * f); }
+    clone.setAttribute('width',  svgW);
+    clone.setAttribute('height', svgH);
+    // Anchor tree content to the bottom of the SVG element so it looks grounded in the scene
+    clone.setAttribute('preserveAspectRatio', 'xMidYMax meet');
     heroWrap.innerHTML = '';
     heroWrap.appendChild(clone);
   }
