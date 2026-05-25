@@ -149,7 +149,8 @@ body {
 .al-sub {
   font-size:14px; color:rgba(30,61,30,0.70);
   line-height:1.65; text-align:center;
-  margin:0 0 28px; max-width:300px;
+  margin:0 0 28px; max-width:320px;
+  text-wrap:balance;
 }
 
 /* Primary Google CTA */
@@ -402,7 +403,7 @@ body {
 }
 .notif-overlay.open { opacity:1; pointer-events:auto; }
 .notif-panel {
-  position:fixed; top:0; right:0; bottom:0; z-index:801;
+  position:fixed; top:54px; right:0; bottom:0; z-index:801;
   width:340px; max-width:100vw;
   background:var(--card); box-shadow:-4px 0 32px rgba(0,0,0,0.18);
   display:flex; flex-direction:column;
@@ -3590,8 +3591,8 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
   /* Filter tabs — nowrap, scroll */
   .filter-tabs { padding:10px 14px; gap:5px; flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; position:relative; }
   .filter-tabs::-webkit-scrollbar { display:none; }
-  .filter-tabs::after { content:''; position:sticky; right:0; top:0; bottom:0; min-width:32px; background:linear-gradient(to right, transparent, var(--card)); pointer-events:none; flex-shrink:0; }
-  [data-theme="dark"] .filter-tabs::after { background:linear-gradient(to right, transparent, #0B1C0E); }
+  .filter-tabs::after { content:''; position:sticky; right:0; top:0; bottom:0; min-width:32px; background:linear-gradient(to right, transparent, #0B1C0E); pointer-events:none; flex-shrink:0; }
+  [data-theme="light"] .filter-tabs::after { background:linear-gradient(to right, transparent, #F8F6EF); }
   .ftab { white-space:nowrap; flex-shrink:0; font-size:12px; padding:6px 11px; }
 
   /* Focus banner */
@@ -3977,6 +3978,82 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 [data-theme="light"] .dsm-cost-label strong { color:var(--text); }
 [data-theme="light"] .dsm-btn-cancel    { border-color:var(--border); color:var(--mid); }
 [data-theme="light"] .dsm-alt           { color:var(--mid); }
+
+/* ══════════════════════════════════════════════════════════
+   DARK THEME: Panels & Overlays
+   (app is dark-first; these panels use var(--card) which
+   only resolves correctly in light mode — override here)
+══════════════════════════════════════════════════════════ */
+
+/* Notification panel — dark */
+[data-theme="dark"] .notif-panel {
+  background:#0E1F10;
+  box-shadow:-4px 0 40px rgba(0,0,0,0.55);
+}
+[data-theme="dark"] .notif-panel-header {
+  border-bottom-color:rgba(76,161,48,0.12);
+}
+[data-theme="dark"] .notif-panel-title  { color:#FFFEF8; }
+[data-theme="dark"] .notif-mark-all     { color:var(--g4); }
+[data-theme="dark"] .notif-mark-all:hover { background:rgba(76,161,48,0.12); }
+[data-theme="dark"] .notif-close-btn    { color:rgba(255,255,255,0.4); }
+[data-theme="dark"] .notif-close-btn:hover { color:#FFFEF8; }
+[data-theme="dark"] .notif-item         { border-bottom-color:rgba(76,161,48,0.09); }
+[data-theme="dark"] .notif-item.unread  { background:rgba(76,161,48,0.07); }
+[data-theme="dark"] .notif-item-title   { color:#FFFEF8; }
+[data-theme="dark"] .notif-item-body    { color:rgba(255,255,255,0.55); }
+[data-theme="dark"] .notif-item-time    { color:rgba(255,255,255,0.3); }
+[data-theme="dark"] .notif-empty        { color:rgba(255,255,255,0.3); }
+[data-theme="dark"] .notif-push-section { border-bottom-color:rgba(76,161,48,0.1); }
+[data-theme="dark"] .notif-push-btn {
+  background:#0B1C0E; border-color:rgba(76,161,48,0.22);
+  color:rgba(255,255,255,0.7);
+}
+[data-theme="dark"] .notif-push-btn:hover  { border-color:var(--g3); background:rgba(76,161,48,0.1); color:#FFFEF8; }
+[data-theme="dark"] .notif-push-btn.active { border-color:var(--g3); background:rgba(76,161,48,0.15); color:var(--g4); }
+[data-theme="dark"] .ios-notif-guide {
+  background:rgba(76,161,48,0.08); border-color:rgba(76,161,48,0.15);
+}
+[data-theme="dark"] .ios-guide-title  { color:#FFFEF8; }
+[data-theme="dark"] .ios-guide-steps li { color:rgba(255,255,255,0.55); }
+
+/* Account menu — dark */
+[data-theme="dark"] .account-menu {
+  background:#0E1F10;
+  border-color:rgba(76,161,48,0.14);
+  box-shadow:0 12px 40px rgba(0,0,0,0.55), 0 0 0 1px rgba(76,161,48,0.08);
+}
+[data-theme="dark"] .am-header         { border-bottom-color:rgba(76,161,48,0.1); }
+[data-theme="dark"] .am-name           { color:#FFFEF8; }
+[data-theme="dark"] .am-email          { color:rgba(255,255,255,0.4); }
+[data-theme="dark"] .am-tier           { background:rgba(76,161,48,0.15); color:var(--g4); }
+[data-theme="dark"] .am-btn            { color:rgba(255,255,255,0.75); }
+[data-theme="dark"] .am-btn:hover      { background:rgba(76,161,48,0.1); color:#FFFEF8; }
+[data-theme="dark"] .am-btn.danger     { color:#E8836A; }
+[data-theme="dark"] .am-btn.danger:hover { background:rgba(199,91,58,0.1); }
+
+/* Settings modal — dark */
+[data-theme="dark"] #settings-modal .modal-box,
+[data-theme="dark"] #add-modal .modal-box,
+[data-theme="dark"] #edit-modal .modal-box,
+[data-theme="dark"] #confirm-modal .modal-box {
+  background:#0E1F10;
+  border:1px solid rgba(76,161,48,0.12);
+  box-shadow:0 24px 80px rgba(0,0,0,0.65);
+}
+[data-theme="dark"] .modal-title       { color:#FFFEF8; }
+[data-theme="dark"] .modal-close       { color:rgba(255,255,255,0.35); }
+[data-theme="dark"] .modal-close:hover { color:#FFFEF8; }
+[data-theme="dark"] .settings-section  { border-bottom-color:rgba(76,161,48,0.09); }
+[data-theme="dark"] .settings-label    { color:rgba(255,255,255,0.45); }
+[data-theme="dark"] .settings-row      { border-bottom-color:rgba(76,161,48,0.09); }
+
+/* Study screen desktop — subtle ambient glow so centered card feels intentional */
+@media (min-width:641px) {
+  #sc4 {
+    background:radial-gradient(ellipse 800px 600px at 50% 30%, rgba(46,96,32,0.35) 0%, transparent 70%);
+  }
+}
 
 </style>
 <!-- Apply theme before first paint to prevent flash -->
