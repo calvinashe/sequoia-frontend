@@ -6746,6 +6746,13 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     // Sync browser extension data if available
     setTimeout(() => loadExtensionAssignments(), 2000);
+    // Notify the Sequoia browser extension (if installed) with a fresh auth token
+    // The extension listens for this event via sequoia-bridge.js
+    user.getIdToken().then(token => {
+      window.dispatchEvent(new CustomEvent('__sq_ext_token__', {
+        detail: { token, uid: user.uid, email: user.email, displayName: user.displayName }
+      }));
+    });
     // Sync public leaderboard profile (fire-and-forget)
     setTimeout(() => _upsertPublicProfile(), 2000);
     initPushBtn(); // badge count is now fetched inside loadUserData (parallel query)
@@ -7903,6 +7910,18 @@ function openSettings() {
   // Show "connected" indicator if iCal feed is saved
   const icalStatus = document.getElementById('set-ical-status');
   if (icalStatus) icalStatus.style.display = localStorage.getItem('sq_ical_connected') === '1' ? '' : 'none';
+  // Show extension status if it has synced before
+  const extSynced = localStorage.getItem('sq_ext_last_sync');
+  const extConn   = document.getElementById('set-ext-status-connected');
+  const extBtn    = document.getElementById('set-ext-install-btn');
+  if (extConn) extConn.style.display = extSynced ? 'flex' : 'none';
+  if (extBtn)  extBtn.style.display  = extSynced ? 'none' : '';
+  if (extSynced) {
+    const mins = Math.round((Date.now() - parseInt(extSynced)) / 60000);
+    const label = mins < 2 ? 'just now' : mins < 60 ? `${mins}m ago` : `${Math.floor(mins/60)}h ago`;
+    const el = document.getElementById('set-ext-last-sync');
+    if (el) el.textContent = 'last synced ' + label;
+  }
   document.getElementById('settings-saved-msg').style.opacity = '0';
   document.getElementById('settings-overlay').classList.add('show');
   // Init theme buttons
@@ -8074,6 +8093,7 @@ async function loadExtensionAssignments() {
       });
       renderAssignments(allAssignments);
       buildQPick && buildQPick();
+      localStorage.setItem('sq_ext_last_sync', Date.now());
       console.log(`[Extension] merged ${added} assignments from browser extension`);
     }
 
@@ -12586,6 +12606,32 @@ function _showPwaInstallBanner() {
 
     <button class="settings-save" onclick="saveSettings()">Save Changes</button>
     <div class="settings-saved-msg" id="settings-saved-msg">✓ Saved</div>
+
+    <hr class="settings-divider">
+
+    <!-- Browser Extension -->
+    <div class="settings-field">
+      <label>Browser Extension</label>
+      <div id="set-ext-status-connected" style="display:none;font-size:12px;font-weight:600;color:var(--g4);
+        margin-bottom:8px;display:none;align-items:center;gap:6px">
+        <span style="width:7px;height:7px;border-radius:50%;background:var(--g4);display:inline-block;
+          box-shadow:0 0 6px var(--g4)"></span>
+        Extension connected · <span id="set-ext-last-sync"></span>
+      </div>
+      <div style="font-size:12px;line-height:1.6;color:var(--light);margin-bottom:10px">
+        The <strong style="color:rgba(255,255,255,0.75)">Sequoia for Canvas</strong> Chrome extension
+        syncs your assignments, grade weights, and submission status automatically —
+        no API token needed, works even when your school blocks them.
+      </div>
+      <a href="https://chrome.google.com/webstore/detail/sequoia-for-canvas"
+        target="_blank" id="set-ext-install-btn"
+        style="display:inline-block;padding:9px 16px;border-radius:10px;
+        background:rgba(76,161,48,0.15);border:1px solid rgba(76,161,48,0.3);
+        color:var(--g3);font-size:13px;font-weight:700;text-decoration:none;
+        transition:all .2s">
+        🔌 Install Extension ↗
+      </a>
+    </div>
 
     <hr class="settings-divider">
 
