@@ -1,13 +1,13 @@
 // Sequoia Service Worker
-const CACHE = 'sequoia-v16';
-const BASE  = '/sequoia-frontend';
+const CACHE = 'sequoia-v17';
+const BASE  = '';
 const SHELL = [
-  BASE + '/',
-  BASE + '/index.html',
-  BASE + '/manifest.json',
-  BASE + '/icon-192.png',
-  BASE + '/icon-512.png',
-  BASE + '/icon-maskable.png',
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/icon-maskable.png',
 ];
 
 // ── Install: cache app shell (fail-safe) ─────────────────

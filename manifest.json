@@ -2,8 +2,8 @@
   "name": "Sequoia — Grow Through Every Semester",
   "short_name": "Sequoia",
   "description": "Connect your Canvas, tackle what matters most, and watch your Sequoia tree grow all semester long.",
-  "id": "/sequoia-frontend/",
-  "start_url": "/sequoia-frontend/",
+  "id": "/",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#0A1A0A",
   "theme_color": "#1C3A1C",
@@ -35,14 +35,14 @@
       "name": "Study Now",
       "short_name": "Study",
       "description": "Start a focus session",
-      "url": "/sequoia-frontend/?tab=study",
+      "url": "/?tab=study",
       "icons": [{ "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "My Assignments",
       "short_name": "Assignments",
       "description": "View priority assignments",
-      "url": "/sequoia-frontend/?tab=home",
+      "url": "/?tab=home",
       "icons": [{ "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
