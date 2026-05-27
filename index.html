@@ -6129,7 +6129,7 @@ async function loadUserData(uid) {
     if (d.name)                           localStorage.setItem('sq_name',           d.name);
     if (d.pomo_sessions    !== undefined) localStorage.setItem('sq_pomo_sessions',  String(d.pomo_sessions));
     if (d.manual_assignments)             localStorage.setItem('sq_manual',         JSON.stringify(d.manual_assignments));
-    if (d.tier)                           localStorage.setItem('sq_tier',           d.tier);
+    if (d.tier)                         { localStorage.setItem('sq_tier',           d.tier); setUserTier(d.tier); }
     if (d.purchasedDecos)                 localStorage.setItem('sq_purchased_decos',JSON.stringify(d.purchasedDecos));
     if (d.leaves !== undefined)           localStorage.setItem('sq_leaves',          String(d.leaves));
     // Sync today's XP usage from Firestore so the daily cap chip is accurate across
