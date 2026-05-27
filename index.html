@@ -7095,6 +7095,13 @@ window.addEventListener('DOMContentLoaded', () => {
         if (u && !url) { closeOnboard(); setGreeting(localStorage.getItem('sq_name') || ''); loadAssignments('', u); loadCourses('', u); }
         // Show one-time toast for users affected by the level formula update
         _checkLevelMigration();
+        // If this is a post-Stripe redirect and Firestore already has premium, unlock now.
+        // (Covers the case where the webhook fired before auth resolved.)
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('upgraded') === '1' && userData.tier === 'premium') {
+          history.replaceState({}, '', window.location.pathname);
+          showToast('✦ Premium features unlocked! Welcome to Pro 🌲', 4000);
+        }
       }
     });
     // Keep timezone offset fresh on every login (user may travel or change device)
@@ -12774,13 +12781,13 @@ function _checkUpgradeRedirect() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('upgraded') === '1') {
     history.replaceState({}, '', window.location.pathname);
-    setTimeout(() => showToast('🌲 Welcome to Premium! Your trial has started.', 4000), 800);
-    // Webhook updates Firestore within seconds — poll until tier flips to premium
-    let attempts = 0;
+    setTimeout(() => showToast('🌲 Welcome to Premium! Setting up your account…', 4000), 800);
+    // Wait for Firebase auth to resolve before polling (auth is async — currentUser may be null on cold load)
+    let authWait = 0;
     const poll = setInterval(async () => {
-      attempts++;
-      if (attempts > 8) { clearInterval(poll); return; } // give up after ~16s
-      if (!currentUser) return;
+      authWait++;
+      if (authWait > 20) { clearInterval(poll); return; } // give up after ~40s
+      if (!currentUser) return; // still waiting for auth
       try {
         const doc = await db.collection('users').doc(currentUser.uid).get({ source: 'server' });
         if (doc.exists && doc.data().tier === 'premium') {
