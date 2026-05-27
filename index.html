@@ -2025,6 +2025,9 @@ input.g-slider::-moz-range-thumb {
   background:linear-gradient(180deg,#020708 0%,#04100A 28%,#081A0E 58%,#0E2210 100%);
   position:relative; overflow:hidden;
 }
+[data-theme="light"] #sc2 {
+  background:linear-gradient(180deg,#1A3A1A 0%,#1E4020 28%,#254A26 58%,#2C5230 100%);
+}
 /* Pinned full-screen forest SVG layer */
 #sc2-forest-bg {
   position:fixed; inset:0; z-index:0; pointer-events:none;
@@ -3357,6 +3360,8 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
   justify-content:center; transition:all .18s;
 }
 .cal-nav-btn:hover { background:rgba(255,255,255,0.18); color:#fff; }
+[data-theme="light"] .cal-nav-btn { background:var(--border); color:var(--text); }
+[data-theme="light"] .cal-nav-btn:hover { background:rgba(76,161,48,0.18); color:var(--g1); }
 
 .cal-wrap {
   max-width:1200px; margin:0 auto; padding:0 20px 24px;
