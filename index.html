@@ -6744,6 +6744,8 @@ window.addEventListener('DOMContentLoaded', () => {
     if (localStorage.getItem('sq_ical_connected') === '1') {
       setTimeout(() => loadIcalAssignments(), 1500); // slight delay so Canvas API loads first
     }
+    // Sync browser extension data if available
+    setTimeout(() => loadExtensionAssignments(), 2000);
     // Sync public leaderboard profile (fire-and-forget)
     setTimeout(() => _upsertPublicProfile(), 2000);
     initPushBtn(); // badge count is now fetched inside loadUserData (parallel query)
@@ -7737,7 +7739,7 @@ function renderAssignments(list, _skipCal) {
       <div class="a-check${done ? ' checked' : ''}" onclick="toggleDone('${esc(a.id)}', this, '${esc(a.title)}', ${Math.round(w)})">${done ? '✓' : ''}</div>
       <div class="a-icon ${iconBg}">${rowIcon(w, i)}</div>
       <div class="a-info" onclick="openAssignDetail('${esc(a.id)}')" style="cursor:pointer;flex:1;min-width:0">
-        <div class="a-name${done ? ' struck' : ''}"><span class="a-name-text">${esc(a.title)}</span><span class="a-weight-pill">${w > 0 ? Math.round(w)+'%' : a.source === 'ical' ? '🗓' : a.manual ? '＋' : ''}</span></div>
+        <div class="a-name${done ? ' struck' : ''}"><span class="a-name-text">${esc(a.title)}</span><span class="a-weight-pill">${w > 0 ? Math.round(w)+'%' : a.source === 'extension' ? (a.submitted ? '✓' : '🔌') : a.source === 'ical' ? '🗓' : a.manual ? '＋' : ''}</span></div>
         <div class="a-course">${esc(a.course)}</div>
       </div>
       <div class="a-right" onclick="openAssignDetail('${esc(a.id)}')" style="cursor:pointer">
@@ -8035,6 +8037,70 @@ async function loadIcalAssignments() {
     }
   } catch(e) {
     console.warn('[iCal] sync error:', e);
+  }
+}
+
+// ── BROWSER EXTENSION SYNC ────────────────────────────────────────────────────
+// Fetches Canvas data synced by the Sequoia Chrome extension.
+// The extension scrapes courses/assignments/grades using the user's Canvas
+// session cookies (no API token needed) and stores them server-side.
+async function loadExtensionAssignments() {
+  if (isDemo || !currentUser) return;
+  try {
+    const idToken = await currentUser.getIdToken();
+    const res  = await fetch(API + '/extension-data', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+      body:    JSON.stringify({}),
+    });
+    const data = await res.json();
+    if (!data.ok || !data.assignments?.length) return;
+
+    // Merge — skip IDs already present (avoid duping Canvas API or iCal results)
+    const existingIds = new Set(allAssignments.map(a => String(a.id)));
+    let added = 0;
+    data.assignments.forEach(a => {
+      if (!existingIds.has(String(a.id))) {
+        allAssignments.push(a);
+        added++;
+      }
+    });
+
+    if (added > 0) {
+      allAssignments.sort((a, b) => {
+        const ps = (b.priority_score || 0) - (a.priority_score || 0);
+        if (ps !== 0) return ps;
+        return (a.due_at || '9999') < (b.due_at || '9999') ? -1 : 1;
+      });
+      renderAssignments(allAssignments);
+      buildQPick && buildQPick();
+      console.log(`[Extension] merged ${added} assignments from browser extension`);
+    }
+
+    // Persist extension courses into My Courses if not already there
+    if (data.courses?.length) {
+      const existing = getCourses();
+      const existingCodes = new Set(existing.map(c => c.code || c.name));
+      let coursesAdded = 0;
+      data.courses.forEach((c, i) => {
+        const code = c.code || c.name;
+        if (!existingCodes.has(code)) {
+          existing.push({
+            id:    'ext-' + c.id,
+            name:  code,
+            color: COURSE_COLORS[existing.length % COURSE_COLORS.length],
+            cats:  (c.cats || []).map(cat => ({ name: cat.name, weight: cat.weight })),
+          });
+          coursesAdded++;
+        }
+      });
+      if (coursesAdded > 0) {
+        _saveCourses(existing);
+        console.log(`[Extension] added ${coursesAdded} courses to My Courses`);
+      }
+    }
+  } catch(e) {
+    console.warn('[Extension] sync error:', e);
   }
 }
 
