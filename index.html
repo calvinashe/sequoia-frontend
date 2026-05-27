@@ -1681,6 +1681,152 @@ input.g-slider::-moz-range-thumb {
 }
 .aa-err { font-size:12px; color:#d9534f; font-weight:600; min-height:16px; margin-bottom:4px; }
 
+/* ── COURSES MANAGEMENT OVERLAY ─────────────────────────── */
+#courses-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(4px);
+  z-index:9600; display:flex; align-items:flex-end; justify-content:center;
+  opacity:0; pointer-events:none; visibility:hidden;
+  transition:opacity .22s, visibility .22s;
+}
+#courses-overlay.show { opacity:1; pointer-events:auto; visibility:visible; }
+.courses-sheet {
+  background:#0D1F0D; border-radius:28px 28px 0 0; padding:28px 20px 0;
+  width:100%; max-width:520px; position:relative;
+  max-height:88vh; display:flex; flex-direction:column;
+  animation:scSlideUp .32s cubic-bezier(0.34,1.4,0.64,1);
+}
+.courses-sheet-title {
+  font-family:'Playfair Display',serif; font-size:20px; font-weight:700;
+  color:#FFFEF8; margin-bottom:4px;
+}
+.courses-sheet-sub {
+  font-size:12px; color:rgba(255,255,255,0.55); margin-bottom:18px; line-height:1.4;
+}
+.cs-list { flex:1; overflow-y:auto; padding-bottom:4px; }
+.cs-course-card {
+  background:rgba(76,161,48,0.07); border:1px solid rgba(76,161,48,0.12);
+  border-radius:16px; padding:14px 16px; margin-bottom:10px;
+}
+.cs-course-header { display:flex; align-items:center; gap:10px; cursor:pointer; }
+.cs-course-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.cs-course-name-text { flex:1; font-size:14px; font-weight:700; color:rgba(255,255,255,0.88); }
+.cs-course-expand { font-size:12px; color:rgba(255,255,255,0.4); transition:transform .2s; }
+.cs-course-expand.open { transform:rotate(180deg); }
+.cs-course-body { display:none; margin-top:12px; }
+.cs-course-body.show { display:block; }
+.cs-cats-label { font-size:10px; font-weight:700; color:rgba(255,255,255,0.45); text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px; }
+.cs-cat-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.cs-cat-name { flex:1; font-size:12px; color:rgba(255,255,255,0.75); }
+.cs-cat-weight { font-size:12px; font-weight:700; color:var(--g4); min-width:32px; text-align:right; }
+.cs-cat-del { font-size:16px; color:rgba(255,255,255,0.25); cursor:pointer; padding:2px 4px; background:none; border:none; line-height:1; }
+.cs-cat-del:hover { color:#ff6b6b; }
+.cs-add-cat-row { display:flex; gap:6px; margin-top:10px; }
+.cs-add-cat-input {
+  flex:2; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12);
+  border-radius:8px; padding:8px 10px; color:#FFFEF8; font-size:12px;
+  font-family:'DM Sans',sans-serif;
+}
+.cs-add-cat-input::placeholder { color:rgba(255,255,255,0.2); }
+.cs-add-cat-input:focus { outline:none; border-color:rgba(76,161,48,0.5); }
+.cs-add-wt-input {
+  flex:1; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12);
+  border-radius:8px; padding:8px 10px; color:#FFFEF8; font-size:12px;
+  font-family:'DM Sans',sans-serif; text-align:center;
+}
+.cs-add-wt-input::placeholder { color:rgba(255,255,255,0.2); }
+.cs-add-wt-input:focus { outline:none; border-color:rgba(76,161,48,0.5); }
+.cs-add-cat-btn {
+  background:rgba(76,161,48,0.15); border:1px solid rgba(76,161,48,0.3);
+  border-radius:8px; padding:8px 12px; color:var(--g3); font-size:12px; font-weight:700;
+  cursor:pointer; font-family:'DM Sans',sans-serif; white-space:nowrap;
+}
+.cs-add-cat-btn:hover { background:rgba(76,161,48,0.25); }
+.cs-del-course-btn {
+  display:inline-flex; align-items:center; gap:4px; margin-top:10px;
+  font-size:11px; font-weight:600; color:rgba(255,100,100,0.5);
+  background:none; border:none; cursor:pointer; padding:0; font-family:'DM Sans',sans-serif;
+}
+.cs-del-course-btn:hover { color:rgba(255,100,100,0.85); }
+.cs-add-course-form {
+  background:rgba(76,161,48,0.05); border:1px dashed rgba(76,161,48,0.22);
+  border-radius:16px; padding:16px; margin-bottom:10px;
+}
+.cs-add-course-title { font-size:13px; font-weight:700; color:rgba(255,255,255,0.65); margin-bottom:10px; }
+.cs-color-row { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+.cs-color-swatch {
+  width:24px; height:24px; border-radius:50%; cursor:pointer;
+  border:2px solid transparent; transition:transform .15s, border-color .15s; flex-shrink:0;
+}
+.cs-color-swatch.sel { border-color:#fff; transform:scale(1.2); }
+.cs-add-course-row { display:flex; gap:8px; }
+.cs-footer {
+  padding:14px 0; border-top:1px solid rgba(255,255,255,0.06);
+  padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));
+}
+.cs-done-btn {
+  width:100%; background:var(--g2); color:#fff; border:none; border-radius:14px;
+  padding:13px; font-size:14px; font-weight:700; cursor:pointer;
+  font-family:'DM Sans',sans-serif; transition:background .18s;
+}
+.cs-done-btn:hover { background:var(--g1); }
+/* Enhanced add-assign: course select + category */
+.aa-course-sel, .aa-cat-sel {
+  width:100%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12);
+  border-radius:12px; padding:10px 14px; color:#FFFEF8; font-size:14px;
+  font-family:'DM Sans',sans-serif; cursor:pointer; appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(255,255,255,.4)'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 12px center; padding-right:32px;
+}
+.aa-course-sel:focus, .aa-cat-sel:focus { outline:none; border-color:rgba(76,161,48,0.5); }
+.aa-course-sel option, .aa-cat-sel option { background:#1C3A1C; color:#FFFEF8; }
+.aa-manage-link {
+  font-size:11px; font-weight:600; color:rgba(76,161,48,0.7);
+  background:none; border:none; cursor:pointer; padding:0; text-decoration:underline;
+  font-family:'DM Sans',sans-serif;
+}
+.aa-manage-link:hover { color:var(--g3); }
+/* Empty state for manual-only users (no Canvas connected) */
+.es-setup-card {
+  background:linear-gradient(155deg,#0D2210 0%,#091608 100%);
+  border:1px solid rgba(76,161,48,0.18); border-radius:20px;
+  padding:32px 24px; text-align:center; margin:8px 0;
+}
+.es-setup-tree { font-size:56px; margin-bottom:12px; line-height:1; }
+.es-setup-title { font-size:18px; font-weight:800; color:#FFFEF8; font-family:'Playfair Display',serif; margin-bottom:8px; }
+.es-setup-sub { font-size:13px; color:rgba(255,255,255,0.58); line-height:1.55; margin-bottom:22px; }
+.es-setup-btns { display:flex; flex-direction:column; gap:10px; }
+.es-setup-primary {
+  background:var(--g2); color:#fff; border:none; border-radius:14px;
+  padding:13px; font-size:14px; font-weight:700; cursor:pointer;
+  font-family:'DM Sans',sans-serif; transition:background .18s;
+}
+.es-setup-primary:hover { background:var(--g1); }
+.es-setup-secondary {
+  background:rgba(76,161,48,0.10); color:var(--g4); border:1px solid rgba(76,161,48,0.2);
+  border-radius:14px; padding:11px; font-size:13px; font-weight:700; cursor:pointer;
+  font-family:'DM Sans',sans-serif; transition:background .18s;
+}
+.es-setup-secondary:hover { background:rgba(76,161,48,0.18); }
+/* Light mode — courses overlay */
+[data-theme="light"] .courses-sheet { background:var(--card); }
+[data-theme="light"] .courses-sheet-title { color:var(--g1); }
+[data-theme="light"] .courses-sheet-sub { color:var(--mid); }
+[data-theme="light"] .cs-course-card { background:rgba(76,161,48,0.06); border-color:rgba(76,161,48,0.18); }
+[data-theme="light"] .cs-course-name-text { color:var(--text); }
+[data-theme="light"] .cs-cats-label { color:var(--mid); }
+[data-theme="light"] .cs-cat-name { color:var(--text); }
+[data-theme="light"] .cs-course-expand { color:var(--mid); }
+[data-theme="light"] .cs-add-cat-input, [data-theme="light"] .cs-add-wt-input { background:rgba(255,255,255,0.7); border-color:var(--border); color:var(--text); }
+[data-theme="light"] .cs-add-cat-input::placeholder, [data-theme="light"] .cs-add-wt-input::placeholder { color:var(--light); }
+[data-theme="light"] .cs-add-course-form { background:rgba(76,161,48,0.04); border-color:rgba(76,161,48,0.25); }
+[data-theme="light"] .cs-add-course-title { color:var(--mid); }
+[data-theme="light"] .cs-footer { border-top-color:var(--border); }
+[data-theme="light"] .aa-course-sel, [data-theme="light"] .aa-cat-sel { background-color:var(--card); border-color:var(--border); color:var(--text); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(30,61,30,.4)'/%3E%3C/svg%3E"); }
+[data-theme="light"] .aa-course-sel option, [data-theme="light"] .aa-cat-sel option { background:#FFFEF8; color:var(--text); }
+[data-theme="light"] .es-setup-card { background:linear-gradient(155deg,#EDF4E9 0%,#DDECD3 100%); border-color:rgba(76,161,48,0.22); }
+[data-theme="light"] .es-setup-title { color:var(--g1); }
+[data-theme="light"] .es-setup-sub { color:var(--mid); }
+
 /* ── SESSION COMPLETE OVERLAY ───────────────────────────── */
 #session-complete {
   position:fixed; inset:0; background:rgba(0,0,0,0.65); backdrop-filter:blur(6px);
@@ -7508,6 +7654,29 @@ function renderAssignments(list, _skipCal) {
   const fl = filteredList();
   if (!fl.length) {
     if (activeFilter === 'all') {
+      // No assignments at all — check if Canvas is connected
+      const hasCanvas = !!(localStorage.getItem('sq_token') || localStorage.getItem('sq_url'));
+      if (!hasCanvas && !isDemo) {
+        // First-time manual user — guide them through setup
+        const hasCourses = getCourses().length > 0;
+        el.innerHTML = `<div class="es-setup-card">
+          <div class="es-setup-tree">🌱</div>
+          <div class="es-setup-title">Let's get started</div>
+          <div class="es-setup-sub">${hasCourses
+            ? 'Your courses are set up — now add your first assignment to start growing your tree.'
+            : 'Add your courses and grade categories once, and Sequoia will auto-fill weights every time you add an assignment.'
+          }</div>
+          <div class="es-setup-btns">
+            ${hasCourses
+              ? `<button class="es-setup-primary" onclick="openAddAssign()">＋ Add Your First Assignment</button>
+                 <button class="es-setup-secondary" onclick="openCoursesModal()">⚙ Manage My Courses</button>`
+              : `<button class="es-setup-primary" onclick="openCoursesModal()">📚 Set Up My Courses</button>
+                 <button class="es-setup-secondary" onclick="openAddAssign()">＋ Add an Assignment Now</button>`
+            }
+          </div>
+        </div>`;
+        return;
+      }
       // "All caught up" — drive users into Pomodoro to keep streak alive
       const streak  = getStreak();
       const today   = _localDateStr();
@@ -9404,14 +9573,210 @@ function renderStreakCal(streak) {
 }
 
 // ── ADD ASSIGNMENT ──────────────────────────────────────────
+// ── COURSES MANAGEMENT SYSTEM ────────────────────────────────────────────────
+const COURSE_COLORS = ['#4CA130','#3B82F6','#F59E0B','#8B5CF6','#EC4899','#14B8A6','#F97316'];
+let _selCourseColor  = COURSE_COLORS[0];
+let _expandedCourseId = null;
+
+function getCourses() {
+  try { return JSON.parse(localStorage.getItem('sq_courses') || '[]'); } catch { return []; }
+}
+function _saveCourses(list) { localStorage.setItem('sq_courses', JSON.stringify(list)); }
+
+function openCoursesModal() {
+  lockScroll();
+  _renderCoursesList();
+  document.getElementById('courses-overlay').classList.add('show');
+}
+function closeCoursesModal() {
+  document.getElementById('courses-overlay').classList.remove('show');
+  unlockScroll();
+  // Refresh course dropdown if add-assign modal is also open
+  if (document.getElementById('add-assign-overlay').classList.contains('show')) {
+    _refreshCourseSelect();
+  }
+}
+
+function _renderCoursesList() {
+  const courses = getCourses();
+  const list = document.getElementById('cs-list');
+  let html = '';
+
+  courses.forEach(c => {
+    const isOpen = _expandedCourseId === c.id;
+    const catsHtml = (c.cats || []).map((cat, ci) =>
+      `<div class="cs-cat-row">
+        <div class="cs-cat-name">${esc(cat.name)}</div>
+        <div class="cs-cat-weight">${cat.weight}%</div>
+        <button class="cs-cat-del" onclick="deleteCat('${c.id}',${ci})" title="Remove">×</button>
+      </div>`
+    ).join('');
+    const totalW = (c.cats || []).reduce((s, x) => s + (x.weight || 0), 0);
+    const wtWarn = totalW > 100
+      ? `<div style="font-size:11px;color:#ff9878;margin-top:6px">⚠ Categories exceed 100% (${totalW}%)</div>`
+      : totalW < 100 && totalW > 0
+      ? `<div style="font-size:11px;color:rgba(255,200,60,0.8);margin-top:6px">ℹ ${100-totalW}% unassigned</div>` : '';
+
+    html += `<div class="cs-course-card">
+      <div class="cs-course-header" onclick="toggleCourseExpand('${c.id}')">
+        <div class="cs-course-dot" style="background:${c.color}"></div>
+        <div class="cs-course-name-text">${esc(c.name)}</div>
+        <div class="cs-course-expand${isOpen?' open':''}">▾</div>
+      </div>
+      <div class="cs-course-body${isOpen?' show':''}">
+        <div class="cs-cats-label">Grade Categories</div>
+        ${catsHtml || '<div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:8px">No categories yet — add them below</div>'}
+        ${wtWarn}
+        <div class="cs-add-cat-row">
+          <input class="cs-add-cat-input" id="cs-catname-${c.id}" type="text" placeholder="e.g. Homework">
+          <input class="cs-add-wt-input"  id="cs-catwt-${c.id}"   type="number" min="1" max="100" placeholder="%">
+          <button class="cs-add-cat-btn" onclick="addCat('${c.id}')">+ Add</button>
+        </div>
+        <button class="cs-del-course-btn" onclick="deleteCourse('${c.id}')">🗑 Remove course</button>
+      </div>
+    </div>`;
+  });
+
+  // Add-new-course form
+  html += `<div class="cs-add-course-form">
+    <div class="cs-add-course-title">＋ Add a Course</div>
+    <div class="cs-color-row" id="cs-color-row">
+      ${COURSE_COLORS.map(col=>`<div class="cs-color-swatch${col===_selCourseColor?' sel':''}" style="background:${col}" onclick="_pickCourseColor('${col}')"></div>`).join('')}
+    </div>
+    <div class="cs-add-course-row">
+      <input class="settings-input" id="cs-new-name" type="text" placeholder="e.g. ENG 1020" style="flex:1"
+        onkeydown="if(event.key==='Enter')addCourse()">
+      <button class="settings-save" style="width:auto;padding:10px 18px;white-space:nowrap;margin-left:8px" onclick="addCourse()">Add</button>
+    </div>
+  </div>`;
+
+  list.innerHTML = html;
+}
+
+function toggleCourseExpand(id) {
+  _expandedCourseId = (_expandedCourseId === id) ? null : id;
+  _renderCoursesList();
+}
+function _pickCourseColor(col) {
+  _selCourseColor = col;
+  _renderCoursesList();
+}
+function addCourse() {
+  const nameEl = document.getElementById('cs-new-name');
+  const name = nameEl.value.trim();
+  if (!name) { nameEl.focus(); return; }
+  const courses = getCourses();
+  if (courses.find(c => c.name.toLowerCase() === name.toLowerCase())) {
+    showToast('That course is already in your list'); return;
+  }
+  const usedCols = courses.map(c => c.color);
+  const autoCol  = COURSE_COLORS.find(c => !usedCols.includes(c)) || _selCourseColor;
+  const newC = { id:'cr_'+Date.now(), name, color: _selCourseColor || autoCol, cats:[] };
+  courses.push(newC);
+  _saveCourses(courses);
+  _expandedCourseId = newC.id;
+  // Rotate color suggestion
+  const nextIdx = (COURSE_COLORS.indexOf(_selCourseColor) + 1) % COURSE_COLORS.length;
+  _selCourseColor = COURSE_COLORS[nextIdx];
+  _renderCoursesList();
+  showToast('✅ Course added — now add grade categories!');
+  try { track('course_added', { name }); } catch(e) {}
+}
+function deleteCourse(id) {
+  const courses = getCourses().filter(c => c.id !== id);
+  _saveCourses(courses);
+  if (_expandedCourseId === id) _expandedCourseId = null;
+  _renderCoursesList();
+}
+function addCat(courseId) {
+  const nameEl = document.getElementById('cs-catname-' + courseId);
+  const wtEl   = document.getElementById('cs-catwt-'   + courseId);
+  const name   = nameEl ? nameEl.value.trim() : '';
+  const weight = wtEl ? (parseInt(wtEl.value) || 0) : 0;
+  if (!name)   { if (nameEl) nameEl.focus(); return; }
+  if (!weight) { if (wtEl)   wtEl.focus();   return; }
+  const courses = getCourses();
+  const course  = courses.find(c => c.id === courseId);
+  if (!course) return;
+  if (!course.cats) course.cats = [];
+  course.cats.push({ name, weight });
+  _saveCourses(courses);
+  _expandedCourseId = courseId;
+  _renderCoursesList();
+}
+function deleteCat(courseId, catIdx) {
+  const courses = getCourses();
+  const course  = courses.find(c => c.id === courseId);
+  if (!course || !course.cats) return;
+  course.cats.splice(catIdx, 1);
+  _saveCourses(courses);
+  _expandedCourseId = courseId;
+  _renderCoursesList();
+}
+
+// ── ENHANCED ADD ASSIGN ───────────────────────────────────────────────────────
+function _refreshCourseSelect() {
+  const courses = getCourses();
+  const wrap    = document.getElementById('aa-course-wrap');
+  if (!wrap) return;
+  if (!courses.length) {
+    wrap.innerHTML = `<input class="settings-input" id="aa-course" type="text" placeholder="e.g. ENG 1020">`;
+    const cf = document.getElementById('aa-cat-field');
+    if (cf) cf.style.display = 'none';
+  } else {
+    const opts = courses.map(c =>
+      `<option value="${esc(c.name)}" data-id="${esc(c.id)}">${esc(c.name)}</option>`
+    ).join('');
+    wrap.innerHTML = `<select class="aa-course-sel" id="aa-course" onchange="onCourseChange()">
+      <option value="">— select a course —</option>
+      ${opts}
+      <option value="__other__">＋ Other (type below)</option>
+    </select>
+    <input class="settings-input" id="aa-course-other" type="text" placeholder="Course name"
+      style="display:none;margin-top:8px">`;
+  }
+}
+function onCourseChange() {
+  const sel        = document.getElementById('aa-course');
+  const otherInput = document.getElementById('aa-course-other');
+  const catField   = document.getElementById('aa-cat-field');
+  const catSel     = document.getElementById('aa-cat');
+  if (!sel) return;
+  const val = sel.value;
+  if (otherInput) otherInput.style.display = (val === '__other__') ? '' : 'none';
+  if (val && val !== '__other__') {
+    const courses = getCourses();
+    const course  = courses.find(c => c.name === val);
+    if (course && course.cats && course.cats.length) {
+      catField.style.display = '';
+      catSel.innerHTML = `<option value="">— pick a category —</option>` +
+        course.cats.map(cat =>
+          `<option value="${esc(cat.name)}" data-weight="${cat.weight}">${esc(cat.name)} (${cat.weight}%)</option>`
+        ).join('');
+      catSel.selectedIndex = 1;
+      onCatChange();
+      return;
+    }
+  }
+  if (catField) catField.style.display = 'none';
+  const wf = document.getElementById('aa-weight');
+  if (wf && val !== '__other__') wf.value = '';
+}
+function onCatChange() {
+  const sel = document.getElementById('aa-cat');
+  if (!sel) return;
+  const opt = sel.options[sel.selectedIndex];
+  const wt  = opt ? opt.getAttribute('data-weight') : null;
+  if (wt) document.getElementById('aa-weight').value = wt;
+}
+
 function openAddAssign() { lockScroll();
   document.getElementById('aa-title').value  = '';
-  document.getElementById('aa-course').value = '';
   document.getElementById('aa-weight').value = '';
   document.getElementById('aa-err').textContent = '';
-  // default due date = tomorrow (local date)
   const tom = new Date(); tom.setDate(tom.getDate()+1);
   document.getElementById('aa-due').value = _fmtDate(tom);
+  _refreshCourseSelect();
   document.getElementById('add-assign-overlay').classList.add('show');
   setTimeout(() => document.getElementById('aa-title').focus(), 200);
 }
@@ -9668,12 +10033,23 @@ function confirmSyllabusImport() {
 }
 function submitAddAssign() {
   const title  = document.getElementById('aa-title').value.trim();
-  const course = document.getElementById('aa-course').value.trim();
   const due    = document.getElementById('aa-due').value;
   const weight = parseFloat(document.getElementById('aa-weight').value) || 0;
   const err    = document.getElementById('aa-err');
+  // Read course from select or plain input
+  const courseEl = document.getElementById('aa-course');
+  let course = '';
+  if (courseEl && courseEl.tagName === 'SELECT') {
+    if (courseEl.value === '__other__') {
+      course = (document.getElementById('aa-course-other')?.value || '').trim();
+    } else {
+      course = courseEl.value;
+    }
+  } else if (courseEl) {
+    course = courseEl.value.trim();
+  }
   if (!title)  { err.textContent = 'Please enter a title.'; return; }
-  if (!course) { err.textContent = 'Please enter a course name.'; return; }
+  if (!course) { err.textContent = 'Please enter or select a course.'; return; }
   err.textContent = '';
   const dueDate  = due ? new Date(due + 'T23:59:00') : null;
   const today    = new Date(); today.setHours(0,0,0,0);
@@ -12051,6 +12427,20 @@ function _showPwaInstallBanner() {
 </div>
 
 <!-- ── ADD ASSIGNMENT SHEET ── -->
+<!-- ── COURSES MANAGEMENT OVERLAY ── -->
+<div id="courses-overlay" onclick="if(event.target===this)closeCoursesModal()">
+  <div class="courses-sheet">
+    <button class="ad-close-btn" onclick="closeCoursesModal()">✕</button>
+    <div class="ad-handle"></div>
+    <div class="courses-sheet-title">My Courses</div>
+    <div class="courses-sheet-sub">Set up your courses and grade categories once — Sequoia will auto-fill weights when you add assignments.</div>
+    <div class="cs-list" id="cs-list"><!-- rendered by JS --></div>
+    <div class="cs-footer">
+      <button class="cs-done-btn" onclick="closeCoursesModal()">Done</button>
+    </div>
+  </div>
+</div>
+
 <div id="add-assign-overlay" onclick="if(event.target===this)closeAddAssign()">
   <div class="add-assign-sheet">
     <button class="ad-close-btn" onclick="closeAddAssign()">✕</button>
@@ -12061,8 +12451,20 @@ function _showPwaInstallBanner() {
       <input class="settings-input" id="aa-title" type="text" placeholder="e.g. Research Paper Draft">
     </div>
     <div class="settings-field">
-      <label>Course</label>
-      <input class="settings-input" id="aa-course" type="text" placeholder="e.g. ENG 1100">
+      <label style="display:flex;justify-content:space-between;align-items:center">
+        Course
+        <button class="aa-manage-link" onclick="closeAddAssign();openCoursesModal()">⚙ Manage courses</button>
+      </label>
+      <div id="aa-course-wrap">
+        <!-- populated dynamically by openAddAssign() -->
+        <input class="settings-input" id="aa-course" type="text" placeholder="e.g. ENG 1020">
+      </div>
+    </div>
+    <div class="settings-field" id="aa-cat-field" style="display:none">
+      <label>Category</label>
+      <select class="aa-cat-sel" id="aa-cat" onchange="onCatChange()">
+        <option value="">— pick a category —</option>
+      </select>
     </div>
     <div style="display:flex;gap:12px">
       <div class="settings-field" style="flex:1">
