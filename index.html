@@ -3901,7 +3901,17 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
   .ob0-pills { justify-content:center; }
   .ob0-visual { flex:0 0 280px; height:280px; width:min(280px, 100%); border-radius:20px; }
   .ob3-card { padding:28px 20px; border-radius:24px 24px 0 0; position:absolute; bottom:0; left:0; right:0; max-width:100%; max-height:92vh; overflow-y:auto; padding-bottom:calc(28px + env(safe-area-inset-bottom,0px)); }
-  #obs1 { align-items:flex-end; padding:0; }
+  #obs1,#obs2,#obs3,#obs4 { align-items:flex-end; padding:0; }
+  /* Method picker — single column on very small screens */
+  .ob-method-grid { grid-template-columns:1fr 1fr; gap:8px; }
+  .ob-method-card { padding:12px 10px 10px; }
+  .ob-method-icon { font-size:18px; margin-bottom:6px; }
+  .ob-method-title { font-size:12.5px; }
+  .ob-method-desc { font-size:10.5px; }
+  /* Quick check — stack on narrow screens */
+  .ob-method-check-steps { font-size:11.5px; }
+  .ob-method-check-q { font-size:13px; }
+  .ob-method-ans { font-size:12px; padding:8px 6px; }
 
   /* Settings panel — slides up from bottom on mobile */
   #settings-overlay { padding:0; align-items:flex-end; justify-content:center; }
