@@ -1037,6 +1037,7 @@ body {
   font-family:'DM Sans',sans-serif; transition:color .18s;
 }
 .g-whatif-btn:hover { color:var(--g3); }
+[data-theme="light"] .g-whatif-btn { color:rgba(30,61,30,0.62); }
 .g-slider-wrap {
   display:none; padding:12px 0 2px;
   border-top:1px solid rgba(255,255,255,0.06); margin-top:8px;
@@ -3972,6 +3973,40 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 /* GPA panel */
 [data-theme="light"] .gpa-panel         { border-top-color:var(--border); }
 [data-theme="light"] .gpa-row label     { color:var(--mid); }
+[data-theme="light"] .gpa-toggle-label  { color:var(--text); }
+[data-theme="light"] .gpa-toggle-arrow  { color:var(--mid); }
+/* What-if slider */
+[data-theme="light"] .g-slider-header   { color:var(--mid); }
+[data-theme="light"] .g-slider-header strong { color:var(--text); }
+[data-theme="light"] .g-slider-wrap     { border-top-color:var(--border); }
+[data-theme="light"] .g-proj-label      { color:var(--mid); }
+[data-theme="light"] .g-proj-pct        { color:var(--text); }
+[data-theme="light"] .g-proj-change     { color:var(--mid); }
+/* Friends screen */
+[data-theme="light"] .fr-hero           { background:linear-gradient(155deg,#E8F4E4 0%,#D6ECD0 100%); box-shadow:0 8px 28px rgba(0,0,0,0.08), 0 0 0 1px rgba(76,161,48,0.15); }
+[data-theme="light"] .fr-hero-name      { color:var(--g1); }
+[data-theme="light"] .fr-hero-rank      { color:var(--mid); }
+[data-theme="light"] .fr-code-label     { color:var(--mid); }
+[data-theme="light"] .fr-code-copy      { color:var(--mid); }
+[data-theme="light"] .fr-pod            { background:linear-gradient(165deg,#EFF7EB 0%,#E2EFD9 100%); border-color:rgba(76,161,48,0.18); box-shadow:0 4px 16px rgba(0,0,0,0.08); }
+[data-theme="light"] .fr-pod.rank-1     { background:linear-gradient(165deg,#FDF8E1 0%,#F5EFC8 100%); }
+[data-theme="light"] .fr-pod-name       { color:var(--text); }
+[data-theme="light"] .fr-pod-xp         { color:var(--mid); }
+[data-theme="light"] .fr-section-title  { color:var(--mid); }
+[data-theme="light"] .fr-card           { background:linear-gradient(165deg,#EFF7EB 0%,#E6F2E0 100%); border-color:rgba(76,161,48,0.15); box-shadow:0 4px 16px rgba(0,0,0,0.07); }
+[data-theme="light"] .fr-row            { border-bottom-color:rgba(30,61,30,0.07); }
+[data-theme="light"] .fr-row.me         { background:rgba(76,161,48,0.1); }
+[data-theme="light"] .fr-rank-num       { color:var(--mid); }
+[data-theme="light"] .fr-row-name       { color:var(--text); }
+[data-theme="light"] .fr-row-sub        { color:var(--mid); }
+[data-theme="light"] .fr-row-streak     { color:var(--mid); }
+[data-theme="light"] .fr-add-card       { background:linear-gradient(165deg,#EFF7EB 0%,#E6F2E0 100%); border-color:rgba(76,161,48,0.18); box-shadow:0 4px 16px rgba(0,0,0,0.07); }
+[data-theme="light"] .fr-add-title      { color:var(--text); }
+[data-theme="light"] .fr-add-sub        { color:var(--mid); }
+[data-theme="light"] .fr-add-input      { background:rgba(255,255,255,0.8); border-color:rgba(30,61,30,0.15); color:var(--text); }
+[data-theme="light"] .fr-add-input::placeholder { color:rgba(30,61,30,0.25); }
+[data-theme="light"] .fr-empty          { color:var(--mid); }
+[data-theme="light"] .fr-loading        { color:var(--mid); }
 /* deco-shop modal */
 [data-theme="light"] .dsm-card          { background:linear-gradient(180deg,#EFF6EC,#E4F0E0); border-color:rgba(76,161,48,0.25); }
 [data-theme="light"] .dsm-name          { color:var(--text); }
@@ -11380,7 +11415,19 @@ async function _upsertPublicProfile() {
 
 let _frLoaded = false;
 async function loadFriendsScreen() {
-  if (!currentUser) return;
+  if (!currentUser) {
+    // Demo mode — populate with friendly placeholder state instead of leaving "Loading…"
+    const xp = getXP(), lvl = levelFor(xp);
+    const name = localStorage.getItem('sq_name') || 'Sequoia Student';
+    document.getElementById('fr-hero-name').textContent = name;
+    document.getElementById('fr-hero-xp').textContent   = xp.toLocaleString() + ' XP · Lv ' + lvl;
+    document.getElementById('fr-hero-tree').textContent = _stageEmoji(xp);
+    document.getElementById('fr-my-code').textContent   = '——';
+    document.getElementById('fr-list').innerHTML =
+      '<div style="text-align:center;padding:32px 16px;opacity:0.55;font-size:13px;line-height:1.6">' +
+      '🌲 Sign in to add friends<br>and compare your progress</div>';
+    return;
+  }
   if (_frLoaded) return; // already loaded this session — avoid re-fetching on every nav
   _frLoaded = true;
   const uid  = currentUser.uid;
