@@ -1183,11 +1183,11 @@ input.g-slider::-moz-range-thumb {
   text-transform:uppercase; letter-spacing:2.5px; margin-top:8px;
 }
 .pomo-dots { display:flex; justify-content:center; gap:10px; margin-bottom:8px; }
-.p-dot { width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,0.15); transition:all .3s; }
+.p-dot { width:10px; height:10px; border-radius:50%; background:var(--border); transition:all .3s; }
 .p-dot.done   { background:var(--g3); box-shadow:0 0 8px rgba(76,161,48,0.6); }
 .p-dot.active { background:var(--g4); transform:scale(1.3); box-shadow:0 0 10px rgba(130,204,85,0.7); }
-.pomo-goal-display { text-align:center; font-size:13px; font-weight:600; color:#fff; background:rgba(255,255,255,0.1); border-radius:100px; padding:5px 16px; margin:0 auto 10px; max-width:280px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.pomo-session-info { text-align:center; font-size:12px; color:rgba(255,255,255,0.68); margin-bottom:6px; }
+.pomo-goal-display { text-align:center; font-size:13px; font-weight:600; color:var(--text); background:var(--border); border-radius:100px; padding:5px 16px; margin:0 auto 10px; max-width:280px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.pomo-session-info { text-align:center; font-size:12px; color:var(--mid); margin-bottom:6px; }
 .pomo-xp-badge {
   display:inline-block; background:rgba(76,161,48,0.18); color:var(--g4);
   font-size:13px; font-weight:700; padding:5px 16px; border-radius:100px;
@@ -1915,13 +1915,15 @@ input.g-slider::-moz-range-thumb {
 #settings-overlay {
   position:fixed; inset:0; background:rgba(0,0,0,0.72); backdrop-filter:blur(6px);
   z-index:10000; display:none; align-items:flex-start; justify-content:flex-end;
-  padding:64px clamp(12px,2vw,24px) 0;
+  padding:64px clamp(12px,2vw,24px) 24px;
+  overflow-y:auto;
 }
 #settings-overlay.show { display:flex; }
 .settings-panel {
   background:var(--card); border-radius:20px; padding:28px; width:320px;
   box-shadow:0 20px 60px rgba(0,0,0,0.35);
   animation:settingsSlideIn .25s cubic-bezier(0.34,1.4,0.64,1);
+  max-height:calc(100vh - 88px); overflow-y:auto; align-self:flex-start;
 }
 @keyframes settingsSlideIn { from{opacity:0;transform:translateY(-12px) scale(.97)} to{opacity:1;transform:none} }
 @keyframes settingsSlideUp  { from{opacity:0;transform:translateY(24px)}            to{opacity:1;transform:none} }
@@ -3340,10 +3342,10 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 }
 .cal-screen-title {
   font-family:'Playfair Display',serif; font-size:22px; font-weight:700;
-  color:#fff; letter-spacing:-.3px;
+  color:var(--text); letter-spacing:-.3px;
 }
 .cal-screen-sub {
-  font-size:12px; font-weight:600; color:rgba(255,255,255,0.45);
+  font-size:12px; font-weight:600; color:var(--light);
   margin-top:2px; letter-spacing:.02em;
 }
 .cal-nav-btns { display:flex; gap:6px; }
@@ -3758,6 +3760,9 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
   .dash-grid { grid-template-columns:300px 1fr; }
   /* Grades card wraps to a new row — span full width so it doesn't look orphaned */
   .dash-grid > div:last-of-type { grid-column: 1 / -1; }
+  /* Stop sticky at this breakpoint — the grades card spans full width below the
+     two-column row, so a sticky hero-card would slide over and hide course names */
+  .hero-card { position: static; }
 }
 
 /* ── BOTTOM NAV (mobile only) ── */
@@ -5148,9 +5153,9 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         <div class="courses-header">
           <span class="courses-title">Grade Intelligence</span>
           <div style="display:flex;align-items:center;gap:6px">
-            <span id="grades-target-label" style="font-size:11px;color:rgba(255,255,255,0.35)">Target</span>
+            <span id="grades-target-label" style="font-size:11px;color:var(--light)">Target</span>
             <select id="grades-target" onchange="renderGrades(window._lastGrades||[])"
-              style="font-size:11px;font-weight:700;border:1px solid rgba(76,161,48,0.25);border-radius:6px;padding:3px 6px;background:rgba(0,0,0,0.3);color:rgba(255,255,255,0.7);cursor:pointer">
+              style="font-size:11px;font-weight:700;border:1px solid rgba(76,161,48,0.25);border-radius:6px;padding:3px 6px;background:var(--card);color:var(--text);cursor:pointer">
               <option value="90">A (90%)</option>
               <option value="80">B (80%)</option>
               <option value="70">C (70%)</option>
@@ -6059,7 +6064,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
           oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')">
         <button class="fr-add-btn" id="fr-add-btn" onclick="addFriend()">Add</button>
       </div>
-      <div id="fr-add-msg" style="font-size:11px;margin-top:8px;color:rgba(255,255,255,0.4);min-height:16px"></div>
+      <div id="fr-add-msg" style="font-size:11px;margin-top:8px;color:var(--light);min-height:16px"></div>
     </div>
 
   </div>
@@ -7716,7 +7721,7 @@ function renderGPARows() {
   const rows   = document.getElementById('gpa-rows');
   if (!rows) return;
   if (!grades.length) {
-    rows.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,0.3);text-align:center;padding:8px 0">Connect Canvas to calculate GPA</div>';
+    rows.innerHTML = '<div style="font-size:12px;color:var(--light);text-align:center;padding:8px 0">Connect Canvas to calculate GPA</div>';
     return;
   }
   rows.innerHTML = grades.slice(0, 7).map((c, i) => {
@@ -10140,7 +10145,7 @@ function _renderCoursesList() {
       </div>
       <div class="cs-course-body${isOpen?' show':''}">
         <div class="cs-cats-label">Grade Categories</div>
-        ${catsHtml || '<div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:8px">No categories yet — add them below</div>'}
+        ${catsHtml || '<div style="font-size:12px;color:var(--light);margin-bottom:8px">No categories yet — add them below</div>'}
         ${wtWarn}
         <div class="cs-add-cat-row">
           <input class="cs-add-cat-input" id="cs-catname-${c.id}" type="text" placeholder="e.g. Homework">
@@ -10365,8 +10370,8 @@ function _renderManualSylCourses() {
     // No courses set up yet — guide user to set them up first or just paste
     list.innerHTML = `<div class="syl-empty" style="text-align:center;padding:20px 16px">
       <div style="font-size:32px;margin-bottom:8px">📋</div>
-      <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.75);margin-bottom:4px">No courses set up yet</div>
-      <div style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.5">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">No courses set up yet</div>
+      <div style="font-size:12px;color:var(--mid);line-height:1.5">
         Set up your courses first for the best experience, or just paste your syllabus below — we'll extract the course name automatically.
       </div>
       <button class="es-add-btn" style="margin:12px auto 0;display:block" onclick="closeSyllabusImport();openCoursesModal()">📚 Set Up My Courses →</button>
@@ -12950,8 +12955,8 @@ function _showPwaInstallBanner() {
 
     <div style="margin:10px 0 14px;padding:10px 14px;background:rgba(76,161,48,0.06);border:1px solid rgba(76,161,48,0.15);border-radius:12px">
       <div style="font-size:11px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">🗓 Canvas Calendar Feed <span style="font-size:10px;background:rgba(76,161,48,0.15);color:var(--g3);border-radius:4px;padding:2px 6px;margin-left:4px">Works when tokens are blocked</span></div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.55);line-height:1.5;margin-bottom:10px">
-        Can't generate a Canvas token? Use your <strong style="color:rgba(255,255,255,0.75)">Calendar Feed URL</strong> instead — it syncs all your assignments from Canvas without needing IT approval.<br>
+      <div style="font-size:11px;color:var(--mid);line-height:1.5;margin-bottom:10px">
+        Can't generate a Canvas token? Use your <strong style="color:var(--text)">Calendar Feed URL</strong> instead — it syncs all your assignments from Canvas without needing IT approval.<br>
         <span style="opacity:0.7">In Canvas → Calendar → click the calendar icon at the bottom right → copy the URL.</span>
       </div>
       <div id="set-ical-status" style="display:none;font-size:11px;font-weight:600;color:var(--g4);margin-bottom:8px">✓ Calendar feed connected</div>
@@ -12975,7 +12980,7 @@ function _showPwaInstallBanner() {
         Extension connected · <span id="set-ext-last-sync"></span>
       </div>
       <div style="font-size:12px;line-height:1.6;color:var(--light);margin-bottom:10px">
-        The <strong style="color:rgba(255,255,255,0.75)">Sequoia for Canvas</strong> Chrome extension
+        The <strong style="color:var(--g2)">Sequoia for Canvas</strong> Chrome extension
         syncs your assignments, grade weights, and submission status automatically —
         no API token needed, works even when your school blocks them.
       </div>
@@ -13022,8 +13027,8 @@ function _showPwaInstallBanner() {
 
     <!-- Help & Tour -->
     <button onclick="closeSettings();setTimeout(()=>{localStorage.removeItem('sq_seen_tour');tourShow();},300)"
-      style="width:100%;padding:11px;border-radius:12px;border:1px solid rgba(255,255,255,0.14);
-      background:transparent;color:rgba(255,255,255,0.72);font-family:'DM Sans',sans-serif;
+      style="width:100%;padding:11px;border-radius:12px;border:1px solid var(--border);
+      background:transparent;color:var(--light);font-family:'DM Sans',sans-serif;
       font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;margin-bottom:8px;text-align:center;">
       ❓ Replay App Tour
     </button>
@@ -13031,12 +13036,12 @@ function _showPwaInstallBanner() {
     <hr class="settings-divider">
     <button class="settings-danger" onclick="disconnect()">Disconnect Canvas</button>
 
-    <div style="margin-top:20px;text-align:center;font-size:11.5px;color:rgba(255,255,255,0.58);line-height:2">
-      <a href="privacy.html" target="_blank" style="color:rgba(255,255,255,0.65);text-decoration:underline">Privacy Policy</a>
+    <div style="margin-top:20px;text-align:center;font-size:11.5px;color:var(--light);line-height:2">
+      <a href="privacy.html" target="_blank" style="color:var(--mid);text-decoration:underline">Privacy Policy</a>
       &nbsp;·&nbsp;
-      <a href="terms.html" target="_blank" style="color:rgba(255,255,255,0.65);text-decoration:underline">Terms of Service</a>
+      <a href="terms.html" target="_blank" style="color:var(--mid);text-decoration:underline">Terms of Service</a>
       &nbsp;·&nbsp;
-      <a href="mailto:support@getsequoia.app" style="color:rgba(255,255,255,0.65);text-decoration:underline">Contact</a>
+      <a href="mailto:support@getsequoia.app" style="color:var(--mid);text-decoration:underline">Contact</a>
     </div>
   </div>
 </div>
