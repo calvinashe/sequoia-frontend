@@ -110,10 +110,10 @@ a:hover { color:#4CA130; }
   </div>
 
   <h1>Privacy Policy</h1>
-  <p class="meta">Effective date: May 16, 2026 &nbsp;·&nbsp; Last updated: May 16, 2026</p>
+  <p class="meta">Effective date: May 16, 2026 &nbsp;·&nbsp; Last updated: May 26, 2026</p>
 
   <div class="callout">
-    <p><strong>Short version:</strong> Sequoia connects to your Canvas account using a read-only token you provide. We don't sell your data, we don't share it with advertisers, and your Canvas token never leaves your own device.</p>
+    <p><strong>Short version:</strong> Sequoia connects to your Canvas account using a read-only token you provide, a Canvas calendar feed URL, or the optional browser extension. We don't sell your data, we don't share it with advertisers, and your credentials never leave your own device or your private account profile.</p>
   </div>
 
   <h2>1. Who We Are</h2>
@@ -125,6 +125,8 @@ a:hover { color:#4CA130; }
   <ul>
     <li><strong>Account information:</strong> When you create an account via email or Google Sign-In, we collect your name and email address, which are stored in Firebase Authentication (operated by Google).</li>
     <li><strong>Canvas credentials:</strong> Your Canvas URL and personal API access token are stored <em>locally on your device</em> (localStorage). If you are signed in, an encrypted copy is also saved to your Firestore profile so you can access Sequoia from multiple devices. Your Canvas token is read-only — it allows Sequoia to read your assignments and grades but cannot submit work or change anything in Canvas.</li>
+    <li><strong>Canvas calendar feed URL:</strong> If you choose to connect your Canvas calendar feed (an alternative to an API token), the feed URL is stored in your private Firestore profile. It is never logged or shared. Sequoia uses it only to fetch your upcoming assignment due dates.</li>
+    <li><strong>Manually entered data:</strong> Courses, grade categories, and assignments you type in yourself are stored locally on your device and, if you are signed in, synced to your Firestore profile.</li>
     <li><strong>Payment information:</strong> Subscription payments are processed by Stripe. We never see or store your full card number — Stripe handles all payment data under their own privacy policy.</li>
   </ul>
 
@@ -161,23 +163,37 @@ a:hover { color:#4CA130; }
     <p>Your Canvas personal access token gives read-only access to your Canvas account. Sequoia stores it in your browser's localStorage and, if you are signed in, in your encrypted Firestore document. It is <strong>never</strong> logged, transmitted to analytics services, or shared with anyone. We recommend generating a token specifically for Sequoia and revoking it from Canvas Settings if you ever stop using the app.</p>
   </div>
 
-  <h2>6. Data Retention and Deletion</h2>
+  <h2>6. Sequoia for Canvas — Browser Extension</h2>
+  <p>The optional <strong>Sequoia for Canvas</strong> Chrome extension syncs your Canvas courses, assignments, grade weights, and submission statuses with Sequoia automatically. Here is exactly what it does and does not do:</p>
+  <ul>
+    <li><strong>What it accesses:</strong> When you visit canvas.instructure.com while logged in, the extension calls Canvas's own REST API using your existing browser session cookies. It reads your active courses, assignment groups (including grade weights), assignment due dates, and whether each assignment has been submitted. It does not read messages, files, or any other Canvas content.</li>
+    <li><strong>What it sends:</strong> The course and assignment data described above is sent to Sequoia's servers, encrypted over HTTPS, and stored in your private Firestore profile. It is used only to display your assignments inside Sequoia.</li>
+    <li><strong>What it never does:</strong> The extension never reads data from any website other than canvas.instructure.com and getsequoia.app. It never captures passwords, payment information, or browsing history. It never submits, modifies, or deletes anything in Canvas.</li>
+    <li><strong>Automatic syncing:</strong> The extension syncs approximately every 45 minutes while a Canvas tab is open, and once each time you visit Canvas. You can also sync manually from the extension popup.</li>
+    <li><strong>Removing the extension:</strong> Uninstalling the extension stops all syncing immediately. Previously synced data remains in your Sequoia account until you request account deletion.</li>
+  </ul>
+  <div class="callout">
+    <p><strong>FERPA note:</strong> Your Canvas data (assignments, grades, course information) constitutes an educational record under FERPA. By installing the extension and authorizing the sync, you are directing Sequoia to access this data on your behalf. Sequoia does not share this data with any third party other than the infrastructure providers listed in Section 4.</p>
+  </div>
+
+  <h2>7. Data Retention and Deletion</h2>
+
   <p>Your account data is retained for as long as your account is active. You can request deletion of your account and all associated data at any time by emailing <a href="mailto:support@getsequoia.app">support@getsequoia.app</a>. We will process deletion requests within 30 days.</p>
   <p>If you uninstall the Sequoia PWA or clear your browser storage, all locally stored data (Canvas token, XP, streaks) is immediately erased from your device. Firestore data is retained until you request account deletion.</p>
 
-  <h2>7. Children's Privacy</h2>
+  <h2>8. Children's Privacy</h2>
   <p>Sequoia is intended for college students age 13 and older. We do not knowingly collect personal information from children under 13. If you believe a child under 13 has provided us with personal information, please contact us and we will delete it promptly.</p>
 
-  <h2>8. Security</h2>
+  <h2>9. Security</h2>
   <p>We take reasonable technical measures to protect your data, including TLS encryption in transit, Firebase's built-in Firestore security rules, and token-based authentication. No system is 100% secure; please protect your Sequoia account with a strong password and revoke your Canvas token if you suspect unauthorized access.</p>
 
-  <h2>9. International Users</h2>
+  <h2>10. International Users</h2>
   <p>Sequoia is operated from the United States. If you access Sequoia from outside the US, your data may be transferred to and processed in the US. By using Sequoia, you consent to this transfer.</p>
 
-  <h2>10. Changes to This Policy</h2>
+  <h2>11. Changes to This Policy</h2>
   <p>We may update this Privacy Policy from time to time. The "Last updated" date at the top of this page will reflect any changes. Continued use of Sequoia after an update constitutes acceptance of the revised policy.</p>
 
-  <h2>11. Contact Us</h2>
+  <h2>12. Contact Us</h2>
   <p>If you have any questions about this Privacy Policy or how we handle your data, please email us at <a href="mailto:support@getsequoia.app">support@getsequoia.app</a>.</p>
 
   <div class="footer">
