@@ -7074,16 +7074,10 @@ window.addEventListener('DOMContentLoaded', () => {
       setGreeting(localStorage.getItem('sq_name') || user.displayName || '');
       loadAssignments(token || '', url);
       loadCourses(token || '', url);
-    } else {
-      // Signed in but no Canvas connected — skip the hero pitch (they just saw it on auth
-      // screen) and land them directly on the Canvas connect step.
-      showOnboard(1);
-      // Pre-fill name from Google profile if available
-      const nameEl = document.getElementById('ob-name');
-      if (nameEl && !nameEl.value && user.displayName) {
-        nameEl.value = user.displayName.split(' ')[0];
-      }
     }
+    // If no url in localStorage, DON'T show onboarding yet —
+    // wait for Firestore to load first so returning users on a new
+    // device / cleared storage don't get sent through onboarding again.
 
     // Sync Firestore data in background — updates UI when ready
     loadUserData(user.uid).then(userData => {
@@ -7091,8 +7085,18 @@ window.addEventListener('DOMContentLoaded', () => {
         updateNavAccount(user, userData.tier || 'free');
         loadXPStreak(); updateDashTree(); syncTreeScreen();
         const u = localStorage.getItem('sq_url');
-        // Load assignments if Canvas is connected but wasn't loaded yet (e.g. Firestore sync added sq_url)
-        if (u && !url) { closeOnboard(); setGreeting(localStorage.getItem('sq_name') || ''); loadAssignments('', u); loadCourses('', u); }
+        if (u && !url) {
+          // Returning user whose Canvas URL was restored from Firestore — skip onboarding
+          closeOnboard();
+          setGreeting(localStorage.getItem('sq_name') || user.displayName || '');
+          loadAssignments('', u);
+          loadCourses('', u);
+        } else if (!u && !url) {
+          // Genuinely new user — no Canvas URL anywhere, show onboarding
+          showOnboard(1);
+          const nameEl = document.getElementById('ob-name');
+          if (nameEl && !nameEl.value && user.displayName) nameEl.value = user.displayName.split(' ')[0];
+        }
         // Show one-time toast for users affected by the level formula update
         _checkLevelMigration();
         // If this is a post-Stripe redirect and Firestore already has premium, unlock now.
