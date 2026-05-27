@@ -9807,17 +9807,23 @@ function sylGoBack() {
 }
 
 async function _loadSyllabusCourses() {
-  const list = document.getElementById('syl-course-list');
+  const list  = document.getElementById('syl-course-list');
+  const token = localStorage.getItem('sq_token');
+  const url   = localStorage.getItem('sq_url');
+
+  // ── No Canvas connected: use manually saved courses ──────────────────────
+  if (!url) {
+    _renderManualSylCourses();
+    return;
+  }
+
+  // ── Canvas connected: fetch syllabi from Canvas API ──────────────────────
+  const sub1 = document.getElementById('syl-step1-sub');
+  if (sub1) sub1.textContent = "We'll auto-pull from Canvas first. Upload a PDF or paste text for anything we can't find.";
   list.innerHTML = '<div class="syl-empty">Checking Canvas for syllabi…</div>';
   document.getElementById('syl-paste-wrap').classList.remove('show');
   document.getElementById('syl-parse-btn').classList.remove('show');
-
-  const token = localStorage.getItem('sq_token'); // may be null post-migration
-  const url   = localStorage.getItem('sq_url');
-  if (!url) {
-    list.innerHTML = '<div class="syl-empty">Connect Canvas first to auto-import syllabi.</div>';
-    return;
-  }
+  document.getElementById('syl-course-picker-wrap').style.display = 'none';
   try {
     const canvasHdrs = await _canvasHeaders(token || '', url);
     const res  = await fetch(API + '/canvas-syllabi', {
@@ -9829,11 +9835,77 @@ async function _loadSyllabusCourses() {
     if (!data.ok) throw new Error(data.error);
     _sylCourses = data.courses;
     _renderSylCourseList();
-    // Auto-parse any course that has a Canvas syllabus
     _autoParseCanvasSyllabi();
   } catch (e) {
     list.innerHTML = `<div class="syl-empty">Couldn't load courses: ${e.message}</div>`;
   }
+}
+
+function _renderManualSylCourses() {
+  const list    = document.getElementById('syl-course-list');
+  const courses = getCourses();
+  const picker  = document.getElementById('syl-course-picker-wrap');
+
+  if (!courses.length) {
+    // No courses set up yet — guide user to set them up first or just paste
+    list.innerHTML = `<div class="syl-empty" style="text-align:center;padding:20px 16px">
+      <div style="font-size:32px;margin-bottom:8px">📋</div>
+      <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.75);margin-bottom:4px">No courses set up yet</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.5">
+        Set up your courses first for the best experience, or just paste your syllabus below — we'll extract the course name automatically.
+      </div>
+      <button class="es-add-btn" style="margin:12px auto 0;display:block" onclick="closeSyllabusImport();openCoursesModal()">📚 Set Up My Courses →</button>
+    </div>`;
+    // Still allow paste even without courses
+    picker.style.display = 'none';
+    document.getElementById('syl-paste-label').textContent = 'Paste your syllabus text:';
+    document.getElementById('syl-paste-wrap').classList.add('show');
+    return;
+  }
+
+  // Show saved courses as cards with PDF/Paste action
+  list.innerHTML = courses.map(c => `
+    <div class="syl-course-card" id="syl-mcard-${c.id}">
+      <div class="syl-course-icon" style="font-size:16px;width:24px;height:24px;border-radius:50%;background:${c.color};display:flex;align-items:center;justify-content:center;flex-shrink:0"></div>
+      <div class="syl-course-info">
+        <div class="syl-course-name">${esc(c.name)}</div>
+        <div class="syl-course-status" id="syl-mstatus-${c.id}">No syllabus imported</div>
+      </div>
+      <button class="syl-course-action sca-upload" id="syl-maction-${c.id}"
+        onclick="sylStartManualPaste('${c.id}','${esc(c.name)}')">📋 Paste</button>
+    </div>`).join('');
+
+  // Show course picker above paste area
+  const pickerSel = document.getElementById('syl-course-picker');
+  if (pickerSel) {
+    pickerSel.innerHTML = `<option value="">— select a course —</option>` +
+      courses.map(c => `<option value="${esc(c.name)}">${esc(c.name)}</option>`).join('') +
+      `<option value="__other__">Other (I'll type it)</option>`;
+  }
+  picker.style.display = 'none'; // hidden until user clicks "Paste" on a card
+  document.getElementById('syl-paste-wrap').classList.remove('show');
+  document.getElementById('syl-parse-btn').classList.remove('show');
+}
+
+function sylStartManualPaste(courseId, courseName) {
+  // Highlight the selected course card
+  document.querySelectorAll('.syl-course-card').forEach(el => el.style.opacity = '0.5');
+  const card = document.getElementById('syl-mcard-' + courseId);
+  if (card) card.style.opacity = '1';
+
+  // Pre-select the course in the picker
+  const picker    = document.getElementById('syl-course-picker-wrap');
+  const pickerSel = document.getElementById('syl-course-picker');
+  if (pickerSel) pickerSel.value = courseName;
+  picker.style.display = '';
+
+  // Show the paste area
+  const pasteWrap = document.getElementById('syl-paste-wrap');
+  document.getElementById('syl-paste-label').textContent = `Paste ${courseName} syllabus:`;
+  pasteWrap.classList.add('show');
+  document.getElementById('syl-paste-ta').value = '';
+  document.getElementById('syl-parse-btn').classList.remove('show');
+  setTimeout(() => document.getElementById('syl-paste-ta').focus(), 200);
 }
 
 function _renderSylCourseList() {
@@ -9950,8 +10022,15 @@ async function parsePastedSyllabus() {
   const btn      = document.getElementById('syl-parse-btn');
   const origText = btn.textContent;
   btn.disabled = true; btn.textContent = '⏳ Parsing…';
-  // Try to guess course name from paste area label context
-  const courseName = 'Pasted Syllabus';
+  // Read course name from picker (manual mode) or fall back to 'Pasted Syllabus'
+  const pickerSel  = document.getElementById('syl-course-picker');
+  const otherInput = document.getElementById('syl-course-other-input');
+  let courseName   = 'Pasted Syllabus';
+  if (pickerSel && pickerSel.value && pickerSel.value !== '__other__') {
+    courseName = pickerSel.value;
+  } else if (otherInput && otherInput.value.trim()) {
+    courseName = otherInput.value.trim();
+  }
   try {
     const res  = await fetch(API + '/parse-syllabus', {
       method: 'POST',
@@ -9961,7 +10040,9 @@ async function parsePastedSyllabus() {
     const data = await res.json();
     if (!data.ok) throw new Error(data.error);
     const count = data.assignments.length;
-    _showReview(data.assignments, `Found ${count} assignments`);
+    // Tag each assignment with the selected course name
+    const tagged = data.assignments.map(a => ({ ...a, course: courseName }));
+    _showReview(tagged, `Found ${count} assignments in ${courseName}`);
     document.getElementById('syl-paste-ta').value = '';
     btn.classList.remove('show');
   } catch (e) {
@@ -9969,6 +10050,12 @@ async function parsePastedSyllabus() {
   } finally {
     btn.disabled = false; btn.textContent = origText;
   }
+}
+
+function onSylCoursePickerChange() {
+  const sel   = document.getElementById('syl-course-picker');
+  const other = document.getElementById('syl-course-other-input');
+  if (sel && other) other.style.display = sel.value === '__other__' ? '' : 'none';
 }
 
 function _showReview(assignments, subtitle) {
@@ -10010,26 +10097,38 @@ function confirmSyllabusImport() {
   if (!checked.length) { showToast('No assignments selected.'); return; }
 
   // Add each checked assignment as a manual assignment
-  const manual = JSON.parse(localStorage.getItem('sq_manual') || '[]');
-  const now    = Date.now();
+  const manual  = JSON.parse(localStorage.getItem('sq_manual') || '[]');
+  const now     = Date.now();
+  const today   = new Date(); today.setHours(0,0,0,0);
   checked.forEach((a, i) => {
-    manual.push({
-      id:      'syl-' + now + '-' + i,
-      name:    a.name || 'Untitled',
-      course:  a.course || 'Unknown Course',
-      due:     a.due_date || '',
-      weight:  a.weight  != null ? a.weight  : 0,
-      points:  a.points  != null ? a.points  : 0,
-      source:  'syllabus',
+    const dueDate   = a.due_date ? new Date(a.due_date + 'T23:59:00') : null;
+    const daysUntil = dueDate ? Math.ceil((dueDate - today) / 86400000) : null;
+    const wt        = a.weight != null ? parseFloat(a.weight) : 0;
+    manual.unshift({
+      id:             'syl-' + now + '-' + i,
+      title:          a.name || a.title || 'Untitled',
+      course:         a.course || 'Unknown Course',
+      due_at:         dueDate ? dueDate.toISOString() : null,
+      days_until:     daysUntil,
+      weight_pct:     wt,
+      urgency:        daysUntil !== null && daysUntil <= 2 ? 'high' : 'medium',
+      priority_score: wt * (daysUntil !== null ? Math.max(1, 10 - daysUntil) : 1),
+      manual:         true,
+      source:         'syllabus',
+      points:         a.points != null ? a.points : 0,
     });
   });
   localStorage.setItem('sq_manual', JSON.stringify(manual));
   if (currentUser) saveUserData({ manual_assignments: manual });
 
+  // Merge into in-memory list (avoid duplicates by id)
+  const existingIds = new Set(allAssignments.map(x => x.id));
+  manual.filter(m => !existingIds.has(m.id)).forEach(m => allAssignments.unshift(m));
   closeSyllabusImport();
-  renderAssignments();
+  renderAssignments(allAssignments);
+  buildQPick && buildQPick();
   showToast(`✅ ${checked.length} assignment${checked.length !== 1 ? 's' : ''} added!`);
-  track('syllabus_imported', { count: checked.length });
+  try { track('syllabus_imported', { count: checked.length }); } catch(e) {}
 }
 function submitAddAssign() {
   const title  = document.getElementById('aa-title').value.trim();
@@ -12401,9 +12500,19 @@ function _showPwaInstallBanner() {
         <div class="syl-title">Import Syllabus</div>
         <div style="font-size:11px;font-weight:600;color:var(--mid)">Step 1 of 2</div>
       </div>
-      <div class="syl-sub">We'll auto-pull from Canvas first. Upload a PDF or paste text for anything we can't find.</div>
+      <div class="syl-sub" id="syl-step1-sub">Select a course below and paste or upload its syllabus — Sequoia will extract all the assignments for you.</div>
       <div class="syl-course-list" id="syl-course-list">
         <div class="syl-empty">Loading your courses…</div>
+      </div>
+      <!-- Course picker for manual (no-Canvas) mode -->
+      <div id="syl-course-picker-wrap" style="display:none;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Course</div>
+        <select class="aa-course-sel" id="syl-course-picker" onchange="onSylCoursePickerChange()"
+          style="margin-bottom:0">
+          <option value="">— select a course —</option>
+        </select>
+        <input class="settings-input" id="syl-course-other-input" type="text"
+          placeholder="Course name" style="display:none;margin-top:8px">
       </div>
       <div class="syl-paste-wrap" id="syl-paste-wrap">
         <div class="syl-paste-label" id="syl-paste-label">Paste syllabus text</div>
