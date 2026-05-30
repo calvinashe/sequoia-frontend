@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Support — Sequoia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { height:100%; }
+body {
+  font-family:'DM Sans', sans-serif;
+  background:linear-gradient(160deg,#F4F0E8 0%,#EDE8DC 55%,#E6E0D4 100%);
+  min-height:100vh;
+  color:#1A2E1A;
+}
+body::before {
+  content:'';
+  position:fixed; inset:0; pointer-events:none; z-index:0;
+  background-image:radial-gradient(circle, rgba(30,61,30,0.05) 1px, transparent 1px);
+  background-size:28px 28px;
+}
+.wrap {
+  position:relative; z-index:1;
+  max-width:720px; margin:0 auto;
+  padding:48px 24px 80px;
+}
+.back-link {
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:13px; font-weight:600; color:rgba(30,61,30,0.5);
+  text-decoration:none; margin-bottom:40px;
+  transition:color .18s;
+}
+.back-link:hover { color:#2E6020; }
+.logo {
+  display:flex; align-items:center; gap:10px; margin-bottom:36px;
+}
+.logo-icon {
+  width:40px; height:40px; border-radius:10px;
+  background:#2E6020; display:flex; align-items:center; justify-content:center;
+}
+.logo-icon img { width:24px; height:24px; filter:brightness(0) invert(1); }
+.logo-name {
+  font-family:'Playfair Display', serif;
+  font-size:22px; font-weight:800; color:#1A2E1A;
+}
+h1 {
+  font-family:'Playfair Display', serif;
+  font-size:clamp(28px,5vw,42px); font-weight:800;
+  line-height:1.15; color:#1A2E1A; margin-bottom:12px;
+}
+.subtitle {
+  font-size:16px; color:rgba(30,61,30,0.6);
+  line-height:1.6; margin-bottom:48px;
+}
+.contact-card {
+  background:#fff; border-radius:16px;
+  padding:32px; margin-bottom:40px;
+  border:1px solid rgba(30,61,30,0.1);
+  display:flex; align-items:center; gap:20px;
+  flex-wrap:wrap;
+}
+.contact-icon {
+  width:52px; height:52px; border-radius:14px;
+  background:#EAF5E4; display:flex; align-items:center; justify-content:center;
+  font-size:24px; flex-shrink:0;
+}
+.contact-info h3 { font-size:16px; font-weight:700; margin-bottom:4px; }
+.contact-info p { font-size:14px; color:rgba(30,61,30,0.6); margin-bottom:12px; }
+.contact-btn {
+  display:inline-flex; align-items:center; gap:8px;
+  background:#2E6020; color:#fff; text-decoration:none;
+  padding:10px 20px; border-radius:10px;
+  font-size:14px; font-weight:600; transition:background .18s;
+}
+.contact-btn:hover { background:#245018; }
+.faq-section h2 {
+  font-family:'Playfair Display', serif;
+  font-size:24px; font-weight:800; margin-bottom:24px; color:#1A2E1A;
+}
+.faq-item {
+  background:#fff; border-radius:14px;
+  border:1px solid rgba(30,61,30,0.1);
+  margin-bottom:12px; overflow:hidden;
+}
+.faq-q {
+  width:100%; text-align:left; background:none; border:none; cursor:pointer;
+  padding:20px 24px; font-size:15px; font-weight:600; color:#1A2E1A;
+  display:flex; justify-content:space-between; align-items:center; gap:12px;
+  font-family:'DM Sans', sans-serif;
+}
+.faq-q .arrow {
+  font-size:18px; color:#2E6020; transition:transform .2s; flex-shrink:0;
+}
+.faq-item.open .faq-q .arrow { transform:rotate(180deg); }
+.faq-a {
+  max-height:0; overflow:hidden; transition:max-height .3s ease;
+  font-size:14px; line-height:1.7; color:rgba(30,61,30,0.75);
+}
+.faq-item.open .faq-a { max-height:400px; }
+.faq-a-inner { padding:0 24px 20px; }
+.faq-a a { color:#2E6020; }
+.divider {
+  height:1px; background:rgba(30,61,30,0.08);
+  margin:48px 0;
+}
+.ext-section {
+  background:#1A2E1A; border-radius:16px;
+  padding:32px; color:#FFFEF8;
+}
+.ext-section h2 {
+  font-family:'Playfair Display', serif;
+  font-size:22px; font-weight:800; margin-bottom:10px;
+}
+.ext-section p { font-size:14px; line-height:1.7; opacity:0.75; margin-bottom:20px; }
+.ext-btn {
+  display:inline-flex; align-items:center; gap:8px;
+  background:#4CA130; color:#fff; text-decoration:none;
+  padding:12px 22px; border-radius:10px;
+  font-size:14px; font-weight:600; transition:background .18s;
+}
+.ext-btn:hover { background:#3A9020; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="/" class="back-link">← Back to Sequoia</a>
+
+  <div class="logo">
+    <div class="logo-icon">
+      <img src="icon-192.png" alt="Sequoia">
+    </div>
+    <span class="logo-name">Sequoia</span>
+  </div>
+
+  <h1>How can we help?</h1>
+  <p class="subtitle">Get answers fast or reach out — we respond to every email, usually within 24 hours.</p>
+
+  <!-- Contact card -->
+  <div class="contact-card">
+    <div class="contact-icon">✉️</div>
+    <div class="contact-info">
+      <h3>Email support</h3>
+      <p>For account issues, billing questions, or anything else — we're here.</p>
+      <a href="mailto:support@getsequoia.app" class="contact-btn">support@getsequoia.app</a>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq-section">
+    <h2>Frequently asked questions</h2>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggle(this)">
+        How do I connect my Canvas account?
+        <span class="arrow">⌄</span>
+      </button>
+      <div class="faq-a"><div class="faq-a-inner">
+        You have two options:<br><br>
+        <strong>Option 1 — Chrome extension (easiest):</strong> Install the Sequoia for Canvas extension from the Chrome Web Store. It syncs automatically when you visit Canvas — no API token needed.<br><br>
+        <strong>Option 2 — API token:</strong> Go to your Canvas account settings, scroll to "Approved Integrations," and generate a new access token. Paste it into Sequoia during setup along with your Canvas URL (e.g. <em>yourschool.instructure.com</em>).
+      </div></div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggle(this)">
+        My school doesn't allow Canvas API tokens. What do I do?
+        <span class="arrow">⌄</span>
+      </button>
+      <div class="faq-a"><div class="faq-a-inner">
+        Install the <strong>Sequoia for Canvas</strong> Chrome extension. It reads your Canvas data using your existing browser session — no API token required, and no IT approval needed. Just install it, log in to Sequoia, and visit Canvas once.
+      </div></div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggle(this)">
+        What is Premium and what does it include?
+        <span class="arrow">⌄</span>
+      </button>
+      <div class="faq-a"><div class="faq-a-inner">
+        Premium is <strong>$7.99/month</strong> and includes:<br><br>
+        • Unlimited assignments (free plan shows top 5)<br>
+        • Full study mode with focus timer and XP<br>
+        • Grade Intelligence with "What if?" scenarios<br>
+        • AI Quick Pick — smart assignment recommendations<br>
+        • All tree decorations and cosmetics<br>
+        • Semester archive (past trees saved forever)<br><br>
+        You can cancel anytime from your account settings.
+      </div></div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggle(this)">
+        How do I cancel my Premium subscription?
+        <span class="arrow">⌄</span>
+      </button>
+      <div class="faq-a"><div class="faq-a-inner">
+        Email us at <a href="mailto:support@getsequoia.app">support@getsequoia.app</a> with your account email and we'll cancel immediately. You'll keep Premium access until the end of your billing period.
+      </div></div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggle(this)">
+        My assignments aren't loading. What's wrong?
+        <span class="arrow">⌄</span>
+      </button>
+      <div class="faq-a"><div class="faq-a-inner">
+        Try these steps in order:<br><br>
+        1. Pull down to refresh on the dashboard<br>
+        2. Sign out and sign back in<br>
+        3. If using an API token, it may have expired — generate a new one in Canvas settings<br>
+        4. If using the extension, visit Canvas in Chrome to trigger a fresh sync<br><br>
+        Still not working? Email us and we'll look into it.
+      </div></div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggle(this)">
+        I lost my XP or streak. Can you restore it?
+        <span class="arrow">⌄</span>
+      </button>
+      <div class="faq-a"><div class="faq-a-inner">
+        Yes — email us at <a href="mailto:support@getsequoia.app">support@getsequoia.app</a> with your account email and the approximate date the issue happened. We can look at your account history and restore your progress.
+      </div></div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggle(this)">
+        Is my Canvas data private?
+        <span class="arrow">⌄</span>
+      </button>
+      <div class="faq-a"><div class="faq-a-inner">
+        Yes. Your Canvas data (assignments, grades, course names) is only used to power your Sequoia dashboard. We never sell your data or share it with third parties. See our full <a href="/privacy.html">Privacy Policy</a>.
+      </div></div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggle(this)">
+        Does Sequoia work on mobile?
+        <span class="arrow">⌄</span>
+      </button>
+      <div class="faq-a"><div class="faq-a-inner">
+        Yes! On iPhone or Android, visit <strong>getsequoia.app</strong> in Safari or Chrome and tap "Add to Home Screen" to install it as an app. It works offline and sends push notifications for due dates.
+      </div></div>
+    </div>
+
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Extension promo -->
+  <div class="ext-section">
+    <h2>🌲 Sequoia for Canvas</h2>
+    <p>Automatically sync your Canvas courses and assignments to Sequoia — no API token needed. Install the Chrome extension and Canvas stays in sync in the background.</p>
+    <a href="https://chrome.google.com/webstore/search/sequoia%20canvas" class="ext-btn" target="_blank">Get the Chrome Extension →</a>
+  </div>
+
+</div>
+
+<script>
+function toggle(btn) {
+  const item = btn.closest('.faq-item');
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
+  if (!isOpen) item.classList.add('open');
+}
+</script>
+</body>
+</html>
