@@ -19,17 +19,17 @@
 <meta property="og:title" content="Sequoia — Grow Through Every Semester">
 <meta property="og:description" content="The study app that grows as you do. Connect Canvas, prioritize by grade weight, and earn XP every session.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://calvinashe.github.io/sequoia-frontend/">
-<meta property="og:image" content="https://calvinashe.github.io/sequoia-frontend/icon-512.png">
-<meta property="og:image:width" content="512">
-<meta property="og:image:height" content="512">
+<meta property="og:url" content="https://getsequoia.app">
+<meta property="og:image" content="https://getsequoia.app/social-preview.jpg">
+<meta property="og:image:width" content="1400">
+<meta property="og:image:height" content="560">
 <meta property="og:site_name" content="Sequoia">
 
 <!-- Twitter Card -->
-<meta name="twitter:card" content="summary">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Sequoia — Grow Through Every Semester">
 <meta name="twitter:description" content="Connect Canvas, tackle what matters most, and watch your tree grow all semester long.">
-<meta name="twitter:image" content="https://calvinashe.github.io/sequoia-frontend/icon-512.png">
+<meta name="twitter:image" content="https://getsequoia.app/social-preview.jpg">
 
 <!-- Windows Tile -->
 <meta name="msapplication-TileColor" content="#1C3A1C">
@@ -4401,7 +4401,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
     <p class="al-sub" id="al-sub">Connect Canvas, tackle what matters most, and watch your Sequoia grow all semester long.</p>
     <!-- Share-referral banner (shown when ?ref=share is in URL) -->
     <div class="al-ref-banner" id="al-ref-banner" style="display:none">
-      📤 You just saw someone's semester stats — here's how to track yours.
+      🌲 Someone just shared their Sequoia semester — start yours free below.
     </div>
 
     <!-- Primary CTA — Google -->
@@ -11414,7 +11414,7 @@ function syncWrapUp() {
 
   // Pre-release stats row
   document.getElementById('wu-xp').textContent     = xp.toLocaleString();
-  document.getElementById('wu-hours').textContent  = hours + 'h';
+  document.getElementById('wu-hours').textContent  = hours > 0 ? hours + 'h ' + mins + 'm' : mins + 'm';
   document.getElementById('wu-done').textContent   = done;
   document.getElementById('wu-streak').textContent = streak;
 
@@ -11657,7 +11657,9 @@ async function saveSemesterToArchive() {
   const sessions = parseInt(localStorage.getItem('sq_pomo_sessions') || '0');
   const done     = completedIds.size;
   const now      = new Date();
-  const sem      = (now.getMonth() < 6 ? 'Spring' : 'Fall') + ' ' + now.getFullYear();
+  const _sm = now.getMonth();
+  const _semLabel = _sm <= 4 ? 'Spring' : _sm <= 7 ? 'Summer' : 'Fall';
+  const sem      = _semLabel + ' ' + now.getFullYear();
   const st       = stageFor(xp);
   const stageIdx = STAGES.indexOf(st);
   await db.collection('users').doc(currentUser.uid).collection('semesters').add({
@@ -11824,16 +11826,32 @@ function _captureStatsCard() {
   const card = document.getElementById('stats-card');
   return new Promise((resolve, reject) => {
     const doCapture = () => {
-      setTimeout(() => {
-        html2canvas(card, {
-          backgroundColor: '#04090A',
-          scale: 3,
-          useCORS: true,
-          logging: false,
-          width: card.offsetWidth,
-          height: card.offsetHeight,
-        }).then(resolve).catch(reject);
-      }, 80);
+      // Wait for fonts to be fully loaded before capture so text renders correctly
+      (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => {
+        setTimeout(() => {
+          html2canvas(card, {
+            backgroundColor: '#04090A',
+            scale: 3,
+            useCORS: true,
+            logging: false,
+            width: card.offsetWidth,
+            height: card.offsetHeight,
+            onclone: (clonedDoc) => {
+              // Re-inject Google Fonts into the cloned document so text renders
+              const link = clonedDoc.createElement('link');
+              link.rel  = 'stylesheet';
+              link.href = 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap';
+              clonedDoc.head.appendChild(link);
+              // Force star elements to be visible (they have dynamic styles)
+              clonedDoc.querySelectorAll('.sc-star').forEach(s => {
+                s.style.borderRadius = '50%';
+                s.style.background = '#ffffff';
+                s.style.position = 'absolute';
+              });
+            },
+          }).then(resolve).catch(reject);
+        }, 120);
+      });
     };
     if (typeof html2canvas === 'undefined') {
       const s = document.createElement('script');
@@ -11898,7 +11916,7 @@ async function shareStatsCard() {
             await navigator.share({
               files: [file],
               title: 'My Sequoia Semester',
-              text: 'Grew my sequoia tree through a whole semester 🌲 Study app that actually prioritizes by what matters → getsequoia.app?ref=share',
+              text: 'Grew my sequoia tree through a whole semester 🌲 Study app that actually prioritizes by what matters → https://getsequoia.app?ref=share',
             });
             btn.textContent = '✓ Shared!';
             _revealReferralNudge();
@@ -11963,9 +11981,9 @@ function shareToX() {
   const hours = document.getElementById('stat-hours')?.textContent || '';
   // Lead with what Sequoia IS so new viewers understand immediately
   const parts = ['just finished ' + sem + ' with Sequoia 🌲'];
-  parts.push('it connects to Canvas and ranks assignments by grade weight so you always work on what matters most');
+  parts.push('connects to Canvas & ranks assignments by grade weight — always work on what matters most');
   if (stage) parts.push('grew my tree to ' + stage + ' — ' + xp.toLocaleString() + ' XP' + (hours ? ', ' + hours + ' studied' : ''));
-  parts.push('', 'getsequoia.app?ref=share');
+  parts.push('', 'https://getsequoia.app?ref=share');
   const text = encodeURIComponent(parts.join('\n'));
   window.open('https://twitter.com/intent/tweet?text=' + text, '_blank', 'noopener,noreferrer');
   _revealReferralNudge();
