@@ -4603,25 +4603,8 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
       <div class="ob-dots" style="margin-bottom:20px;display:flex;justify-content:center;gap:6px">
         <div class="ob-dot active"></div><div class="ob-dot"></div>
       </div>
-      <h2 style="text-align:center;margin-bottom:6px">Connect your Canvas</h2>
-
-      <!-- Quick check callout -->
-      <div class="ob-method-check">
-        <div class="ob-method-check-title">🔍 Quick check — takes 10 seconds</div>
-        <div class="ob-method-check-steps">
-          <span>In Canvas go to</span>
-          <span class="ob-method-crumb">Account</span>
-          <span>→</span>
-          <span class="ob-method-crumb">Settings</span>
-          <span>→ scroll to</span>
-          <span class="ob-method-crumb">Approved Integrations</span>
-        </div>
-        <div class="ob-method-check-q">Do you see a <strong>+ New Access Token</strong> button?</div>
-        <div class="ob-method-check-answers">
-          <button class="ob-method-ans ob-method-ans-yes" onclick="obGo(2)">✓ Yes I see it</button>
-          <button class="ob-method-ans ob-method-ans-no"  onclick="obShowBlocked()">✗ No / not sure</button>
-        </div>
-      </div>
+      <h2 style="text-align:center;margin-bottom:6px">How do you want to connect?</h2>
+      <p class="sub" style="text-align:center;margin-bottom:18px">Pick a connection method — you can change it later in Settings.</p>
 
       <!-- Blocked explanation (hidden by default) -->
       <div id="ob-blocked-msg" style="display:none;margin-bottom:16px;padding:12px 14px;
@@ -4632,8 +4615,8 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         </div>
         Some schools (Cornell, Auburn, UW-Madison and others) block students from creating
         Canvas API tokens for security reasons. That's okay —
-        <strong style="color:rgba(255,255,255,0.8)">Sequoia has two workarounds below</strong>
-        that give you the same experience.
+        <strong style="color:rgba(255,255,255,0.8)">use the Extension or Calendar Feed instead</strong>
+        — same experience.
       </div>
 
       <div class="ob-method-grid" id="ob-method-grid">
@@ -4651,7 +4634,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
           <div class="ob-method-icon">🔌</div>
           <div class="ob-method-title">Browser Extension</div>
           <div class="ob-method-desc">Same data as a token — uses your Canvas login instead. Works when tokens are blocked.</div>
-          <div class="ob-method-badge ob-method-badge-blue">Token blocked</div>
+          <div class="ob-method-badge ob-method-badge-blue">Token blocked?</div>
         </button>
 
         <!-- iCal -->
@@ -4672,7 +4655,12 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
 
       </div>
 
-      <button class="ob-link" onclick="obGo(0)" style="margin-top:14px;display:block;text-align:center">← Back</button>
+      <!-- Token blocked help link -->
+      <div style="text-align:center;margin-top:14px">
+        <button class="ob-link" onclick="obShowBlocked()" style="font-size:12px;opacity:0.6">🔒 My school blocks API tokens →</button>
+      </div>
+
+      <button class="ob-link" onclick="obGo(0)" style="margin-top:8px;display:block;text-align:center">← Back</button>
     </div>
   </div>
 
@@ -4798,7 +4786,13 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
       <h2>Install the Extension</h2>
       <p class="sub">The Sequoia Chrome extension syncs your Canvas assignments automatically — no API token required.</p>
 
-      <div style="display:flex;flex-direction:column;gap:12px;margin:20px 0">
+      <!-- Name field for extension path -->
+      <div class="ob-field" style="margin-bottom:16px">
+        <label>Your first name</label>
+        <input type="text" id="ob-ext-name" placeholder="e.g. Alex" autocomplete="given-name">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;margin:20px 0 20px">
         <div style="display:flex;align-items:flex-start;gap:12px">
           <div style="width:28px;height:28px;border-radius:50%;background:rgba(76,161,48,0.2);border:1px solid rgba(76,161,48,0.3);
             display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;
@@ -4839,7 +4833,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         </div>
       </div>
 
-      <a class="ob-btn" href="https://chrome.google.com/webstore/detail/sequoia-for-canvas"
+      <a class="ob-btn" href="https://chromewebstore.google.com/search/sequoia%20for%20canvas"
         target="_blank" style="display:block;text-align:center;text-decoration:none;margin-bottom:10px">
         🔌 Install Extension ↗
       </a>
@@ -5148,6 +5142,24 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         <button class="ftab" onclick="filterAssign('high',this)">High Weight</button>
         <button class="ftab" onclick="filterAssign('done',this)">Completed</button>
       </div>
+      <!-- Extension pending nudge — shown when user chose extension but hasn't synced yet -->
+      <div id="ext-pending-nudge" style="display:none;margin-bottom:12px;padding:14px 16px;
+        background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.22);
+        border-radius:14px;font-size:13px;line-height:1.6;color:rgba(255,255,255,0.75)">
+        <div style="font-weight:700;color:rgba(147,197,253,0.9);margin-bottom:6px;font-size:14px">
+          🔌 Almost there — 2 steps to sync your assignments
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
+          <div>1. <a href="https://chromewebstore.google.com/search/sequoia%20for%20canvas" target="_blank" rel="noopener"
+            style="color:rgba(147,197,253,0.9);font-weight:700">Install the Sequoia Chrome extension ↗</a></div>
+          <div>2. Visit <strong style="color:rgba(255,255,255,0.85)">canvas.instructure.com</strong> in Chrome — your assignments sync automatically</div>
+        </div>
+        <button onclick="document.getElementById('ext-pending-nudge').style.display='none';localStorage.setItem('sq_ext_nudge_dismissed','1')"
+          style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.35);background:none;border:none;cursor:pointer;padding:0">
+          Dismiss
+        </button>
+      </div>
+
       <div class="assign-list" id="assign-list">
         <div class="loading-state"><span class="spin">🌿</span> Loading your Canvas assignments…</div>
       </div>
@@ -6805,13 +6817,19 @@ async function connectCanvas() {
 
 // ── Method picker helpers ────────────────────────────────────────────────────
 function obShowBlocked() {
-  // Show the "school blocks tokens" explanation and highlight the alternatives
+  // Toggle the "school blocks tokens" explanation and highlight alternatives
   const msg  = document.getElementById('ob-blocked-msg');
   const grid = document.getElementById('ob-method-grid');
-  if (msg)  msg.style.display  = '';
-  if (grid) grid.classList.add('blocked');
-  // Scroll the message into view smoothly
-  msg && msg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  if (!msg) return;
+  const isVisible = msg.style.display !== 'none' && msg.style.display !== '';
+  if (isVisible) {
+    msg.style.display = 'none';
+    if (grid) grid.classList.remove('blocked');
+  } else {
+    msg.style.display = '';
+    if (grid) grid.classList.add('blocked');
+    msg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
 }
 
 // ── iCal onboarding path ─────────────────────────────────────────────────────
@@ -6866,11 +6884,31 @@ async function obConnectIcal() {
   }
 }
 
+// ── Extension pending nudge ──────────────────────────────────────────────────
+function _checkExtPendingNudge() {
+  const nudge = document.getElementById('ext-pending-nudge');
+  if (!nudge) return;
+  const extChosen   = localStorage.getItem('sq_ext_chosen') === '1';
+  const extSynced   = !!localStorage.getItem('sq_ext_last_sync');
+  const dismissed   = localStorage.getItem('sq_ext_nudge_dismissed') === '1';
+  const hasToken    = !!(localStorage.getItem('sq_token') || localStorage.getItem('sq_url'));
+  // Show if: extension path chosen, never synced, not dismissed, no token fallback, not demo
+  nudge.style.display = (extChosen && !extSynced && !dismissed && !hasToken && !isDemo) ? '' : 'none';
+}
+
 // ── Extension onboarding path ────────────────────────────────────────────────
 function obExtSkip() {
-  // User chose extension but wants to enter the app now; extension will sync when they install it
+  // Save name if entered on this step
+  const extName = (document.getElementById('ob-ext-name')?.value || '').trim();
+  if (extName) {
+    localStorage.setItem('sq_name', extName);
+    setGreeting && setGreeting(extName);
+  }
+  // Mark extension as chosen so the dashboard shows the install nudge
   localStorage.setItem('sq_ext_chosen', '1');
+  localStorage.removeItem('sq_ext_synced'); // ensure nudge shows until first sync
   closeOnboard();
+  setTimeout(_checkExtPendingNudge, 500); // show after onboarding fades out
 }
 
 // ── Manual onboarding path ───────────────────────────────────────────────────
@@ -7094,11 +7132,20 @@ window.addEventListener('DOMContentLoaded', () => {
         } else if (!u && !url) {
           // Genuinely new user — no Canvas URL anywhere, show onboarding
           showOnboard(1);
-          const nameEl = document.getElementById('ob-name');
-          if (nameEl && !nameEl.value && user.displayName) nameEl.value = user.displayName.split(' ')[0];
+          const _fname = user.displayName ? user.displayName.split(' ')[0] : '';
+          if (_fname) {
+            const _nEl  = document.getElementById('ob-name');
+            const _eEl  = document.getElementById('ob-ext-name');
+            const _iEl  = document.getElementById('ob-ical-name');
+            if (_nEl  && !_nEl.value)  _nEl.value  = _fname;
+            if (_eEl  && !_eEl.value)  _eEl.value  = _fname;
+            if (_iEl  && !_iEl.value)  _iEl.value  = _fname;
+          }
         }
         // Show one-time toast for users affected by the level formula update
         _checkLevelMigration();
+        // Show extension install nudge for users who chose extension but haven't synced yet
+        _checkExtPendingNudge();
         // If this is a post-Stripe redirect and Firestore already has premium, unlock now.
         // (Covers the case where the webhook fired before auth resolved.)
         const params = new URLSearchParams(window.location.search);
@@ -8473,6 +8520,7 @@ async function loadExtensionAssignments() {
       renderAssignments(allAssignments);
       buildQPick && buildQPick();
       localStorage.setItem('sq_ext_last_sync', Date.now());
+      _checkExtPendingNudge(); // hide the install nudge once extension syncs
       console.log(`[Extension] merged ${added} assignments from browser extension`);
     }
 
