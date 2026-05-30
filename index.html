@@ -12871,6 +12871,82 @@ function _tourRender() {
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 // ── SERVICE WORKER ───────────────────────────────────────
+// ── PULL TO REFRESH ─────────────────────────────────────────
+(function() {
+  const THRESHOLD = 72;   // px of pull needed to trigger
+  const MAX_PULL  = 96;   // max visual stretch
+
+  // Create the indicator element
+  const ind = document.createElement('div');
+  ind.id = 'ptr-indicator';
+  ind.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>';
+  ind.style.cssText = [
+    'position:fixed','top:0','left:0','right:0','z-index:99999',
+    'display:flex','align-items:center','justify-content:center',
+    'height:0','overflow:hidden','transition:height .18s ease',
+    'background:var(--card)','color:var(--g3)',
+    'border-bottom:1px solid var(--border)',
+    'pointer-events:none',
+  ].join(';');
+  document.body.appendChild(ind);
+
+  let startY = 0, pulling = false, triggered = false;
+
+  function _activeScreen() {
+    return document.querySelector('.screen.active');
+  }
+
+  document.addEventListener('touchstart', e => {
+    const sc = _activeScreen();
+    if (!sc) return;
+    if (sc.scrollTop > 0) return;              // not at top
+    if (window.scrollY > 0) return;
+    startY   = e.touches[0].clientY;
+    pulling  = true;
+    triggered = false;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (!pulling) return;
+    const sc = _activeScreen();
+    if (!sc || sc.scrollTop > 4) { pulling = false; return; }
+
+    const dy = Math.max(0, e.touches[0].clientY - startY);
+    if (dy <= 0) return;
+
+    const pull = Math.min(dy * 0.45, MAX_PULL);   // dampened
+    ind.style.height = pull + 'px';
+    // Spin the icon proportionally then full spin when ready
+    const rot = triggered ? 'rotate(360deg)' : `rotate(${(pull / THRESHOLD) * 180}deg)`;
+    ind.querySelector('svg').style.transform = rot;
+    if (pull >= THRESHOLD && !triggered) {
+      triggered = true;
+      ind.style.color = 'var(--g2)';
+      // Light haptic if supported
+      try { navigator.vibrate && navigator.vibrate(8); } catch(_) {}
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', () => {
+    if (!pulling) return;
+    pulling = false;
+    ind.style.height = '0';
+    ind.style.color  = 'var(--g3)';
+    if (!triggered) return;
+    triggered = false;
+
+    // Trigger refresh
+    const token = localStorage.getItem('sq_token') || '';
+    const url   = localStorage.getItem('sq_url')   || '';
+    if (url) {
+      loadAssignments(token, url);
+      loadCourses(token, url);
+    }
+    loadXPStreak(); updateDashTree(); syncTreeScreen();
+    showToast('Refreshed ↻', 1500);
+  });
+})();
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
