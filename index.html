@@ -7104,7 +7104,8 @@ window.addEventListener('DOMContentLoaded', () => {
         const params = new URLSearchParams(window.location.search);
         if (params.get('upgraded') === '1' && userData.tier === 'premium') {
           history.replaceState({}, '', window.location.pathname);
-          showToast('✦ Premium features unlocked! Welcome to Pro 🌲', 4000);
+          showToast('✦ Premium unlocked! Loading your account…', 2000);
+          setTimeout(() => location.reload(), 2000);
         }
       }
     });
@@ -12797,8 +12798,9 @@ function _checkUpgradeRedirect() {
         if (doc.exists && doc.data().tier === 'premium') {
           clearInterval(poll);
           localStorage.setItem('sq_tier', 'premium');
-          setUserTier('premium');
-          showToast('✦ Premium features unlocked!', 3000);
+          // Reload the page so all premium UI unlocks cleanly
+          showToast('✦ Premium unlocked! Loading your account…', 2000);
+          setTimeout(() => location.reload(), 2000);
         }
       } catch(_) {}
     }, 2000);
