@@ -1869,6 +1869,9 @@ input.g-slider::-moz-range-thumb {
 .sc-btn-primary:hover { background:var(--g1); }
 .sc-btn-secondary { padding:14px 20px; background:var(--g-pale); color:var(--g2); border:none; border-radius:100px; font-size:14px; font-weight:600; cursor:pointer; transition:background .2s; }
 .sc-btn-secondary:hover { background:#d0e8b8; }
+/* Rating prompt stars */
+.rating-star { color:rgba(255,255,255,0.25); }
+.rating-star:hover { opacity:1 !important; color:#F5C842 !important; transform:scale(1.2) !important; }
 
 /* ── ASSIGNMENT DETAIL SHEET ─────────────────────────────── */
 #assign-detail {
@@ -9956,6 +9959,8 @@ function pomoTick() {
       localStorage.setItem('sq_pomo_sessions',n);
       saveUserData({ pomo_sessions: n });
       _bumpTodaySessionCount();
+      // Show rating prompt after the 3rd completed session — peak satisfaction moment
+      if (n === 3) setTimeout(_maybeShowRatingPrompt, 5000);
       pomoPhase='break'; pomoSecs=phaseDur(); pomoAt=Date.now();
       showWeakSpotPrompt();
       showSessionComplete(sessionXP);
@@ -12037,6 +12042,67 @@ function shareToX() {
   _revealReferralNudge();
 }
 
+// ── RATING PROMPT ────────────────────────────────────────
+
+// Chrome Web Store URL — update to direct extension link once approved
+const STORE_REVIEW_URL = 'https://chromewebstore.google.com/search/sequoia%20for%20canvas';
+
+function _maybeShowRatingPrompt() {
+  // Only show once, never in demo, only to signed-in users
+  if (isDemo) return;
+  if (!currentUser) return;
+  if (localStorage.getItem('sq_rated') === '1') return;
+  if (localStorage.getItem('sq_rating_dismissed') === '1') return;
+  showRatingPrompt();
+}
+
+function showRatingPrompt() {
+  const overlay = document.getElementById('rating-overlay');
+  if (!overlay) return;
+  const storeLink = document.getElementById('rating-store-link');
+  if (storeLink) storeLink.href = STORE_REVIEW_URL;
+  overlay.style.display = 'flex';
+  overlay.style.pointerEvents = 'auto';
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    overlay.style.opacity = '1';
+    const sheet = document.getElementById('rating-sheet');
+    if (sheet) sheet.style.transform = 'translateY(0)';
+  }));
+}
+
+function closeRatingPrompt() {
+  const overlay = document.getElementById('rating-overlay');
+  if (!overlay) return;
+  overlay.style.opacity = '0';
+  const sheet = document.getElementById('rating-sheet');
+  if (sheet) sheet.style.transform = 'translateY(12px)';
+  overlay.style.pointerEvents = 'none';
+  setTimeout(() => { overlay.style.display = 'none'; }, 280);
+  localStorage.setItem('sq_rating_dismissed', '1');
+}
+
+function ratingBackdropClick(e) {
+  if (e.target.id === 'rating-overlay') closeRatingPrompt();
+}
+
+function handleRating(val) {
+  // Highlight selected stars
+  document.querySelectorAll('.rating-star').forEach(s => {
+    const sv = parseInt(s.dataset.v);
+    s.style.opacity   = sv <= val ? '1' : '0.25';
+    s.style.color     = sv <= val ? '#F5C842' : 'rgba(255,255,255,0.3)';
+    s.style.transform = sv <= val ? 'scale(1.15)' : 'scale(1)';
+  });
+  // Show response
+  const resp  = document.getElementById('rating-response');
+  const happy = document.getElementById('rating-happy');
+  const sad   = document.getElementById('rating-sad');
+  if (resp)  resp.style.display  = '';
+  if (happy) happy.style.display = val >= 4 ? '' : 'none';
+  if (sad)   sad.style.display   = val <= 3 ? '' : 'none';
+  track('rating_selected', { stars: val });
+}
+
 // ── NOTIFICATIONS ────────────────────────────────────────
 const VAPID_PUBLIC_KEY = 'BLI7bQfzk5zPyvSnbSN4qYjocmO5J7dKrA87ihDb9aYlQyJFKbhv_3Ws3i4j7zhWpFvfDRcaWs54KiMWOUNHYUg';
 let _notifCache = [];
@@ -13328,6 +13394,53 @@ function _showPwaInstallBanner() {
       <button class="sc-btn-secondary" onclick="closeSessionComplete()">Skip Break</button>
       <button class="sc-btn-primary" onclick="startBreakFromComplete()">Start Break →</button>
     </div>
+  </div>
+</div>
+
+<!-- ── RATING PROMPT ── -->
+<div id="rating-overlay" onclick="ratingBackdropClick(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .25s ease;pointer-events:none">
+  <div id="rating-sheet" style="background:linear-gradient(160deg,#0E1E0E,#071510);border:1px solid rgba(76,161,48,0.25);border-radius:24px;padding:32px 28px 28px;max-width:340px;width:100%;text-align:center;box-shadow:0 40px 80px rgba(0,0,0,0.7);position:relative;transform:translateY(12px);transition:transform .25s ease">
+    <button onclick="closeRatingPrompt()" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:18px;color:rgba(255,255,255,0.3);cursor:pointer;padding:4px;line-height:1">✕</button>
+    <div style="font-size:44px;margin-bottom:12px">🌲</div>
+    <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:800;color:#FFFEF8;margin-bottom:8px">Enjoying Sequoia?</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.5;margin-bottom:22px">Takes 30 seconds and helps more students find the app</div>
+
+    <!-- Star row -->
+    <div id="rating-stars" style="display:flex;justify-content:center;gap:10px;margin-bottom:20px">
+      <button class="rating-star" data-v="1" onclick="handleRating(1)" style="font-size:36px;background:none;border:none;cursor:pointer;opacity:0.35;transition:opacity .15s,transform .15s;line-height:1">★</button>
+      <button class="rating-star" data-v="2" onclick="handleRating(2)" style="font-size:36px;background:none;border:none;cursor:pointer;opacity:0.35;transition:opacity .15s,transform .15s;line-height:1">★</button>
+      <button class="rating-star" data-v="3" onclick="handleRating(3)" style="font-size:36px;background:none;border:none;cursor:pointer;opacity:0.35;transition:opacity .15s,transform .15s;line-height:1">★</button>
+      <button class="rating-star" data-v="4" onclick="handleRating(4)" style="font-size:36px;background:none;border:none;cursor:pointer;opacity:0.35;transition:opacity .15s,transform .15s;line-height:1">★</button>
+      <button class="rating-star" data-v="5" onclick="handleRating(5)" style="font-size:36px;background:none;border:none;cursor:pointer;opacity:0.35;transition:opacity .15s,transform .15s;line-height:1">★</button>
+    </div>
+
+    <!-- Response area (hidden until star selected) -->
+    <div id="rating-response" style="display:none">
+      <!-- Happy path (4-5 stars) -->
+      <div id="rating-happy" style="display:none">
+        <div style="font-size:14px;font-weight:600;color:#FFFEF8;margin-bottom:6px">So glad you love it! 🙌</div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,0.5);margin-bottom:16px">A quick review helps other students find Sequoia</div>
+        <a id="rating-store-link" href="https://chromewebstore.google.com/search/sequoia%20for%20canvas" target="_blank" rel="noopener"
+          onclick="localStorage.setItem('sq_rated','1');closeRatingPrompt();track('rating_store_clicked')"
+          style="display:block;background:#4CA130;color:#fff;text-decoration:none;border-radius:12px;padding:13px 20px;font-size:14px;font-weight:700;margin-bottom:10px;transition:background .18s">
+          ⭐ Leave a Review on Chrome →
+        </a>
+        <button onclick="localStorage.setItem('sq_rated','1');closeRatingPrompt()" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:12px;cursor:pointer">Maybe later</button>
+      </div>
+      <!-- Unhappy path (1-3 stars) -->
+      <div id="rating-sad" style="display:none">
+        <div style="font-size:14px;font-weight:600;color:#FFFEF8;margin-bottom:6px">Thanks for being honest</div>
+        <div style="font-size:12.5px;color:rgba(255,255,255,0.5);margin-bottom:16px">Tell us what's not working — we read every email</div>
+        <a href="mailto:support@getsequoia.app?subject=Sequoia%20feedback&body=What%20could%20be%20better%3A%0A%0A"
+          onclick="localStorage.setItem('sq_rated','1');closeRatingPrompt();track('rating_feedback_clicked')"
+          style="display:block;background:rgba(255,255,255,0.08);color:#FFFEF8;text-decoration:none;border-radius:12px;padding:13px 20px;font-size:14px;font-weight:700;margin-bottom:10px;border:1px solid rgba(255,255,255,0.12);transition:background .18s">
+          📧 Send Feedback →
+        </a>
+        <button onclick="localStorage.setItem('sq_rated','1');closeRatingPrompt()" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:12px;cursor:pointer">Dismiss</button>
+      </div>
+    </div>
+
+    <div style="font-size:11px;color:rgba(255,255,255,0.2);margin-top:16px">We'll never ask again</div>
   </div>
 </div>
 
