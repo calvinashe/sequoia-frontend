@@ -8829,9 +8829,9 @@ function saveSettings() {
           localStorage.setItem('sq_ical_connected', '1');
           loadIcalAssignments();
         } else {
-          showToast('iCal save failed: ' + (d.error || 'unknown error'));
+          showToast("⚠️ Couldn't save your calendar URL — try again.");
         }
-      }).catch(() => showToast('Could not save calendar feed URL'));
+      }).catch(() => showToast("⚠️ Couldn't save calendar URL — check your connection."));
     });
   }
   const msg = document.getElementById('settings-saved-msg');
@@ -10838,7 +10838,7 @@ function addCourse() {
   if (!name) { nameEl.focus(); return; }
   const courses = getCourses();
   if (courses.find(c => c.name.toLowerCase() === name.toLowerCase())) {
-    showToast('That course is already in your list'); return;
+    showToast('That course is already in your list ✓'); return;
   }
   const usedCols = courses.map(c => c.color);
   const autoCol  = COURSE_COLORS.find(c => !usedCols.includes(c)) || _selCourseColor;
@@ -11175,7 +11175,7 @@ function sylUploadPDF(courseId, courseName) {
       _showReview(tagged, `Found ${count} assignments in ${courseName}`);
     } catch (e) {
       _setSylCardState(courseId, 'upload', '⬆ Upload PDF', 'Failed — try paste instead');
-      showToast('PDF parse failed: ' + e.message);
+      showToast("⚠️ Couldn't read that PDF — try pasting the text instead.");
     }
   };
   input.click();
@@ -11217,7 +11217,7 @@ async function parsePastedSyllabus() {
     document.getElementById('syl-paste-ta').value = '';
     btn.classList.remove('show');
   } catch (e) {
-    showToast('Parse failed: ' + e.message);
+    showToast("⚠️ Couldn't parse the syllabus — try adding more text or uploading a PDF.");
   } finally {
     btn.disabled = false; btn.textContent = origText;
   }
@@ -11266,7 +11266,7 @@ function confirmSyllabusImport() {
     const cb = document.getElementById(`sric-${i}`);
     return cb && cb.checked;
   });
-  if (!checked.length) { showToast('No assignments selected.'); return; }
+  if (!checked.length) { showToast('Check at least one assignment to add.'); return; }
 
   // Add each checked assignment as a manual assignment
   const manual  = JSON.parse(localStorage.getItem('sq_manual') || '[]');
@@ -11605,7 +11605,7 @@ function _saveAssignmentWeight(id, newWeight) {
 
   if (currentUser) saveUserData({ weight_overrides: overrides });
   renderAssignments(allAssignments);
-  showToast(`Weight set to ${Math.round(newWeight * 10) / 10}%`, 2000);
+  showToast(`⚖️ Weight set to ${Math.round(newWeight * 10) / 10}%`, 2000);
 }
 
 // Load weight overrides on startup (called from init)
@@ -13397,7 +13397,7 @@ async function enablePushNotifs() {
     addNotification('system', 'Push notifications enabled 🎉', 'You\'ll get streak reminders and due date alerts even when the app is closed.');
   } catch(e) {
     console.warn('Push subscribe failed:', e);
-    showToast('Could not enable push notifications: ' + e.message);
+    showToast("⚠️ Couldn't enable notifications — try again or check browser permissions.");
   }
 }
 
@@ -14099,12 +14099,12 @@ async function startCheckout() {
       track('checkout_started', { context: _paywallContext });
       window.location.href = data.url;
     } else {
-      showToast('Could not start checkout: ' + (data.error || 'Unknown error'));
+      showToast("⚠️ Couldn't open checkout — try again or refresh the page.");
       btn.textContent = orig;
       btn.disabled    = false;
     }
   } catch (e) {
-    showToast('Network error. Please try again.');
+    showToast('⚠️ No connection — check your internet and try again.');
     btn.textContent = orig;
     btn.disabled    = false;
   }
@@ -14123,9 +14123,9 @@ async function openCustomerPortal() {
     });
     const data = await res.json();
     if (data.ok && data.url) window.location.href = data.url;
-    else showToast('Could not open billing portal: ' + (data.error || 'Unknown error'));
+    else showToast("⚠️ Couldn't open billing — try again in a moment.");
   } catch (e) {
-    showToast('Network error. Please try again.');
+    showToast('⚠️ No connection — check your internet and try again.');
   } finally {
     if (btn) { btn.textContent = orig; btn.disabled = false; }
   }
