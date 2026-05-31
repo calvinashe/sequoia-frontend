@@ -6718,27 +6718,37 @@ async function authSubmit() {
 
 async function signInWithGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
-  // iOS standalone PWA: signInWithRedirect breaks — it sends the user to Safari and
-  // never returns to the home-screen app. Use popup for standalone mode instead.
-  const isStandalone = (typeof _isIOSStandalone === 'function' && _isIOSStandalone())
-    || window.matchMedia('(display-mode: standalone)').matches;
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+  const errEl = document.getElementById('auth-global-err') || document.getElementById('auth-err');
+  const _showErr = (msg) => {
+    if (!errEl) return;
+    errEl.textContent = msg;
+    errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
   try {
-    if (isMobile && !isStandalone) {
-      // Redirect flow: page reloads after sign-in; onAuthStateChanged + getRedirectResult handle the rest
-      await auth.signInWithRedirect(provider);
-    } else {
-      // Desktop or iOS PWA: popup works reliably
-      const cred = await auth.signInWithPopup(provider);
-      if (cred.additionalUserInfo && cred.additionalUserInfo.isNewUser) {
-        await initNewUser(cred.user, cred.user.displayName || '');
-      }
-      // onAuthStateChanged handles the rest
+    // Try popup first on all platforms — it's more reliable than redirect on
+    // modern mobile browsers. Fall back to redirect only if popup is blocked.
+    const cred = await auth.signInWithPopup(provider);
+    if (cred.additionalUserInfo && cred.additionalUserInfo.isNewUser) {
+      await initNewUser(cred.user, cred.user.displayName || '');
     }
+    // onAuthStateChanged handles the rest
   } catch(e) {
-    if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') {
-      const el = document.getElementById('auth-global-err') || document.getElementById('auth-err');
-      if (el) el.textContent = e.message || 'Google sign-in failed.';
+    if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
+      // Popup was blocked or closed — fall back to redirect flow
+      try {
+        await auth.signInWithRedirect(provider);
+      } catch(e2) {
+        _showErr('Sign-in failed — please try again or use email instead.');
+      }
+    } else if (e.code === 'auth/network-request-failed') {
+      _showErr('No internet connection — check your network and try again.');
+    } else if (e.code === 'auth/unauthorized-domain') {
+      _showErr('Sign-in not allowed from this domain. Please contact support.');
+    } else if (e.code) {
+      _showErr('Sign-in error: ' + e.code.replace('auth/', '').replace(/-/g, ' '));
+    } else {
+      _showErr('Google sign-in failed — please try again.');
     }
   }
 }
@@ -7431,7 +7441,11 @@ window.addEventListener('DOMContentLoaded', () => {
   }).catch(e => {
     if (e && e.code !== 'auth/popup-closed-by-user') {
       const el = document.getElementById('auth-global-err');
-      if (el) el.textContent = 'Google sign-in failed — please try again.';
+      if (el) {
+        const msg = e.code ? 'Sign-in error: ' + e.code.replace('auth/', '').replace(/-/g, ' ') : 'Google sign-in failed — please try again.';
+        el.textContent = msg;
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
     }
   });
 
