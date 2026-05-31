@@ -13,11 +13,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Sequoia">
-<meta name="description" content="The study app that grows as you do. Connect Canvas, tackle what matters most, and watch your Sequoia tree grow.">
+<meta name="description" content="Canvas assignments ranked by grade weight — not just due date. Study with a focus timer, earn XP, and watch your Sequoia tree grow all semester.">
 
 <!-- Open Graph -->
-<meta property="og:title" content="Sequoia — Grow Through Every Semester">
-<meta property="og:description" content="The study app that grows as you do. Connect Canvas, prioritize by grade weight, and earn XP every session.">
+<meta property="og:title" content="Sequoia — Your Canvas assignments, ranked by grade weight">
+<meta property="og:description" content="Stop guessing what to study next. Sequoia sorts your Canvas assignments by grade impact, adds a focus timer that earns XP, and grows a tree as your semester progresses. Free to start.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://getsequoia.app">
 <meta property="og:image" content="https://getsequoia.app/social-preview.jpg">
@@ -27,8 +27,8 @@
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Sequoia — Grow Through Every Semester">
-<meta name="twitter:description" content="Connect Canvas, tackle what matters most, and watch your tree grow all semester long.">
+<meta name="twitter:title" content="Sequoia — Your Canvas assignments, ranked by grade weight">
+<meta name="twitter:description" content="Stop guessing what to study next. Sequoia sorts your Canvas by grade impact, adds a focus timer, and grows a tree all semester. Free to start.">
 <meta name="twitter:image" content="https://getsequoia.app/social-preview.jpg">
 
 <!-- Windows Tile -->
@@ -653,6 +653,60 @@ body {
   font-size:11px; color:rgba(255,255,255,0.58); margin-top:5px;
   display:flex; justify-content:space-between;
 }
+
+/* ── DAILY CAP STRIP (dashboard) ─────────────────────────── */
+.cap-row {
+  margin-top:7px; display:flex; align-items:center; gap:8px;
+}
+.cap-bar-track {
+  flex:1; height:5px; background:rgba(255,255,255,0.07); border-radius:3px; overflow:hidden;
+}
+.cap-bar-fill {
+  height:100%; border-radius:3px;
+  background:linear-gradient(90deg,#4CA130,#82CC55);
+  transition:width .8s cubic-bezier(0.34,1.35,0.64,1), background .5s;
+}
+.cap-bar-fill.cap-warn  { background:linear-gradient(90deg,#E09020,#F5C030); }
+.cap-bar-fill.cap-full  { background:linear-gradient(90deg,#C04020,#E06030); box-shadow:0 0 6px rgba(200,60,20,0.35); }
+.cap-row-label {
+  font-size:10px; font-weight:700; color:rgba(255,255,255,0.45);
+  white-space:nowrap; flex-shrink:0;
+}
+.cap-row-label.cap-warn { color:#F5C030; }
+.cap-row-label.cap-full { color:#E06030; }
+
+/* ── CAP HIT TOAST ───────────────────────────────────────── */
+#cap-hit-toast {
+  position:fixed;
+  bottom:calc(24px + env(safe-area-inset-bottom,0px));
+  left:50%; transform:translateX(-50%) translateY(24px);
+  z-index:9790; opacity:0; pointer-events:none;
+  width:calc(100% - 32px); max-width:360px;
+  background:linear-gradient(145deg,#1E1008,#160800);
+  border:1px solid rgba(220,100,40,0.45);
+  border-radius:18px; padding:14px 16px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.5);
+  transition:opacity .3s, transform .35s cubic-bezier(0.34,1.4,0.64,1);
+  font-family:'DM Sans',sans-serif;
+}
+#cap-hit-toast.show {
+  opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto;
+}
+.cht-top { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.cht-icon { font-size:24px; flex-shrink:0; }
+.cht-title { font-size:13px; font-weight:800; color:#FFFEF8; }
+.cht-sub   { font-size:11px; color:rgba(255,255,255,0.55); margin-top:1px; }
+.cht-reset { font-size:11px; font-weight:700; color:#F5C030; margin-bottom:10px; }
+.cht-upgrade-btn {
+  display:block; width:100%; padding:9px; border-radius:12px;
+  border:none; background:linear-gradient(135deg,#4CA130,#2E6020);
+  color:#fff; font-family:inherit; font-size:12px; font-weight:700;
+  cursor:pointer; text-align:center;
+}
+
+[data-theme="light"] .cap-bar-track { background:rgba(0,0,0,0.07); }
+[data-theme="light"] .cap-row-label { color:var(--mid); }
+
 .hero-stats { display:flex; gap:8px; }
 .hero-stat {
   flex:1; background:rgba(0,0,0,0.28);
@@ -846,6 +900,58 @@ body {
 }
 .a-check:hover { border-color:var(--g3); color:var(--g3); }
 .a-check.checked { background:var(--g3); border-color:var(--g3); color:#fff; }
+.a-check.completing {
+  animation:checkPop .35s cubic-bezier(0.34,1.6,0.64,1) both;
+}
+@keyframes checkPop {
+  0%   { transform:scale(1); }
+  40%  { transform:scale(1.35); background:var(--g3); border-color:var(--g3); }
+  60%  { transform:scale(0.92); }
+  100% { transform:scale(1); }
+}
+.a-row.completing-row {
+  animation:rowDone .55s ease forwards;
+  pointer-events:none;
+}
+@keyframes rowDone {
+  0%   { opacity:1; transform:translateX(0); max-height:80px; }
+  45%  { opacity:0.6; transform:translateX(12px); }
+  100% { opacity:0; transform:translateX(24px); max-height:0; padding-top:0; padding-bottom:0; margin:0; overflow:hidden; }
+}
+
+/* ── BIG WIN CARD ─────────────────────────────────────────── */
+#big-win-card {
+  position:fixed;
+  bottom:calc(80px + env(safe-area-inset-bottom,0px) + 12px);
+  left:50%; transform:translateX(-50%) translateY(24px);
+  z-index:9750; opacity:0; pointer-events:none;
+  width:calc(100% - 32px); max-width:380px;
+  background:linear-gradient(145deg,#162B16,#0F2010);
+  border:1px solid rgba(76,161,48,0.45);
+  border-radius:20px; padding:18px 18px 14px;
+  box-shadow:0 8px 36px rgba(0,0,0,0.5), 0 0 0 1px rgba(76,161,48,0.1);
+  transition:opacity .3s ease, transform .35s cubic-bezier(0.34,1.4,0.64,1);
+  font-family:'DM Sans',sans-serif;
+}
+#big-win-card.show {
+  opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto;
+}
+.bw-header { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.bw-emoji  { font-size:28px; flex-shrink:0; }
+.bw-label  { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.6px; color:var(--g4); margin-bottom:2px; }
+.bw-title  { font-size:14px; font-weight:800; color:#FFFEF8; font-family:'Playfair Display',serif; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:260px; }
+.bw-pills  { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+.bw-pill   { font-size:11px; font-weight:700; border-radius:100px; padding:3px 10px; }
+.bw-pill-xp    { background:rgba(76,161,48,0.2); color:var(--g4); border:1px solid rgba(76,161,48,0.3); }
+.bw-pill-early { background:rgba(245,200,66,0.15); color:#F5C842; border:1px solid rgba(245,200,66,0.25); }
+.bw-pill-grade { background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.65); border:1px solid rgba(255,255,255,0.1); }
+.bw-actions { display:flex; gap:8px; }
+.bw-share-btn { flex:1; padding:9px; border-radius:12px; border:1px solid rgba(76,161,48,0.3); background:rgba(76,161,48,0.12); color:var(--g4); font-family:inherit; font-size:12px; font-weight:700; cursor:pointer; transition:all .15s; }
+.bw-share-btn:hover { background:rgba(76,161,48,0.22); }
+.bw-dismiss-btn { padding:9px 16px; border-radius:12px; border:none; background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.45); font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; transition:all .15s; }
+[data-theme="light"] #big-win-card { background:linear-gradient(145deg,#EAF5E4,#D8EED0); border-color:rgba(76,161,48,0.4); }
+[data-theme="light"] .bw-title { color:var(--g1); }
+[data-theme="light"] .bw-dismiss-btn { background:rgba(30,61,30,0.07); color:var(--mid); }
 .a-info { flex:1; min-width:0; }
 .a-name { font-size:14px; font-weight:700; color:rgba(255,255,255,0.88); margin-bottom:2px; display:flex; align-items:flex-start; gap:5px; }
 .a-name-text {
@@ -1131,7 +1237,7 @@ input.g-slider::-moz-range-thumb {
    SCREEN 2 — STUDY (POMODORO)
 ══════════════════════════════════════════════════════════ */
 .study-layout {
-  max-width:680px; margin:0 auto; padding:28px 20px;
+  max-width:900px; margin:0 auto; padding:28px 20px;
 }
 .study-card { background:linear-gradient(165deg,#091608 0%,#0A1A0A 50%,#060F05 100%); border-radius:24px; box-shadow:0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(76,161,48,0.1); overflow:hidden; }
 .study-header {
@@ -1218,12 +1324,14 @@ input.g-slider::-moz-range-thumb {
 .btn-primary:active { transform:scale(0.93); }
 .btn-secondary {
   font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600;
-  padding:11px 22px; border-radius:100px; border:1.5px solid rgba(255,255,255,0.15);
-  background:transparent; color:rgba(255,255,255,0.6); cursor:pointer;
+  padding:11px 22px; border-radius:100px; border:1.5px solid rgba(255,255,255,0.28);
+  background:transparent; color:rgba(255,255,255,0.75); cursor:pointer;
   transition:background .2s, transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
 }
 .btn-secondary:hover  { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.9); }
 .btn-secondary:active { transform:scale(0.93); }
+[data-theme="light"] .btn-secondary { color:var(--mid); border-color:var(--border); background:transparent; }
+[data-theme="light"] .btn-secondary:hover { background:var(--g-pale); color:var(--g1); }
 .btn-end-early {
   font-size:12px; font-weight:600; color:rgba(255,255,255,0.62);
   background:none; border:none; cursor:pointer; padding:12px 16px;
@@ -1282,6 +1390,50 @@ input.g-slider::-moz-range-thumb {
   font-size:13px; color:rgba(255,255,255,0.58);
 }
 .slog-empty-icon { font-size:28px; margin-bottom:6px; }
+
+/* ── 7-DAY STUDY HEATMAP ─────────────────────────────────── */
+.hm-row { display:flex; gap:6px; align-items:flex-end; margin-bottom:16px; }
+.hm-col { display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; }
+.hm-dot {
+  width:100%; aspect-ratio:1; border-radius:5px; max-width:32px;
+  background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.07);
+  transition:transform .15s;
+}
+.hm-dot.hm-1 { background:rgba(76,161,48,0.30); border-color:rgba(76,161,48,0.35); }
+.hm-dot.hm-2 { background:rgba(76,161,48,0.55); border-color:rgba(76,161,48,0.50); }
+.hm-dot.hm-3 { background:rgba(76,161,48,0.85); border-color:rgba(76,161,48,0.75); box-shadow:0 0 8px rgba(76,161,48,0.30); }
+.hm-dot:hover { transform:scale(1.15); }
+.hm-label { font-size:9px; font-weight:700; color:rgba(255,255,255,0.40); text-transform:uppercase; letter-spacing:.3px; }
+.hm-label.hm-today { color:var(--g4); }
+
+/* ── FRIEND REMOVE / INVITE ──────────────────────────────── */
+.fr-remove-btn {
+  background:none; border:1px solid rgba(255,255,255,0.12); border-radius:8px;
+  color:rgba(255,255,255,0.40); font-size:11px; padding:4px 7px; cursor:pointer;
+  transition:all .15s; flex-shrink:0; line-height:1; margin-left:4px;
+}
+.fr-remove-btn:hover { background:rgba(255,80,80,0.12); border-color:rgba(255,80,80,0.30); color:#FF7070; }
+.fr-invite-btn {
+  display:flex; align-items:center; gap:6px; justify-content:center;
+  background:rgba(76,161,48,0.15); border:1px solid rgba(76,161,48,0.30);
+  border-radius:12px; padding:10px 16px; cursor:pointer; width:100%;
+  color:var(--g4); font-size:13px; font-weight:700; margin-top:10px;
+  transition:all .15s; box-sizing:border-box;
+}
+.fr-invite-btn:hover { background:rgba(76,161,48,0.25); border-color:rgba(76,161,48,0.45); }
+
+/* ── CALENDAR EMPTY STATE ────────────────────────────────── */
+.cal-empty-state {
+  text-align:center; padding:48px 24px 36px; animation:fadeSlideUp .3s ease;
+}
+.cal-empty-icon { font-size:48px; margin-bottom:12px; }
+.cal-empty-title { font-size:16px; font-weight:800; color:#FFFEF8; font-family:'Playfair Display',serif; margin-bottom:6px; }
+.cal-empty-sub { font-size:13px; color:rgba(255,255,255,0.55); line-height:1.5; margin-bottom:20px; }
+.cal-empty-btn {
+  display:inline-block; background:var(--g2); color:#fff;
+  border:none; border-radius:100px; padding:10px 22px;
+  font-size:13px; font-weight:700; cursor:pointer; text-decoration:none;
+}
 
 /* ── WEAK SPOTS ──────────────────────────────────────────── */
 .weakspot-prompt {
@@ -1358,6 +1510,14 @@ input.g-slider::-moz-range-thumb {
 .amb-btn.amb-playing {
   animation: ambPulse 2s ease-in-out infinite;
 }
+.amb-btn.amb-loading {
+  opacity:.7;
+  animation: ambPulse 1s ease-in-out infinite;
+}
+.amb-btn.amb-error {
+  border-color:rgba(255,120,80,0.45); color:rgba(255,180,140,0.9);
+  background:rgba(255,80,60,0.07);
+}
 .amb-vol-row { display:flex; align-items:center; justify-content:center; gap:10px; margin-top:14px; }
 .amb-vol-row label { font-size:11px; font-weight:600; color:rgba(255,255,255,0.62); }
 .amb-vol { width:110px; accent-color:var(--g3); cursor:pointer; }
@@ -1400,17 +1560,46 @@ input.g-slider::-moz-range-thumb {
 .pw-sub {
   font-size:13px; color:rgba(255,255,255,0.72); margin-bottom:20px; line-height:1.5;
 }
-.pw-price-row {
-  display:flex; align-items:baseline; gap:6px; margin-bottom:5px;
+.pw-plans {
+  display:flex; gap:8px; margin-bottom:10px;
 }
-.pw-price {
-  font-family:'Playfair Display',serif; font-size:42px; font-weight:800;
-  color:#fff; letter-spacing:-2px; line-height:1;
+.pw-plan {
+  flex:1; background:rgba(255,255,255,0.06); border:1.5px solid rgba(255,255,255,0.10);
+  border-radius:14px; padding:11px 8px; text-align:center; cursor:pointer;
+  transition:all .2s cubic-bezier(.2,.8,.2,1); position:relative;
 }
-.pw-price-period { font-size:14px; color:rgba(255,255,255,0.70); font-weight:600; }
+.pw-plan:hover { background:rgba(76,161,48,0.10); border-color:rgba(76,161,48,0.3); }
+.pw-plan.active {
+  background:rgba(76,161,48,0.15); border-color:#4CA130;
+  box-shadow:0 0 0 3px rgba(76,161,48,0.18);
+}
+.pw-plan-badge {
+  position:absolute; top:-9px; left:50%; transform:translateX(-50%);
+  background:linear-gradient(135deg,#D4882B,#E8A040); color:#fff;
+  font-size:8px; font-weight:800; letter-spacing:.8px; text-transform:uppercase;
+  border-radius:100px; padding:2px 8px; white-space:nowrap;
+}
+.pw-plan-badge.badge-val {
+  background:linear-gradient(135deg,#266018,#4CA130);
+}
+.pw-plan-name {
+  font-size:10px; font-weight:700; color:rgba(255,255,255,0.60);
+  text-transform:uppercase; letter-spacing:.8px; margin-bottom:5px;
+}
+.pw-plan-price {
+  font-family:'Playfair Display',serif; font-size:22px; font-weight:800;
+  color:#fff; line-height:1; letter-spacing:-.5px;
+}
+.pw-plan-period {
+  font-size:10px; color:rgba(255,255,255,0.55); font-weight:600; margin-top:2px;
+}
+.pw-plan-save {
+  font-size:9px; color:rgba(130,204,85,0.85); font-weight:700;
+  margin-top:3px; min-height:12px;
+}
 .pw-trial-note {
-  font-size:11px; color:rgba(130,204,85,0.8); font-weight:700; margin-bottom:22px;
-  letter-spacing:.02em;
+  font-size:11px; color:rgba(130,204,85,0.8); font-weight:700; margin-bottom:20px;
+  letter-spacing:.02em; text-align:center;
 }
 .pw-features {
   display:flex; flex-direction:column; gap:11px; margin-bottom:24px;
@@ -1549,10 +1738,10 @@ input.g-slider::-moz-range-thumb {
 #undo-toast {
   position:fixed; bottom:calc(24px + env(safe-area-inset-bottom,0px));
   left:50%; transform:translateX(-50%) translateY(20px);
-  background:#1A2E1A; color:#fff; border-radius:100px;
-  padding:11px 18px 11px 16px;
+  background:#1A2E1A; color:#fff; border-radius:18px;
+  padding:11px 14px 11px 16px;
   display:flex; align-items:center; gap:10px;
-  font-size:13px; font-weight:600; white-space:nowrap;
+  font-size:13px; font-weight:600;
   box-shadow:0 4px 24px rgba(0,0,0,0.35);
   z-index:9800; opacity:0; pointer-events:none;
   transition:opacity .22s ease, transform .28s cubic-bezier(0.34,1.4,0.64,1);
@@ -1664,6 +1853,111 @@ input.g-slider::-moz-range-thumb {
 [data-theme="light"] .syl-course-card { background:rgba(0,0,0,0.03); border-color:rgba(0,0,0,0.08); }
 [data-theme="light"] .syl-paste-ta { background:#fff; border-color:rgba(0,0,0,0.15); color:#1A2E1A; }
 [data-theme="light"] .syl-review-item { background:rgba(0,0,0,0.03); border-color:rgba(0,0,0,0.06); }
+
+/* ── WEIGHT CLASSIFIER MODAL ────────────────────────────── */
+#wc-overlay {
+  position:fixed; inset:0; background:rgba(4,10,4,0.65); backdrop-filter:blur(6px);
+  z-index:9600; display:flex; align-items:flex-end; justify-content:center;
+  opacity:0; pointer-events:none; visibility:hidden;
+  transition:opacity .22s ease, visibility .22s ease;
+}
+#wc-overlay.show { opacity:1; pointer-events:auto; visibility:visible; }
+.wc-sheet {
+  background:var(--card); border-radius:22px 22px 0 0;
+  width:100%; max-width:640px; max-height:88vh;
+  padding:20px 20px 32px; overflow-y:auto;
+  transform:translateY(40px); transition:transform .28s cubic-bezier(.25,1,.4,1);
+  box-shadow:0 -16px 60px rgba(0,0,0,0.5);
+}
+#wc-overlay.show .wc-sheet { transform:translateY(0); }
+.wc-title  { font-family:'Playfair Display',serif; font-size:19px; font-weight:700; color:var(--text); margin-bottom:3px; }
+.wc-sub    { font-size:12.5px; color:var(--mid); margin-bottom:16px; line-height:1.5; }
+.wc-close  { position:absolute; top:16px; right:16px; background:none; border:none;
+             font-size:18px; color:var(--mid); cursor:pointer; padding:4px; }
+.wc-ta {
+  width:100%; min-height:90px; padding:12px 14px; border-radius:12px;
+  background:rgba(255,255,255,0.06); border:1.5px solid var(--border);
+  color:var(--text); font-size:13px; font-family:'DM Sans',sans-serif; line-height:1.6;
+  resize:vertical; outline:none; box-sizing:border-box; margin-bottom:12px;
+}
+.wc-ta:focus { border-color:rgba(76,161,48,0.4); }
+.wc-parse-btn {
+  width:100%; padding:13px; border-radius:12px; border:none; cursor:pointer;
+  background:var(--g2); color:#fff; font-size:13px; font-weight:700;
+  font-family:'DM Sans',sans-serif; transition:opacity .15s;
+}
+.wc-parse-btn:disabled { opacity:.45; cursor:not-allowed; }
+/* Category summary chips */
+.wc-cat-row { display:flex; flex-wrap:wrap; gap:7px; margin:14px 0 10px; }
+.wc-cat-chip {
+  padding:5px 10px; border-radius:20px; font-size:11px; font-weight:700;
+  background:rgba(76,161,48,0.14); color:var(--g3);
+  border:1px solid rgba(76,161,48,0.2);
+}
+/* Classification table */
+.wc-table { width:100%; border-collapse:collapse; margin-bottom:16px; }
+.wc-table th {
+  font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em;
+  color:var(--mid); padding:6px 8px; border-bottom:1px solid var(--border); text-align:left;
+}
+.wc-table td { padding:9px 8px; border-bottom:1px solid rgba(255,255,255,0.05); vertical-align:middle; }
+.wc-table tr:last-child td { border-bottom:none; }
+.wc-aname { font-size:12.5px; font-weight:600; color:var(--text); }
+.wc-acourse { font-size:11px; color:var(--mid); }
+.wc-cat-sel {
+  padding:5px 8px; border-radius:8px; border:1.5px solid var(--border);
+  background:rgba(255,255,255,0.06); color:var(--text); font-size:12px;
+  font-family:'DM Sans',sans-serif; cursor:pointer; outline:none;
+  min-width:120px; max-width:160px;
+}
+.wc-cat-sel:focus { border-color:rgba(76,161,48,0.4); }
+.wc-weight-cell { font-size:13px; font-weight:700; color:var(--g3); white-space:nowrap; }
+.wc-weight-input {
+  width:60px; padding:5px 7px; border-radius:8px;
+  border:1.5px solid rgba(76,161,48,0.5); background:rgba(76,161,48,0.1);
+  color:var(--g3); font-size:13px; font-weight:700; font-family:'DM Sans',sans-serif;
+  outline:none; text-align:center;
+}
+.wc-confirm-btn {
+  width:100%; padding:14px; border-radius:12px; border:none; cursor:pointer;
+  background:linear-gradient(135deg,#3A8A20,#2D6B18); color:#fff;
+  font-size:14px; font-weight:700; font-family:'DM Sans',sans-serif;
+  box-shadow:0 4px 16px rgba(76,161,48,0.3); transition:transform .15s, box-shadow .15s;
+}
+.wc-confirm-btn:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(76,161,48,0.4); }
+.wc-err { font-size:12px; color:#f87171; margin-bottom:10px; display:none; }
+.wc-err.show { display:block; }
+[data-theme="light"] .wc-sheet  { background:#fff; }
+[data-theme="light"] .wc-ta     { background:#f8faf8; border-color:var(--border); color:var(--text); }
+[data-theme="light"] .wc-cat-sel { background:#f8faf8; border-color:var(--border); color:var(--text); }
+[data-theme="light"] .wc-table td { border-bottom-color:rgba(0,0,0,0.06); }
+
+/* ── INLINE WEIGHT EDIT ─────────────────────────────────── */
+.a-weight-pill {
+  cursor:pointer; transition:background .15s;
+}
+.a-weight-pill.editable:hover {
+  background:rgba(76,161,48,0.3) !important;
+}
+.weight-edit-pop {
+  position:absolute; z-index:9900; background:var(--card);
+  border:1.5px solid rgba(76,161,48,0.4); border-radius:10px;
+  padding:10px 12px; box-shadow:0 8px 30px rgba(0,0,0,0.4);
+  display:flex; align-items:center; gap:8px; min-width:160px;
+}
+.weight-edit-pop label { font-size:11px; font-weight:700; color:var(--mid); white-space:nowrap; }
+.weight-edit-pop input {
+  width:56px; padding:5px 8px; border-radius:7px;
+  border:1.5px solid rgba(76,161,48,0.4); background:rgba(76,161,48,0.1);
+  color:var(--g3); font-size:13px; font-weight:700; font-family:'DM Sans',sans-serif;
+  outline:none; text-align:center;
+}
+.weight-edit-pop .wep-save {
+  padding:5px 10px; border-radius:7px; border:none; cursor:pointer;
+  background:var(--g2); color:#fff; font-size:12px; font-weight:700;
+  font-family:'DM Sans',sans-serif;
+}
+[data-theme="light"] .weight-edit-pop { background:#fff; }
 
 /* ── ADD ASSIGNMENT SHEET ───────────────────────────────── */
 #add-assign-overlay {
@@ -2407,7 +2701,7 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 ══════════════════════════════════════════════════════════ */
 #sched-overlay {
   display:none; position:fixed; inset:0; z-index:200;
-  background:rgba(4,10,4,0.92); backdrop-filter:blur(12px);
+  background:rgba(4,10,4,0.72); backdrop-filter:blur(14px);
   overflow-y:auto; padding:env(safe-area-inset-top,0) 0 0;
 }
 #sched-overlay.show { display:block; }
@@ -2571,7 +2865,7 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 }
 .wu-sv { font-size:40px; font-weight:800; color:#fff; margin-bottom:6px; letter-spacing:-1.5px; line-height:1; }
 .wu-sl { font-size:10px; color:rgba(255,255,255,0.45); text-transform:uppercase; letter-spacing:1.4px; font-weight:700; }
-.wu-release-copy { font-size:13px; color:rgba(255,255,255,0.38); margin-bottom:20px; line-height:1.7; }
+.wu-release-copy { font-size:13px; color:rgba(255,255,255,0.62); margin-bottom:20px; line-height:1.7; }
 .wu-release-btn {
   font-family:'DM Sans',sans-serif; font-size:17px; font-weight:800;
   padding:20px 56px; border-radius:100px; border:none;
@@ -3398,6 +3692,15 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 .cal-cell:hover { transform:scale(1.08); box-shadow:0 2px 8px rgba(0,0,0,0.18); z-index:2; }
 .cal-cell.today { box-shadow:0 0 0 2px var(--g2); }
 .cal-cell.past { opacity:0.45; }
+.cal-date-num {
+  position:absolute; top:5px; left:7px;
+  font-size:11px; font-weight:700; line-height:1;
+  pointer-events:none; color:rgba(30,61,30,0.45);
+}
+.cal-c3 .cal-date-num,
+.cal-c4 .cal-date-num,
+.cal-c5 .cal-date-num { color:rgba(255,255,255,0.65); }
+.cal-cell.today .cal-date-num { color:rgba(30,61,30,0.75); font-weight:800; }
 /* intensity levels */
 .cal-c0 { background:var(--g-pale); }
 .cal-c1 { background:#B8E08A; }
@@ -4097,6 +4400,15 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 [data-theme="light"] .s-entry-time { color:var(--light); }
 [data-theme="light"] .s-entry-xp { background:var(--g2); color:#fff; border:none; }
 [data-theme="light"] .slog-empty { color:var(--light); }
+[data-theme="light"] .hm-label  { color:var(--mid); }
+[data-theme="light"] .hm-dot    { background:rgba(30,61,30,0.08); border-color:rgba(30,61,30,0.12); }
+[data-theme="light"] .hm-dot.hm-1 { background:rgba(76,161,48,0.22); border-color:rgba(76,161,48,0.35); }
+[data-theme="light"] .hm-dot.hm-2 { background:rgba(76,161,48,0.45); border-color:rgba(76,161,48,0.50); }
+[data-theme="light"] .hm-dot.hm-3 { background:rgba(76,161,48,0.75); border-color:rgba(76,161,48,0.70); }
+[data-theme="light"] .fr-remove-btn { border-color:rgba(30,61,30,0.18); color:var(--mid); }
+[data-theme="light"] .fr-invite-btn { background:rgba(76,161,48,0.10); color:var(--g1); }
+[data-theme="light"] .cal-empty-title { color:var(--g1); }
+[data-theme="light"] .cal-empty-sub   { color:var(--mid); }
 [data-theme="light"] .weakspot-prompt { border-top-color:var(--border); }
 [data-theme="light"] .ws-title { color:var(--text); }
 [data-theme="light"] .ws-skip { color:var(--light); }
@@ -4172,9 +4484,10 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 
 /* ── LIGHT THEME: missed / insufficient overrides ─────── */
 /* Wrap Up pre-release text */
-[data-theme="light"] .wu-heading  { color:var(--g1); text-shadow:none; }
-[data-theme="light"] .wu-sub      { color:var(--mid); }
-[data-theme="light"] .wu-done-msg { color:var(--g1); }
+[data-theme="light"] .wu-heading     { color:var(--g1); text-shadow:none; }
+[data-theme="light"] .wu-sub        { color:var(--mid); }
+[data-theme="light"] .wu-done-msg   { color:var(--g1); }
+[data-theme="light"] .wu-release-copy { color:var(--mid); }
 
 /* Wrap Up stat boxes */
 [data-theme="light"] .sbox .sn { color:var(--g1); }
@@ -4400,8 +4713,8 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
     </div>
 
     <!-- Hero -->
-    <h1 class="al-headline" id="al-headline">The study app<br>that grows as you do.</h1>
-    <p class="al-sub" id="al-sub">Connect Canvas, tackle what matters most, and watch your Sequoia grow all semester long.</p>
+    <h1 class="al-headline" id="al-headline">Know exactly what<br>to study next.</h1>
+    <p class="al-sub" id="al-sub">Sequoia ranks your Canvas assignments by grade weight — not just due date — so you always work on what moves the needle. Plus a study timer that grows a tree.</p>
     <!-- Share-referral banner (shown when ?ref=share is in URL) -->
     <div class="al-ref-banner" id="al-ref-banner" style="display:none">
       🌲 Someone just shared their Sequoia semester — start yours free below.
@@ -4458,12 +4771,12 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
 
     <!-- Benefit chips -->
     <div class="al-benefits">
-      <span class="al-chip">📊 Grade-weighted priorities</span>
-      <span class="al-chip">⏱ Focus timer + XP</span>
+      <span class="al-chip">⚖️ Ranked by grade weight</span>
       <span class="al-chip">🌲 Tree grows with you</span>
+      <span class="al-chip">⏱ Focus timer + XP</span>
       <span class="al-chip">🔥 Streak rewards</span>
-      <span class="al-chip">🤖 AI Quick Pick</span>
-      <span class="al-chip">📅 Calendar view</span>
+      <span class="al-chip">🤖 AI weekly schedule</span>
+      <span class="al-chip">📊 Grade forecasts</span>
     </div>
 
     <!-- Legal links -->
@@ -4497,8 +4810,8 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
       <!-- Left: headline + CTAs -->
       <div class="ob0-copy">
         <div class="ob0-badge">🌲 Sequoia</div>
-        <h1 class="ob0-h1">Stop guessing.<br>Start growing.</h1>
-        <p class="ob0-sub">Connect your Canvas, see every assignment ranked by real grade weight, and watch your tree grow all semester long.</p>
+        <h1 class="ob0-h1">Know exactly what<br>to study next.</h1>
+        <p class="ob0-sub">Connect Canvas. Every assignment ranked by grade weight — not just due date. Study, earn XP, and watch your tree grow all semester.</p>
         <div class="ob0-ctas">
           <button class="ob0-btn-primary" onclick="obGo(1)">Get Started &rarr;</button>
           <button class="ob0-btn-secondary" onclick="loadDemo()">✨ Try the Demo</button>
@@ -4751,7 +5064,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         <div class="ob-dot active"></div><div class="ob-dot active"></div>
       </div>
       <h2>Connect your Calendar Feed</h2>
-      <p class="sub">Your Canvas calendar URL syncs all your assignment names and due dates — no token needed.</p>
+      <p class="sub">Paste your school calendar feed URL — works with Canvas, Blackboard, Moodle, D2L, and any LMS that exports .ics. Syncs your assignment names and due dates, no token needed.</p>
 
       <div class="ob-fields">
         <div class="ob-field">
@@ -4759,15 +5072,15 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
           <input type="text" id="ob-ical-name" placeholder="e.g. Alex" autocomplete="given-name">
         </div>
         <div class="ob-field">
-          <label>Canvas Calendar URL <span class="ob-field-hint">from Canvas → Calendar → 📅 icon</span></label>
-          <input type="url" id="ob-ical-url" placeholder="https://school.instructure.com/feeds/calendars/user_….ics"
+          <label>Calendar Feed URL <span class="ob-field-hint">.ics link from your school's LMS</span></label>
+          <input type="url" id="ob-ical-url" placeholder="https://yourschool.edu/feeds/calendars/….ics"
             style="font-size:12px">
           <div style="margin-top:8px;padding:10px 12px;background:rgba(76,161,48,0.08);border-radius:8px;
             border:1px solid rgba(76,161,48,0.15);font-size:11.5px;line-height:1.6;color:rgba(255,255,255,0.55)">
             <strong style="color:rgba(255,255,255,0.7)">How to find it:</strong>
-            In Canvas → click <strong style="color:rgba(255,255,255,0.7)">Calendar</strong> in the left sidebar
-            → look for the <strong style="color:rgba(255,255,255,0.7)">📅 calendar icon</strong> at the bottom right
-            → copy the feed URL
+            <span style="display:block;margin-top:4px"><strong style="color:rgba(255,255,255,0.65)">Canvas:</strong> Calendar → 📅 icon (bottom right) → copy feed URL</span>
+            <span style="display:block;margin-top:2px"><strong style="color:rgba(255,255,255,0.65)">Blackboard:</strong> Calendar → Settings gear → Export → copy .ics link</span>
+            <span style="display:block;margin-top:2px"><strong style="color:rgba(255,255,255,0.65)">Moodle:</strong> Calendar → Export → copy the generated URL</span>
           </div>
         </div>
       </div>
@@ -5118,6 +5431,10 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
           </div>
           <div class="xp-bar-track"><div class="xp-bar-fill" id="dash-xp-bar" style="width:0%"></div></div>
           <div class="xp-sub"><span id="dash-xp-lvl">Level 1</span><span id="dash-xp-next">1,200 XP to next stage</span></div>
+          <div class="cap-row" id="dash-cap-row" style="display:none">
+            <div class="cap-bar-track"><div class="cap-bar-fill" id="dash-cap-fill" style="width:0%"></div></div>
+            <span class="cap-row-label" id="dash-cap-label">0/300 today</span>
+          </div>
         </div>
         <div class="hero-stats">
           <div class="hero-stat"><div class="sv" id="hstat-streak">0</div><div class="sl">Day Streak</div></div>
@@ -5133,10 +5450,11 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         <span class="assign-title">Your Priorities</span>
         <div style="display:flex;gap:6px;align-items:center">
           <button class="ai-pick-btn" onclick="aiQuickPick()" title="AI recommendation" aria-label="AI Pick — best assignment to study now"><span class="ai-spark">⚡</span> AI Pick</button>
-          <button class="add-btn" onclick="openSyllabusImport()" title="Import syllabus" aria-label="Import syllabus">📄</button>
+          <button class="add-btn" onclick="openSyllabusImport()" title="Import syllabus" aria-label="Import syllabus" style="width:auto;padding:0 9px;font-size:12px;gap:4px">📄 <span style="font-size:10px;font-weight:700;letter-spacing:.2px">Syllabus</span></button>
+          <button class="add-btn" onclick="openWeightClassifier()" title="Set grade weights" aria-label="Set grade weights" style="width:auto;padding:0 9px;font-size:12px;gap:4px">⚖️ <span style="font-size:10px;font-weight:700;letter-spacing:.2px">Weights</span></button>
           <button class="add-btn" onclick="openAddAssign()" title="Add assignment" aria-label="Add assignment">＋</button>
           <button class="add-btn" onclick="refreshAssignments()" title="Refresh assignments" aria-label="Refresh assignments">↻</button>
-          <button class="add-btn" onclick="localStorage.removeItem('sq_seen_tour');tourShow()" title="App tour" aria-label="Replay app tour" style="font-size:13px;opacity:0.7">❓</button>
+          <button class="add-btn" onclick="localStorage.removeItem('sq_seen_tour');tourShow()" title="App tour" aria-label="Replay app tour" style="width:auto;padding:0 9px;font-size:12px;gap:4px">🗺 <span style="font-size:10px;font-weight:700;letter-spacing:.2px">Tour</span></button>
         </div>
       </div>
       <div class="filter-tabs">
@@ -5264,6 +5582,14 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
   </div>
   <div class="cal-tip" id="cal-tip"><div class="cal-tip-date" id="cal-tip-date"></div><div id="cal-tip-items"></div></div>
 
+  <!-- Calendar empty state (shown when no assignments are loaded) -->
+  <div id="cal-empty-state" class="cal-empty-state" style="display:none">
+    <div class="cal-empty-icon">📅</div>
+    <div class="cal-empty-title">No assignments yet</div>
+    <div class="cal-empty-sub">Connect Canvas to see your due dates on the calendar. Your whole semester — at a glance.</div>
+    <button class="cal-empty-btn" onclick="showOnboard(1)">Connect Canvas →</button>
+  </div>
+
   <!-- UPCOMING SECTION -->
   <div class="cal-upcoming-wrap" id="cal-upcoming-wrap" style="display:none">
     <div class="cal-upcoming-header">
@@ -5365,6 +5691,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
             <span class="slog-title">Session History</span>
             <span class="slog-today-xp" id="slog-today-xp"></span>
           </div>
+          <div id="study-heatmap"></div>
           <div id="session-entries"></div>
         </div>
 
@@ -5561,7 +5888,11 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
       <div class="tree-stat-chip"><div class="tsc-val" id="tsc-sessions">0</div><div class="tsc-lbl">Study Sessions</div></div>
       <div class="tree-stat-chip"><div class="tsc-val" id="tsc-done">0</div><div class="tsc-lbl">Assignments Done</div></div>
       <div class="tree-stat-chip"><div class="tsc-val" id="tsc-streak">0</div><div class="tsc-lbl">Day Streak</div></div>
-      <div class="tree-stat-chip" id="tsc-cap-chip" style="display:none"><div class="tsc-val" id="tsc-cap-val">0/300</div><div class="tsc-lbl">Today's XP</div></div>
+      <div class="tree-stat-chip" id="tsc-cap-chip" style="display:none">
+        <div class="tsc-val" id="tsc-cap-val">0/300</div>
+        <div class="tsc-lbl">Today's XP</div>
+        <div class="tsc-reset" id="tsc-cap-reset" style="font-size:9px;color:rgba(26,46,26,0.45);margin-top:1px"></div>
+      </div>
     </div>
 
     <div class="stage-cards">
@@ -6063,6 +6394,9 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
           <span class="fr-code-val" id="fr-my-code">——</span>
           <span class="fr-code-copy">⎘</span>
         </div>
+        <button class="fr-invite-btn" id="fr-invite-btn" onclick="shareInviteLink()" style="display:none">
+          🔗 Share Invite Link
+        </button>
       </div>
     </div>
 
@@ -6637,6 +6971,10 @@ function obRevealEnter() {
   if (!localStorage.getItem('sq_notif_nudge_shown')) {
     setTimeout(_nudgePushPermission, 55000);
   }
+  // iOS install prompt — show after 2 minutes of real usage
+  if (_shouldShowIOSPrompt()) {
+    setTimeout(_showIOSInstallPrompt, 120000);
+  }
   track('onboard_reveal_entered');
 }
 
@@ -6844,11 +7182,11 @@ async function obConnectIcal() {
 
   if (errEl) { errEl.textContent = ''; errEl.classList.remove('show'); }
   if (!icalUrl) {
-    if (errEl) { errEl.textContent = 'Please enter your Canvas calendar URL.'; errEl.classList.add('show'); }
+    if (errEl) { errEl.textContent = 'Please enter your school calendar feed URL.'; errEl.classList.add('show'); }
     return;
   }
   if (!icalUrl.includes('.ics') && !icalUrl.includes('feeds/calendars')) {
-    if (errEl) { errEl.textContent = 'That doesn\'t look like a Canvas calendar URL. It should end in .ics'; errEl.classList.add('show'); }
+    if (errEl) { errEl.textContent = 'That doesn\'t look like a calendar feed URL. It should end in .ics'; errEl.classList.add('show'); }
     return;
   }
 
@@ -6938,9 +7276,21 @@ function loadDemo() {
   localStorage.setItem('sq_streak',        '12');
   localStorage.setItem('sq_pomo_sessions', '18');
   localStorage.setItem('sq_last_study',    today); // FIX: prevent streak reset on first action
+  // Pre-populate 12 days of study history so the heatmap matches the streak counter
+  const _demoHistory = {};
+  for (let _d = 0; _d < 12; _d++) {
+    const _dt = new Date(); _dt.setDate(_dt.getDate() - _d);
+    const _key = _dt.getFullYear() + '-' + String(_dt.getMonth()+1).padStart(2,'0') + '-' + String(_dt.getDate()).padStart(2,'0');
+    _demoHistory[_key] = _d === 0 ? 2 : 1; // today counts as 2 sessions
+  }
+  localStorage.setItem('sq_study_history', JSON.stringify(_demoHistory));
+  renderStudyHeatmap(); // render immediately so heatmap matches the 12-day streak counter
   localStorage.removeItem('sq_done');
-  completedIds   = new Set();
-  totalCompleted = 0;
+  // Seed realistic completed count to match 12-day streak / 2850 XP narrative
+  const _demoDoneIds = ['demo_p1','demo_p2','demo_p3','demo_p4','demo_p5','demo_p6','demo_p7','demo_p8'];
+  completedIds   = new Set(_demoDoneIds);
+  totalCompleted = _demoDoneIds.length;
+  localStorage.setItem('sq_done', JSON.stringify(_demoDoneIds));
   treeFaded      = false;
   loadXPStreak();
   updateDashTree();
@@ -6958,7 +7308,8 @@ function loadDemo() {
   const navAvatar = document.getElementById('nav-avatar');
   if (amName)  amName.textContent  = demoName;
   if (amEmail) amEmail.textContent = 'demo mode — not signed in';
-  if (amTier)  { amTier.textContent = 'Free Plan'; amTier.className = 'am-tier'; }
+  if (amTier)  { amTier.textContent = '✦ PRO (Demo)'; amTier.className = 'am-tier pro'; }
+  setUserTier('premium'); // grant full premium access for demo exploration
   if (navAvatar) { navAvatar.textContent = demoName.slice(0,1).toUpperCase(); navAvatar.style.backgroundImage = ''; }
   const amSignout = document.getElementById('am-signout-btn');
   const amSignin  = document.getElementById('am-signin-btn');
@@ -7049,6 +7400,15 @@ window.addEventListener('DOMContentLoaded', () => {
     if (banner) banner.style.display = '';
     // Track the referral source
     track('referral_share_landing');
+  }
+
+  // Store a pending friend code from invite link (?code=XXXXXX)
+  const _pendingCode = (_urlParams.get('code') || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (_pendingCode.length === 6) {
+    localStorage.setItem('sq_pending_friend_code', _pendingCode);
+    history.replaceState({}, '', window.location.pathname);
+    // Show invite notification after app loads
+    setTimeout(() => showToast('🌲 Invite link detected — go to Friends to accept!', 4000), 2500);
   }
 
   // Auto-launch demo mode when ?demo=1 is in the URL
@@ -7185,6 +7545,10 @@ window.addEventListener('DOMContentLoaded', () => {
     // Sync public leaderboard profile (fire-and-forget)
     setTimeout(() => _upsertPublicProfile(), 2000);
     initPushBtn(); // badge count is now fetched inside loadUserData (parallel query)
+    // iOS install prompt — show for returning users after 90s of usage
+    if (_shouldShowIOSPrompt()) {
+      setTimeout(_showIOSInstallPrompt, 90000);
+    }
   });
 
   // Global Escape key: close any open overlay
@@ -7425,6 +7789,7 @@ function _applyAssignments(raw) {
   });
   const manual = JSON.parse(localStorage.getItem('sq_manual') || '[]');
   manual.forEach(m => { if (!allAssignments.find(a => a.id === m.id)) allAssignments.unshift(m); });
+  _loadWeightOverrides(); // re-apply any user-set weight overrides
   renderAssignments(allAssignments);
   scheduleNotifications(allAssignments);
   buildQPick();
@@ -7745,6 +8110,7 @@ function renderGrades(grades) {
 
 // ── GPA CALCULATOR ──────────────────────────────────────
 function toggleGPACalc() {
+  if (!isPremium()) { openPaywall('gpa-calc'); return; }
   const panel = document.getElementById('gpa-panel');
   const btn   = document.getElementById('gpa-toggle-btn');
   if (!panel || !btn) return;
@@ -7857,6 +8223,12 @@ function renderCalendar(assignments) {
   if (!container) return;
   const today = new Date(); today.setHours(0,0,0,0);
 
+  // Show/hide calendar empty state
+  const calEmpty = document.getElementById('cal-empty-state');
+  const noAssignments = !assignments || assignments.length === 0;
+  if (calEmpty) calEmpty.style.display = noAssignments ? '' : 'none';
+  container.style.opacity = noAssignments ? '0.35' : '';
+
   // Build a map: dateKey (YYYY-MM-DD, local timezone) → array of assignments
   const dayMap = {};
   assignments.forEach(a => {
@@ -7916,7 +8288,7 @@ function renderCalendar(assignments) {
         data-date="${dateAttr}" data-count="${countAttr}"
         onmouseenter="calShowTip(event,'${dateAttr}')"
         onmouseleave="calHideTip()"
-        onclick="calClickDay(event,'${dateAttr}')"></div>`;
+        onclick="calClickDay(event,'${dateAttr}')"><span class="cal-date-num">${date.getDate()}</span></div>`;
     }
     html += '</div>';
   }
@@ -8175,7 +8547,7 @@ function renderAssignments(list, _skipCal) {
       <div class="a-check${done ? ' checked' : ''}" onclick="toggleDone('${esc(a.id)}', this, '${esc(a.title)}', ${Math.round(w)})">${done ? '✓' : ''}</div>
       <div class="a-icon ${iconBg}">${rowIcon(w, i)}</div>
       <div class="a-info" onclick="openAssignDetail('${esc(a.id)}')" style="cursor:pointer;flex:1;min-width:0">
-        <div class="a-name${done ? ' struck' : ''}"><span class="a-name-text">${esc(a.title)}</span><span class="a-weight-pill">${w > 0 ? Math.round(w)+'%' : a.source === 'extension' ? (a.submitted ? '✓' : '🔌') : a.source === 'ical' ? '🗓' : a.manual ? '＋' : ''}</span></div>
+        <div class="a-name${done ? ' struck' : ''}"><span class="a-name-text">${esc(a.title)}</span><span class="a-weight-pill editable" onclick="event.stopPropagation();editAssignmentWeight('${esc(a.id)}',this)" title="Click to edit weight">${w > 0 ? Math.round(w*10)/10+'%' : a.source === 'extension' ? (a.submitted ? '✓' : '🔌') : a.source === 'ical' ? '🗓' : a.manual ? '＋' : '—'}</span></div>
         <div class="a-course">${esc(a.course)}</div>
       </div>
       <div class="a-right" onclick="openAssignDetail('${esc(a.id)}')" style="cursor:pointer">
@@ -8217,25 +8589,27 @@ function toggleDone(id, el, title, weight) {
   completedIds.add(id);
   localStorage.setItem('sq_done', JSON.stringify([...completedIds]));
   saveUserData({ done_ids: [...completedIds] });
-  if (el) { el.classList.add('checked'); el.textContent = '✓'; }
+
+  // ── Row completion animation ────────────────────────────
+  if (el) {
+    el.classList.add('checked', 'completing');
+    el.textContent = '✓';
+    const row = el.closest('.a-row');
+    if (row) {
+      setTimeout(() => row.classList.add('completing-row'), 120);
+    }
+  }
 
   const a        = allAssignments.find(x => x.id === id);
   const daysLeft = a?.days_until ?? null;
   const daysEarly= (daysLeft !== null && daysLeft > 0) ? Math.min(daysLeft, 7) : 0;
   // Formula matches backend xp.py: early_bonus = min(1.0 + days_early * 0.033, 1.2)
   const early    = Math.min(1.2, 1 + daysEarly * 0.033);
-  const gradeW   = weight / 100;   // weight arrives as %, convert to 0-1 (no fallback — 0 means unweighted)
-  // Don't show an optimistic burst for 0-weight assignments — the server will return 0 XP
-  // and the "got XP then it disappeared" pattern is more confusing than showing nothing.
+  const gradeW   = weight / 100;
   // Formula matches backend assignment_xp(): BASE_XP(50) × (weight/10) × early_bonus
-  // No Math.max(1,...) floor — that caused a client/server mismatch where low-weight
-  // assignments showed a large burst that the server then silently corrected downward.
   const xp       = weight > 0 ? Math.round(50 * (weight / 10) * early) : 0;
 
   if (xp > 0) showXPBurst(xp, el);
-  // grantXP is async — optimistic UI fires immediately, server reconciles in background.
-  // For 0-weight assignments grantXP(0) is a no-op locally but still records the
-  // assignment_id server-side for deduplication.
   grantXP(xp, {
     source:        'assignment',
     assignment_id: String(id),
@@ -8246,7 +8620,14 @@ function toggleDone(id, el, title, weight) {
   track('assignment_done', { xp_earned: xp, weight_pct: weight, course: a?.course || '' });
   starterGrant('sq_grant_first_done', 25, '✅ +25 XP — First assignment crushed! Keep the momentum.');
   document.getElementById('hstat-done').textContent = totalCompleted;
-  showUndoToast(id, title, xp);
+
+  // ── Show appropriate celebration ────────────────────────
+  showUndoToast(id, title, xp, weight, daysEarly);
+  if (weight >= 20) {
+    setTimeout(() => _showBigWin(title, xp, weight, daysEarly, a?.course || ''), 180);
+  }
+  _checkCompletionMilestone(totalCompleted);
+
   setTimeout(() => { renderAssignments(allAssignments); updateDashTree(); buildQPick(); }, 600);
 }
 
@@ -8338,7 +8719,10 @@ function openSettings() {
   document.getElementById('set-ical-url').value = '';
   // Show "connected" indicator if iCal feed is saved
   const icalStatus = document.getElementById('set-ical-status');
-  if (icalStatus) icalStatus.style.display = localStorage.getItem('sq_ical_connected') === '1' ? '' : 'none';
+  if (icalStatus) {
+    icalStatus.style.display = localStorage.getItem('sq_ical_connected') === '1' ? '' : 'none';
+    if (localStorage.getItem('sq_ical_connected') === '1') _refreshIcalStatusFromCache();
+  }
   // Show extension status if it has synced before
   const extSynced = localStorage.getItem('sq_ext_last_sync');
   const extConn   = document.getElementById('set-ext-status-connected');
@@ -8351,6 +8735,11 @@ function openSettings() {
     const el = document.getElementById('set-ext-last-sync');
     if (el) el.textContent = 'last synced ' + label;
   }
+  // Load notification preferences
+  const mornBox = document.getElementById('set-notif-morning');
+  const evenBox = document.getElementById('set-notif-evening');
+  if (mornBox) mornBox.checked = localStorage.getItem('sq_notif_morning') !== '0';
+  if (evenBox) evenBox.checked = localStorage.getItem('sq_notif_evening') !== '0';
   document.getElementById('settings-saved-msg').style.opacity = '0';
   document.getElementById('settings-overlay').classList.add('show');
   // Init theme buttons
@@ -8392,6 +8781,15 @@ function updateThemeNote(mode) {
 
 function closeSettings() {
   document.getElementById('settings-overlay').classList.remove('show');
+}
+
+function saveNotifPrefs() {
+  const mornOn = document.getElementById('set-notif-morning')?.checked !== false;
+  const evenOn = document.getElementById('set-notif-evening')?.checked !== false;
+  localStorage.setItem('sq_notif_morning', mornOn ? '1' : '0');
+  localStorage.setItem('sq_notif_evening', evenOn ? '1' : '0');
+  // Persist to Firestore so backend respects per-user preferences
+  saveUserData({ notif_morning: mornOn, notif_evening: evenOn });
 }
 
 function settingsOverlayClick(e) {
@@ -8442,9 +8840,10 @@ function saveSettings() {
 }
 
 // ── ICAL FEED SYNC ────────────────────────────────────────────────────────────
-async function loadIcalAssignments() {
+async function loadIcalAssignments(showSpinner) {
   if (isDemo || !currentUser) return;
   if (localStorage.getItem('sq_ical_connected') !== '1') return;
+  if (showSpinner) _setIcalStatus('syncing');
   try {
     const idToken = await currentUser.getIdToken();
     const res  = await fetch(API + '/ical-sync', {
@@ -8455,13 +8854,24 @@ async function loadIcalAssignments() {
     const data = await res.json();
     if (!data.ok) {
       console.warn('[iCal] sync failed:', data.error);
+      const errMsg = data.error || 'Sync failed';
+      localStorage.setItem('sq_ical_last_error', errMsg);
+      localStorage.setItem('sq_ical_last_error_ts', String(Date.now()));
       if (data.error && data.error.includes('denied')) {
         // School disabled the feed — clear the connected flag
         localStorage.removeItem('sq_ical_connected');
         showToast('⚠️ Calendar feed was blocked by your school — add assignments manually');
+      } else if (showSpinner) {
+        showToast('⚠️ Calendar sync failed — check Settings', 3500);
       }
+      _setIcalStatus('error');
       return;
     }
+    // Successful sync — record time and clear any previous error
+    localStorage.setItem('sq_ical_last_sync', String(Date.now()));
+    localStorage.removeItem('sq_ical_last_error');
+    localStorage.removeItem('sq_ical_last_error_ts');
+    _setIcalStatus('ok');
     if (!data.assignments?.length) return;
     // Merge into allAssignments — skip any IDs already present (avoid dupes with Canvas API)
     const existingIds = new Set(allAssignments.map(a => String(a.id)));
@@ -8481,11 +8891,66 @@ async function loadIcalAssignments() {
       });
       renderAssignments(allAssignments);
       buildQPick && buildQPick();
+      if (showSpinner) showToast(`🗓 Synced ${added} assignment${added !== 1 ? 's' : ''} from calendar`, 2500);
       console.log(`[iCal] synced ${added} new assignments`);
+    } else if (showSpinner) {
+      showToast('🗓 Calendar up to date', 2000);
     }
   } catch(e) {
     console.warn('[iCal] sync error:', e);
+    localStorage.setItem('sq_ical_last_error', 'Network error — check your connection');
+    localStorage.setItem('sq_ical_last_error_ts', String(Date.now()));
+    _setIcalStatus('error');
+    if (showSpinner) showToast('⚠️ Calendar sync failed — check your connection', 3000);
   }
+}
+
+function _setIcalStatus(state) {
+  // Update the Settings panel iCal status row (if it's open)
+  const iconEl = document.getElementById('ical-sync-icon');
+  const textEl = document.getElementById('ical-sync-text');
+  const btnEl  = document.getElementById('ical-sync-btn');
+  if (!iconEl || !textEl) return;
+  if (state === 'syncing') {
+    iconEl.textContent = '⏳'; textEl.textContent = 'Syncing…';
+    if (btnEl) btnEl.disabled = true;
+  } else if (state === 'ok') {
+    iconEl.textContent = '✓'; textEl.style.color = 'var(--g4)';
+    textEl.textContent = 'Synced just now';
+    if (btnEl) { btnEl.disabled = false; btnEl.textContent = '↺ Sync'; }
+  } else if (state === 'error') {
+    const err = localStorage.getItem('sq_ical_last_error') || 'Sync failed';
+    iconEl.textContent = '⚠️'; textEl.style.color = '#FFB347';
+    textEl.textContent = err.length > 40 ? err.slice(0,40) + '…' : err;
+    if (btnEl) { btnEl.disabled = false; btnEl.textContent = '↺ Retry'; }
+  }
+}
+
+function _refreshIcalStatusFromCache() {
+  // Populate the iCal status in Settings from localStorage state
+  const iconEl = document.getElementById('ical-sync-icon');
+  const textEl = document.getElementById('ical-sync-text');
+  if (!iconEl || !textEl) return;
+  const lastSync = parseInt(localStorage.getItem('sq_ical_last_sync') || '0');
+  const lastErr  = localStorage.getItem('sq_ical_last_error');
+  const lastErrTs = parseInt(localStorage.getItem('sq_ical_last_error_ts') || '0');
+  if (lastErr && (!lastSync || lastErrTs > lastSync)) {
+    _setIcalStatus('error');
+  } else if (lastSync) {
+    iconEl.textContent = '✓'; textEl.style.color = 'var(--g4)';
+    const mins = Math.round((Date.now() - lastSync) / 60000);
+    const lbl  = mins < 2 ? 'just now' : mins < 60 ? `${mins}m ago` : `${Math.floor(mins/60)}h ago`;
+    textEl.textContent = 'Last synced ' + lbl;
+    const btnEl = document.getElementById('ical-sync-btn');
+    if (btnEl) { btnEl.disabled = false; btnEl.textContent = '↺ Sync'; }
+  } else {
+    iconEl.textContent = '✓'; textEl.textContent = 'Calendar feed connected';
+    textEl.style.color = 'var(--g4)';
+  }
+}
+
+async function manualIcalSync() {
+  await loadIcalAssignments(true);
 }
 
 // ── BROWSER EXTENSION SYNC ────────────────────────────────────────────────────
@@ -8614,7 +9079,7 @@ async function grantXP(amount, opts = {}) {
     if (data.capped && data.granted < data.raw) {
       const remaining = data.daily_cap - (data.daily_used - data.granted);
       if (remaining <= 0) {
-        showToast(`Daily XP cap reached (${data.daily_cap} XP). Come back tomorrow! 🌙`, 4000);
+        showCapHitToast(data.daily_used, data.daily_cap);
       }
     }
   } catch (_) { /* offline or backend down — local optimistic value stands */ }
@@ -8707,6 +9172,7 @@ function updateStreak() {
       if (streak > 2) {
         localStorage.setItem('sq_streak_before_break', String(streak));
         localStorage.setItem('sq_streak_break_date', today);
+        setTimeout(_showStreakBreakNudge, 3000);
       }
       streak = 1;
     }
@@ -8740,6 +9206,20 @@ function checkStreakRisk() {
     chip.querySelector('span').textContent =
       `🔥 Study today to keep your ${streak}-day streak!`;
   }
+}
+
+function _showStreakBreakNudge() {
+  const before = parseInt(localStorage.getItem('sq_streak_before_break') || '0');
+  if (before < 3) return;
+  // Don't show if already nudged today
+  const today = _localDateStr();
+  if (localStorage.getItem('sq_streak_nudge_shown') === today) return;
+  localStorage.setItem('sq_streak_nudge_shown', today);
+  const isPremium = localStorage.getItem('sq_tier') === 'premium';
+  const msg = isPremium
+    ? `Your ${before}-day streak just reset — start a fresh one today! Your tree is still growing 🌱`
+    : `Your ${before}-day streak just reset. Study now to start fresh — or get Premium to use a Streak Freeze 🔥`;
+  showToast(msg, 7000);
 }
 
 // ── LEVEL FORMULA MIGRATION (v1→v2) ─────────────────────
@@ -8795,6 +9275,105 @@ function updateDashTree() {
     heroTree.innerHTML = '';
     heroTree.appendChild(clone);
   }
+  updateCapUI();
+}
+
+// ── DAILY XP CAP UI ─────────────────────────────────────
+
+function _capResetIn() {
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24, 0, 0, 0);
+  const ms  = midnight - now;
+  const hrs = Math.floor(ms / 3600000);
+  const min = Math.floor((ms % 3600000) / 60000);
+  if (hrs === 0) return min + 'm';
+  return hrs + 'h ' + min + 'm';
+}
+
+function _capForMonth() {
+  const mo = new Date().getMonth() + 1; // 1-12
+  if (mo === 5 || mo === 12) return 600;  // finals
+  if (mo === 3 || mo === 10) return 450;  // midterms
+  return 300;
+}
+
+function updateCapUI() {
+  const today   = _localDateStr();
+  const capDate = localStorage.getItem('sq_xp_today_date');
+  const used    = capDate === today ? parseInt(localStorage.getItem('sq_xp_today') || '0') : 0;
+  const limit   = _capForMonth();
+  const pct     = Math.min(100, Math.round(used / limit * 100));
+  const resetIn = _capResetIn();
+
+  // ── Dashboard cap strip ───────────────────────────────
+  const capRow   = document.getElementById('dash-cap-row');
+  const capFill  = document.getElementById('dash-cap-fill');
+  const capLabel = document.getElementById('dash-cap-label');
+  if (capRow) {
+    if (used > 0) {
+      capRow.style.display = '';
+      if (capFill) {
+        capFill.style.width = pct + '%';
+        capFill.classList.toggle('cap-warn', pct >= 60 && pct < 95);
+        capFill.classList.toggle('cap-full', pct >= 95);
+      }
+      if (capLabel) {
+        const label = pct >= 100
+          ? `Cap reached · resets in ${resetIn}`
+          : `${used}/${limit} XP today · resets in ${resetIn}`;
+        capLabel.textContent = label;
+        capLabel.className = 'cap-row-label' + (pct >= 95 ? ' cap-full' : pct >= 60 ? ' cap-warn' : '');
+      }
+    } else {
+      capRow.style.display = 'none';
+    }
+  }
+
+  // ── My Tree cap chip ──────────────────────────────────
+  const chip      = document.getElementById('tsc-cap-chip');
+  const chipVal   = document.getElementById('tsc-cap-val');
+  const chipReset = document.getElementById('tsc-cap-reset');
+  if (chip) {
+    if (used > 0) {
+      chip.style.display = '';
+      if (chipVal) {
+        chipVal.textContent = used + '/' + limit;
+        chipVal.style.color = pct >= 100 ? '#e05c2a' : pct >= 80 ? '#F5C030' : '';
+      }
+      if (chipReset) chipReset.textContent = '↻ ' + resetIn;
+    } else {
+      chip.style.display = 'none';
+    }
+  }
+}
+
+// Live countdown: refresh cap display every minute
+setInterval(updateCapUI, 60000);
+
+// ── CAP HIT TOAST ────────────────────────────────────────
+let _capHitTimer = null;
+
+function showCapHitToast(used, limit) {
+  clearTimeout(_capHitTimer);
+  const toast   = document.getElementById('cap-hit-toast');
+  const subEl   = document.getElementById('cht-cap-sub');
+  const resetEl = document.getElementById('cht-reset-label');
+  const upBtn   = document.getElementById('cht-upgrade-btn');
+  if (!toast) return;
+
+  if (subEl)   subEl.textContent   = `You earned ${used} XP today — great work! 🌱`;
+  if (resetEl) resetEl.textContent = `Cap resets in ${_capResetIn()} — come back then to keep growing.`;
+  if (upBtn)   upBtn.style.display = isPremium() ? 'none' : '';
+
+  toast.classList.add('show');
+  _capHitTimer = setTimeout(_hideCapHit, 8000);
+  track('cap_hit_shown', { cap: limit });
+}
+
+function _hideCapHit() {
+  clearTimeout(_capHitTimer);
+  document.getElementById('cap-hit-toast')?.classList.remove('show');
 }
 
 // ── TREE SCREEN ─────────────────────────────────────────
@@ -9860,6 +10439,7 @@ function syncTreeScreen() {
   } else if (_capChip) {
     _capChip.style.display = 'none';
   }
+  updateCapUI();
   renderStreakCal(streak);
   renderDecorations();
   updateHeroDecorations();
@@ -10666,9 +11246,10 @@ function _showReview(assignments, subtitle) {
   list.innerHTML = assignments.map((a, i) => {
     const emoji   = TYPE_EMOJI[a.type] || '✅';
     const due     = a.due_date ? new Date(a.due_date + 'T12:00:00').toLocaleDateString('en-US', { month:'short', day:'numeric' }) : 'No date';
-    const weight  = a.weight != null ? a.weight + '% of grade' : '';
+    const weight  = a.weight != null ? Math.round(a.weight * 10) / 10 + '% of grade' : '';
     const points  = a.points != null ? a.points + ' pts' : '';
-    const meta    = [due, weight, points].filter(Boolean).join(' · ');
+    const cat     = a.category && a.weight != null && a.category !== a.name ? '(' + a.category + ')' : '';
+    const meta    = [due, weight, cat, points].filter(Boolean).join(' · ');
     return `<div class="syl-review-item">
       <input class="sri-check" type="checkbox" id="sric-${i}" checked>
       <div class="sri-body">
@@ -10721,6 +11302,327 @@ function confirmSyllabusImport() {
   showToast(`✅ ${checked.length} assignment${checked.length !== 1 ? 's' : ''} added!`);
   try { track('syllabus_imported', { count: checked.length }); } catch(e) {}
 }
+
+// ── WEIGHT CLASSIFIER ──────────────────────────────────────────────────────────
+let _wcCategories  = [];   // [{name, weight, count}]  parsed from grade text
+let _wcClassified  = [];   // [{id, title, category, category_weight, individual_weight}]
+let _wcCourseFilter = '';  // which course to classify ('' = all)
+
+function openWeightClassifier() {
+  lockScroll();
+  // Populate course filter dropdown
+  const sel = document.getElementById('wc-course-filter');
+  const courses = [...new Set(allAssignments.map(a => a.course).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">All assignments</option>' +
+    courses.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  // Reset to step 1
+  document.getElementById('wc-step1').style.display = '';
+  document.getElementById('wc-step2').style.display = 'none';
+  document.getElementById('wc-grade-ta').value = '';
+  document.getElementById('wc-err1').textContent = '';
+  document.getElementById('wc-err1').classList.remove('show');
+  document.getElementById('wc-overlay').classList.add('show');
+}
+
+function closeWeightClassifier() {
+  document.getElementById('wc-overlay').classList.remove('show');
+  unlockScroll();
+}
+
+function wcGoBack() {
+  document.getElementById('wc-step1').style.display = '';
+  document.getElementById('wc-step2').style.display = 'none';
+}
+
+async function runWeightClassification() {
+  const gradeText = document.getElementById('wc-grade-ta').value.trim();
+  const errEl = document.getElementById('wc-err1');
+  errEl.classList.remove('show');
+
+  if (!gradeText) {
+    errEl.textContent = 'Please paste your grade breakdown first.';
+    errEl.classList.add('show'); return;
+  }
+
+  _wcCourseFilter = document.getElementById('wc-course-filter').value;
+
+  // Filter assignments to classify
+  const toClassify = allAssignments
+    .filter(a => !_wcCourseFilter || a.course === _wcCourseFilter)
+    .map(a => ({ id: a.id, title: a.title }))
+    .slice(0, 60);
+
+  if (!toClassify.length) {
+    errEl.textContent = 'No assignments found to classify.';
+    errEl.classList.add('show'); return;
+  }
+
+  const btn = document.getElementById('wc-parse-btn');
+  btn.textContent = 'Classifying…'; btn.disabled = true;
+
+  try {
+    const idToken = currentUser ? await currentUser.getIdToken() : null;
+    if (!idToken) {
+      errEl.textContent = 'Please sign in to use this feature.';
+      errEl.classList.add('show'); btn.textContent = 'Classify Assignments →'; btn.disabled = false; return;
+    }
+    const res = await fetch(API + '/classify-assignments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+      body: JSON.stringify({
+        grade_text:  gradeText,
+        assignments: toClassify,
+        course_name: _wcCourseFilter || (allAssignments[0]?.course || 'My Course'),
+      }),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || 'Classification failed');
+
+    _wcCategories = data.categories || [];
+    _wcClassified = data.classified || [];
+
+    if (!_wcClassified.length) {
+      errEl.textContent = 'No assignments could be classified. Try adding more detail to the grade breakdown.';
+      errEl.classList.add('show'); btn.textContent = 'Classify Assignments →'; btn.disabled = false; return;
+    }
+
+    _renderWeightReview();
+    document.getElementById('wc-step1').style.display = 'none';
+    document.getElementById('wc-step2').style.display = '';
+
+  } catch(e) {
+    errEl.textContent = e.message || 'Something went wrong.';
+    errEl.classList.add('show');
+  } finally {
+    btn.textContent = 'Classify Assignments →'; btn.disabled = false;
+  }
+}
+
+function _renderWeightReview() {
+  // Category chips with totals
+  const chips = document.getElementById('wc-cat-chips');
+  chips.innerHTML = _wcCategories.map(c =>
+    `<span class="wc-cat-chip">${esc(c.name)} · ${c.weight}% ÷ ${c.count} = ${Math.round(c.weight/c.count*10)/10}% each</span>`
+  ).join('');
+
+  // Classification table
+  const tbody = document.getElementById('wc-tbody');
+  const catOptions = _wcCategories.map(c =>
+    `<option value="${esc(c.name)}">${esc(c.name)}</option>`
+  ).join('');
+  const noWeightOpt = '<option value="">— no category —</option>';
+
+  tbody.innerHTML = _wcClassified.map((item, i) => {
+    const a = allAssignments.find(x => x.id === item.id);
+    const course = a?.course || '';
+    const iw = item.individual_weight;
+    return `<tr data-idx="${i}">
+      <td>
+        <div class="wc-aname">${esc(item.title || 'Untitled')}</div>
+        ${course ? `<div class="wc-acourse">${esc(course)}</div>` : ''}
+      </td>
+      <td>
+        <select class="wc-cat-sel" data-idx="${i}" onchange="_wcCatChanged(this)">
+          ${noWeightOpt}${catOptions}
+        </select>
+      </td>
+      <td style="text-align:right">
+        <input class="wc-weight-input" type="number" min="0" max="100" step="0.5"
+          data-idx="${i}" value="${iw}" onchange="_wcWeightOverride(this)"
+          title="Override individual weight">
+        <span style="font-size:11px;color:var(--mid)">%</span>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Set the correct selected category for each row
+  _wcClassified.forEach((item, i) => {
+    const sel = tbody.querySelector(`select[data-idx="${i}"]`);
+    if (sel && item.category) sel.value = item.category;
+  });
+
+  document.getElementById('wc-confirm-btn').textContent =
+    `Apply Weights to ${_wcClassified.length} Assignment${_wcClassified.length !== 1 ? 's' : ''} →`;
+}
+
+function _wcCatChanged(sel) {
+  const i = parseInt(sel.dataset.idx);
+  const newCat = sel.value;
+  _wcClassified[i].category = newCat;
+  _wcClassified[i].weight_override = false; // reset manual override when category changes
+
+  // Recount assignments per category and recalculate individual weights
+  _wcRecalculateWeights();
+}
+
+function _wcWeightOverride(input) {
+  const i = parseInt(input.dataset.idx);
+  _wcClassified[i].individual_weight = Math.max(0, Math.min(100, parseFloat(input.value) || 0));
+  _wcClassified[i].weight_override = true; // user manually set — don't recalculate
+}
+
+function _wcRecalculateWeights() {
+  // Count assignments in each category (excluding manually overridden ones)
+  const counts = {};
+  _wcClassified.forEach(item => {
+    if (!item.weight_override && item.category) {
+      counts[item.category] = (counts[item.category] || 0) + 1;
+    }
+  });
+
+  // Update category chip counts
+  _wcCategories.forEach(c => {
+    if (counts[c.name] !== undefined) c.count = counts[c.name];
+  });
+
+  // Recompute individual weights for non-overridden items
+  _wcClassified.forEach((item, i) => {
+    if (item.weight_override) return;
+    const cat = _wcCategories.find(c => c.name === item.category);
+    if (!cat || !counts[cat.name]) { item.individual_weight = 0; return; }
+    item.individual_weight = Math.round(cat.weight / counts[cat.name] * 10) / 10;
+    // Update the weight input in the DOM
+    const input = document.querySelector(`.wc-weight-input[data-idx="${i}"]`);
+    if (input) input.value = item.individual_weight;
+  });
+
+  // Refresh category chips
+  const chips = document.getElementById('wc-cat-chips');
+  chips.innerHTML = _wcCategories.map(c => {
+    const cnt = counts[c.name] || c.count || 1;
+    return `<span class="wc-cat-chip">${esc(c.name)} · ${c.weight}% ÷ ${cnt} = ${Math.round(c.weight/cnt*10)/10}% each</span>`;
+  }).join('');
+}
+
+function confirmWeightClassification() {
+  const overrides = JSON.parse(localStorage.getItem('sq_weight_overrides') || '{}');
+
+  let updated = 0;
+  _wcClassified.forEach(item => {
+    const a = allAssignments.find(x => x.id === item.id);
+    if (!a) return;
+    const newWeight = item.individual_weight || 0;
+    a.weight_pct       = newWeight;
+    a.category         = item.category;
+    a.weight_override  = true;
+    a.priority_score   = newWeight * Math.max(1, 10 - (a.days_until || 14));
+
+    // Persist override
+    overrides[a.id] = { weight: newWeight, category: item.category };
+
+    // If it's a manual/syllabus/ical assignment, also update sq_manual
+    if (a.manual || a.source === 'syllabus' || a.source === 'ical') {
+      const manual = JSON.parse(localStorage.getItem('sq_manual') || '[]');
+      const idx = manual.findIndex(m => m.id === a.id);
+      if (idx >= 0) {
+        manual[idx].weight_pct      = newWeight;
+        manual[idx].priority_score  = a.priority_score;
+        manual[idx].category        = item.category;
+        localStorage.setItem('sq_manual', JSON.stringify(manual));
+      }
+    }
+    updated++;
+  });
+
+  localStorage.setItem('sq_weight_overrides', JSON.stringify(overrides));
+  if (currentUser) saveUserData({ weight_overrides: overrides });
+
+  closeWeightClassifier();
+  renderAssignments(allAssignments);
+  showToast(`⚖️ Weights applied to ${updated} assignment${updated !== 1 ? 's' : ''}!`, 2800);
+  try { track('weights_classified', { count: updated }); } catch(e) {}
+}
+
+// ── INLINE WEIGHT EDITOR ───────────────────────────────────────────────────────
+let _wepActive = null; // active popover element
+
+function editAssignmentWeight(id, pillEl) {
+  // Close any open popover first
+  if (_wepActive) { _wepActive.remove(); _wepActive = null; }
+
+  const a = allAssignments.find(x => x.id === id);
+  if (!a) return;
+
+  const pop = document.createElement('div');
+  pop.className = 'weight-edit-pop';
+  pop.innerHTML = `
+    <label>Weight %</label>
+    <input type="number" min="0" max="100" step="0.5" value="${Math.round((a.weight_pct||0)*10)/10}" autofocus>
+    <button class="wep-save">✓</button>`;
+
+  const rect = pillEl.getBoundingClientRect();
+  pop.style.cssText = `top:${rect.bottom + window.scrollY + 6}px;left:${Math.max(8, rect.left + window.scrollX - 30)}px`;
+  document.body.appendChild(pop);
+  _wepActive = pop;
+
+  const input = pop.querySelector('input');
+  input.focus(); input.select();
+
+  const save = () => {
+    const val = Math.max(0, Math.min(100, parseFloat(input.value) || 0));
+    _saveAssignmentWeight(id, val);
+    pop.remove(); _wepActive = null;
+  };
+
+  pop.querySelector('.wep-save').addEventListener('click', save);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); save(); }
+    if (e.key === 'Escape') { pop.remove(); _wepActive = null; }
+  });
+
+  // Close when clicking outside
+  setTimeout(() => document.addEventListener('click', function handler(e) {
+    if (!pop.contains(e.target) && e.target !== pillEl) {
+      pop.remove(); _wepActive = null;
+      document.removeEventListener('click', handler);
+    }
+  }), 50);
+}
+
+function _saveAssignmentWeight(id, newWeight) {
+  const a = allAssignments.find(x => x.id === id);
+  if (!a) return;
+
+  a.weight_pct      = newWeight;
+  a.weight_override = true;
+  a.priority_score  = newWeight * Math.max(1, 10 - (a.days_until || 14));
+
+  // Persist to sq_weight_overrides (works for all assignment types)
+  const overrides = JSON.parse(localStorage.getItem('sq_weight_overrides') || '{}');
+  overrides[id] = { weight: newWeight };
+  localStorage.setItem('sq_weight_overrides', JSON.stringify(overrides));
+
+  // Also update sq_manual if applicable
+  if (a.manual || a.source === 'syllabus' || a.source === 'ical') {
+    const manual = JSON.parse(localStorage.getItem('sq_manual') || '[]');
+    const idx = manual.findIndex(m => m.id === id);
+    if (idx >= 0) {
+      manual[idx].weight_pct     = newWeight;
+      manual[idx].priority_score = a.priority_score;
+      localStorage.setItem('sq_manual', JSON.stringify(manual));
+    }
+  }
+
+  if (currentUser) saveUserData({ weight_overrides: overrides });
+  renderAssignments(allAssignments);
+  showToast(`Weight set to ${Math.round(newWeight * 10) / 10}%`, 2000);
+}
+
+// Load weight overrides on startup (called from init)
+function _loadWeightOverrides() {
+  const overrides = JSON.parse(localStorage.getItem('sq_weight_overrides') || '{}');
+  Object.entries(overrides).forEach(([id, data]) => {
+    const a = allAssignments.find(x => x.id === id);
+    if (!a) return;
+    const w = typeof data === 'number' ? data : data.weight;
+    if (w == null) return;
+    a.weight_pct      = w;
+    a.weight_override = true;
+    a.priority_score  = w * Math.max(1, 10 - (a.days_until || 14));
+    if (data.category) a.category = data.category;
+  });
+}
+
 function submitAddAssign() {
   const title  = document.getElementById('aa-title').value.trim();
   const due    = document.getElementById('aa-due').value;
@@ -10849,13 +11751,40 @@ function renderPomoUI() {
 function logSession(label, xp) {
   sessionEntries.unshift({ label, xp, ts: Date.now() });
   saveSessionHistory(sessionEntries);
+  // Update the heatmap count for today
+  const _hk = _localDateStr();
+  const _hdata = JSON.parse(localStorage.getItem('sq_study_history') || '{}');
+  _hdata[_hk] = (_hdata[_hk] || 0) + 1;
+  localStorage.setItem('sq_study_history', JSON.stringify(_hdata));
   renderSessionLog();
+}
+
+function renderStudyHeatmap() {
+  const el = document.getElementById('study-heatmap');
+  if (!el) return;
+  const history = JSON.parse(localStorage.getItem('sq_study_history') || '{}');
+  const today = new Date();
+  const cols = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const k = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    const count = history[k] || 0;
+    const dayAbbr  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
+    const dayLabel = i === 0 ? 'Today' : dayAbbr;
+    const dotCls = count >= 3 ? 'hm-dot hm-3' : count === 2 ? 'hm-dot hm-2' : count === 1 ? 'hm-dot hm-1' : 'hm-dot';
+    const lblCls = i === 0 ? 'hm-label hm-today' : 'hm-label';
+    cols.push(`<div class="hm-col"><div class="${dotCls}" title="${count} session${count!==1?'s':''} — ${dayLabel}"></div><div class="${lblCls}">${dayAbbr}</div></div>`);
+  }
+  el.innerHTML = `<div class="hm-row">${cols.join('')}</div>`;
 }
 
 function renderSessionLog() {
   const el = document.getElementById('session-entries');
   const todayXPEl = document.getElementById('slog-today-xp');
   if (!el) return;
+
+  renderStudyHeatmap();
 
   if (!sessionEntries.length) {
     el.innerHTML = `<div class="slog-empty"><div class="slog-empty-icon">🌱</div>No sessions yet<br><button onclick="pomoToggle()" style="margin-top:10px;background:var(--g2);color:#fff;border:none;border-radius:100px;padding:7px 18px;font-size:12px;font-weight:700;cursor:pointer">Start now →</button></div>`;
@@ -10912,8 +11841,30 @@ function getAmbCtx() {
     ambMaster.gain.value = (parseInt(document.getElementById('amb-vol')?.value || 40)) / 100;
     ambMaster.connect(ambCtx.destination);
   }
+  // Resume if suspended (happens after tab backgrounding on mobile)
+  if (ambCtx.state === 'suspended') ambCtx.resume().catch(() => {});
   return ambCtx;
 }
+
+// ── AudioContext suspension recovery ─────────────────────
+// On mobile, browsers suspend AudioContext when the tab is backgrounded.
+// Resume it when the tab becomes visible again, and restart ambient sound
+// if it was playing but stopped due to suspension.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  // Resume AudioContext
+  if (ambCtx && ambCtx.state === 'suspended') {
+    ambCtx.resume().catch(() => {});
+  }
+  // Restart lo-fi if it was playing but stopped (stream died in background)
+  if (ambActive === 'lofi') {
+    const el = _lofiEl;
+    if (el && el.paused && el.src) {
+      // Stream died — restart from next source
+      setTimeout(() => { if (ambActive === 'lofi') startLofi(); }, 500);
+    }
+  }
+});
 
 // ── Noise generators ─────────────────────────────────────
 // Brown noise: warm, low-frequency rumble. Good for focus.
@@ -10959,11 +11910,13 @@ function stopAmbNodes() {
 
 function stopAmbience() {
   stopAmbNodes();
-  const lofiEl = document.getElementById('lofi-audio');
-  if (lofiEl && !lofiEl.paused) { lofiEl.pause(); lofiEl.currentTime = 0; }
-  document.querySelectorAll('.amb-btn').forEach(b => b.classList.remove('active', 'amb-playing'));
+  stopLofi();
+  document.querySelectorAll('.amb-btn').forEach(b => b.classList.remove('active', 'amb-playing', 'amb-loading', 'amb-error'));
+  // Reset lo-fi icon in case it was in loading/error state
+  const lofiIcon = document.querySelector('#amb-lofi .amb-icon');
+  if (lofiIcon) lofiIcon.textContent = '🎵';
+  document.getElementById('amb-lofi')?.removeAttribute('title');
   ambActive = 'none';
-  // Mark Off button as active
   document.getElementById('amb-none')?.classList.add('active');
 }
 
@@ -10978,9 +11931,7 @@ function setAmbience(type) {
   if (ambActive === type) { stopAmbience(); return; }
 
   stopAmbNodes();
-  // Stop lo-fi if switching away
-  const lofiEl = document.getElementById('lofi-audio');
-  if (lofiEl && !lofiEl.paused) { lofiEl.pause(); lofiEl.currentTime = 0; }
+  stopLofi(); // Stop lo-fi stream if switching away
 
   if (type === 'none') { stopAmbience(); return; }
   document.querySelectorAll('.amb-btn').forEach(b => b.classList.remove('active', 'amb-playing'));
@@ -10988,21 +11939,9 @@ function setAmbience(type) {
   document.getElementById('amb-' + type)?.classList.add('active');
   track('ambience_selected', { type });
 
-  // Lo-fi: HTML audio element, not Web Audio
+  // Lo-fi: HTML audio element with manual stream cycling
   if (type === 'lofi') {
-    const el = ensureLofiEl();
-    el.play().then(() => {
-      _setAmbPlaying('lofi');
-    }).catch(() => {
-      // Autoplay blocked — show a retry hint on the button
-      const btn = document.getElementById('amb-lofi');
-      if (btn) { btn.title = 'Tap again to start'; }
-      // Try again on next user interaction
-      document.addEventListener('click', function retryLofi() {
-        ensureLofiEl().play().then(() => _setAmbPlaying('lofi')).catch(() => {});
-        document.removeEventListener('click', retryLofi);
-      }, { once: true });
-    });
+    startLofi();
     return;
   }
 
@@ -11080,51 +12019,146 @@ function setAmbience(type) {
 }
 
 function setAmbienceVol(val) {
+  const v = val / 100;
   // Web Audio nodes
   if (ambMaster) {
     const ctx = getAmbCtx();
     if (ctx.state === 'suspended') ctx.resume();
-    ambMaster.gain.setTargetAtTime(val / 100, ctx.currentTime, 0.05);
+    ambMaster.gain.setTargetAtTime(v, ctx.currentTime, 0.05);
   }
   // Lo-fi audio element
-  const lofiEl = document.getElementById('lofi-audio');
-  if (lofiEl) lofiEl.volume = val / 100;
+  const lofiEl = _lofiEl || document.getElementById('lofi-audio');
+  if (lofiEl) lofiEl.volume = v;
 }
 
 // ── LO-FI (hidden <audio> element) ──────────────────────
-// Fallback chain of free lo-fi / chillhop radio streams.
-// Browser tries each <source> in order; first one that loads wins.
-let _lofiReady = false;
-function ensureLofiEl() {
-  let el = document.getElementById('lofi-audio');
-  if (el) return el;
-  el = document.createElement('audio');
-  el.id          = 'lofi-audio';
-  el.loop        = false;  // streams don't loop; they're continuous
-  el.crossOrigin = 'anonymous';
-  // Ordered by reliability — browser stops at first loadable source
-  const sources = [
-    { src: 'https://streams.ilovemusic.de/iloveradio17.mp3', type: 'audio/mpeg' }, // chillhop
-    { src: 'https://stream.zeno.fm/0r0xa792kwzuv',           type: 'audio/mpeg' }, // lofi hip-hop
-    { src: 'https://stream.zeno.fm/f3wvbbqmdg8uv',           type: 'audio/mpeg' }, // chill beats
-  ];
-  sources.forEach(({ src, type }) => {
-    const s = document.createElement('source');
-    s.src = src; s.type = type;
-    el.appendChild(s);
-  });
-  // If all streams fail, show a toast
-  el.addEventListener('error', () => {
-    if (ambActive === 'lofi') {
-      showToast('🎵 Stream unavailable — try again later');
-      stopAmbience();
-    }
-  });
-  el.volume = (parseInt(document.getElementById('amb-vol')?.value || 40)) / 100;
+// Manual stream-cycling approach: try each URL in turn with direct src
+// assignment. <source> fallback is unreliable for live radio streams
+// because browsers don't retry on stall — only on hard load error.
+// crossOrigin is intentionally NOT set: lo-fi streams don't send CORS
+// headers, so adding it causes every request to fail a preflight check.
+
+const LOFI_STREAMS = [
+  'https://stream.zeno.fm/0r0xa792kwzuv',            // Lofi Hip Hop Radio
+  'https://stream.zeno.fm/f3wvbbqmdg8uv',            // Chill Beats
+  'https://stream.zeno.fm/yn65f92wbyzuv',            // Lofi Study
+  'https://streams.ilovemusic.de/iloveradio17.mp3',  // Chillhop (EU)
+  'https://stream.zeno.fm/6sp2ypetwzuv',             // Chill Vibes
+  'https://streams.ilovemusic.de/iloveradio6.mp3',   // Lo-fi Chillout (EU)
+];
+
+let _lofiStreamIdx  = 0;
+let _lofiStallTimer = null;
+let _lofiEl         = null;
+
+function _getLofiEl() {
+  if (_lofiEl) return _lofiEl;
+  const el = document.createElement('audio');
+  el.id           = 'lofi-audio';
+  el.preload      = 'none';
+  // NO crossOrigin — streams don't send CORS headers; setting it breaks them
   el.style.display = 'none';
+  el.volume = (parseInt(document.getElementById('amb-vol')?.value || 40)) / 100;
   document.body.appendChild(el);
-  _lofiReady = true;
+  _lofiEl = el;
   return el;
+}
+
+function _setLofiBtn(state) {
+  // state: 'loading' | 'playing' | 'error' | 'idle'
+  const btn  = document.getElementById('amb-lofi');
+  const icon = btn?.querySelector('.amb-icon');
+  if (!btn || !icon) return;
+  btn.classList.remove('amb-playing', 'amb-loading', 'amb-error', 'active');
+  if (state === 'loading') {
+    icon.textContent = '⏳';
+    btn.title = 'Connecting…';
+    btn.classList.add('active', 'amb-loading');
+  } else if (state === 'playing') {
+    icon.textContent = '🎵';
+    btn.title = '';
+    btn.classList.add('active', 'amb-playing');
+  } else if (state === 'error') {
+    icon.textContent = '⚠️';
+    btn.title = 'Tap to retry';
+    btn.classList.add('amb-error');
+  } else { // idle
+    icon.textContent = '🎵';
+    btn.title = '';
+  }
+}
+
+function _lofiStallDetect() {
+  // If we've been waiting more than 10s, try next stream
+  _lofiStallTimer = setTimeout(() => {
+    const el = _getLofiEl();
+    if (el.paused || el.readyState < 2) {
+      console.warn('[lofi] stream stalled, trying next');
+      _tryLofiStream(_lofiStreamIdx + 1);
+    }
+  }, 10000);
+}
+
+function _tryLofiStream(idx) {
+  if (ambActive !== 'lofi') return; // user stopped while we were connecting
+  clearTimeout(_lofiStallTimer);
+
+  if (idx >= LOFI_STREAMS.length) {
+    // All streams exhausted
+    _setLofiBtn('error');
+    showToast('🎵 All streams unavailable — tap Lo-fi to retry', 4000);
+    stopAmbience();
+    return;
+  }
+
+  _lofiStreamIdx = idx;
+  const el  = _getLofiEl();
+  const url = LOFI_STREAMS[idx];
+
+  // Tear down old listeners before reassigning src
+  el.oncanplay = null; el.onerror = null;
+
+  el.src = url;
+  el.load();
+
+  _setLofiBtn('loading');
+
+  el.oncanplay = () => {
+    if (ambActive !== 'lofi') return;
+    clearTimeout(_lofiStallTimer);
+    el.play().then(() => {
+      _setLofiBtn('playing');
+      console.log('[lofi] playing stream', idx, url);
+    }).catch(() => _tryLofiStream(idx + 1));
+  };
+
+  el.onerror = () => {
+    console.warn('[lofi] stream', idx, 'failed, trying next');
+    setTimeout(() => _tryLofiStream(idx + 1), 400);
+  };
+
+  // Stall detection: if waiting event fires and doesn't clear in 10s, move on
+  el.onwaiting = () => { clearTimeout(_lofiStallTimer); _lofiStallDetect(); };
+  el.onplaying = () => { clearTimeout(_lofiStallTimer); };
+
+  // Start stall timer immediately (covers cases where oncanplay never fires)
+  _lofiStallDetect();
+}
+
+function startLofi() {
+  // Start from a random stream to distribute load across sources
+  const startIdx = Math.floor(Math.random() * Math.min(3, LOFI_STREAMS.length));
+  _tryLofiStream(startIdx);
+}
+
+function stopLofi() {
+  clearTimeout(_lofiStallTimer);
+  const el = _getLofiEl();
+  el.oncanplay = null; el.onerror = null; el.onwaiting = null; el.onplaying = null;
+  el.pause();
+  el.src = '';
+  el.load(); // abort any pending network request
+  _setLofiBtn('idle');
 }
 
 // ── XP BURST ────────────────────────────────────────────
@@ -11181,16 +12215,26 @@ let _undoTimer  = null;
 let _undoId     = null;
 let _undoXP     = 0;
 
-function showUndoToast(id, title, xp) {
+function showUndoToast(id, title, xp, weight, daysEarly) {
   _undoId  = id;
   _undoXP  = xp;
-  const toast = document.getElementById('undo-toast');
-  const text  = document.getElementById('ut-text');
-  const short = title.length > 28 ? title.slice(0, 27) + '…' : title;
-  text.textContent = `"${short}" marked done`;
+  const toast  = document.getElementById('undo-toast');
+  const text   = document.getElementById('ut-text');
+  const xpSub  = document.getElementById('ut-xp-sub');
+  const short  = title.length > 30 ? title.slice(0, 29) + '…' : title;
+  text.textContent = `✓ ${short}`;
+  if (xpSub) {
+    if (xp > 0) {
+      const earlyStr = daysEarly >= 1 ? ` · ${daysEarly}d early 🚀` : '';
+      xpSub.textContent = `+${xp} XP${earlyStr}`;
+      xpSub.style.display = '';
+    } else {
+      xpSub.style.display = 'none';
+    }
+  }
   toast.classList.add('show');
   clearTimeout(_undoTimer);
-  _undoTimer = setTimeout(hideUndoToast, 5000);
+  _undoTimer = setTimeout(hideUndoToast, 30000);
 }
 
 function hideUndoToast() {
@@ -11198,11 +12242,80 @@ function hideUndoToast() {
   _undoId = null; _undoXP = 0;
 }
 
+// ── BIG WIN CELEBRATION ─────────────────────────────────
+let _bigWinTimer = null;
+let _bigWinTitle = '';
+
+function _showBigWin(title, xp, weight, daysEarly, course) {
+  clearTimeout(_bigWinTimer);
+  const card     = document.getElementById('big-win-card');
+  if (!card) return;
+  _bigWinTitle = title;
+
+  // Pick emoji based on weight tier
+  const emoji = weight >= 35 ? '🏆' : weight >= 25 ? '🌲' : '⭐';
+  const label = weight >= 35 ? 'Major assignment done!' : weight >= 25 ? 'Big assignment done!' : 'Solid assignment done!';
+
+  document.getElementById('bw-emoji').textContent = emoji;
+  document.getElementById('bw-label').textContent = label;
+  const titleEl = document.getElementById('bw-title');
+  titleEl.textContent = title.length > 38 ? title.slice(0, 37) + '…' : title;
+
+  // Build pills
+  const pillsEl = document.getElementById('bw-pills');
+  const pills = [];
+  if (xp > 0) pills.push(`<span class="bw-pill bw-pill-xp">+${xp} XP</span>`);
+  if (daysEarly >= 1) {
+    const mult = Math.min(1.2, 1 + Math.min(daysEarly, 7) * 0.033).toFixed(2);
+    pills.push(`<span class="bw-pill bw-pill-early">🚀 ${daysEarly}d early · ${mult}× bonus</span>`);
+  }
+  if (weight > 0) pills.push(`<span class="bw-pill bw-pill-grade">${Math.round(weight)}% of grade</span>`);
+  if (course) pills.push(`<span class="bw-pill bw-pill-grade">${esc(course)}</span>`);
+  pillsEl.innerHTML = pills.join('');
+
+  card.classList.add('show');
+  _bigWinTimer = setTimeout(_hideBigWin, 5000);
+  track('big_win_shown', { weight, xp, days_early: daysEarly });
+}
+
+function _hideBigWin() {
+  clearTimeout(_bigWinTimer);
+  const card = document.getElementById('big-win-card');
+  if (card) card.classList.remove('show');
+}
+
+async function _bigWinShare() {
+  _hideBigWin();
+  const name = localStorage.getItem('sq_name') || 'I';
+  const done = totalCompleted;
+  const text = `${name} just crushed a major assignment on Sequoia 🌲 — the study app that grows with you. ${done} down this semester! https://getsequoia.app?ref=share`;
+  if (navigator.share) {
+    try { await navigator.share({ text, url: 'https://getsequoia.app?ref=share' }); track('big_win_shared'); return; } catch (_) {}
+  }
+  await navigator.clipboard.writeText(text).catch(() => {});
+  showToast('Progress copied! Share it wherever 🌲', 2500);
+  track('big_win_shared', { method: 'clipboard' });
+}
+
+// ── COMPLETION MILESTONES ────────────────────────────────
+function _checkCompletionMilestone(count) {
+  const milestones = {
+    5:   '5 assignments done! The habit is forming 🌱',
+    10:  '10 assignments crushed! Your tree is growing 🌲',
+    25:  '25 done! You\'re a quarter of the way through the semester 🔥',
+    50:  'FIFTY assignments! You\'re unstoppable 🏆',
+    100: '100 assignments done. You\'re in the top tier. 🌳',
+  };
+  const msg = milestones[count];
+  if (msg) setTimeout(() => showToast(msg, 5000), 800);
+}
+
 async function undoComplete() {
   if (!_undoId) return;
   const id  = _undoId;
   const xp  = _undoXP;   // capture before hideUndoToast() zeroes them
   hideUndoToast();
+  _hideBigWin();
 
   // Reverse the completion
   completedIds.delete(id);
@@ -12419,6 +13532,26 @@ function timeAgo(date) {
 // ── PAYWALL ──────────────────────────────────────────────
 let _userTier = 'free';       // updated from Firestore on login
 let _paywallContext = null;   // what triggered the paywall (for analytics later)
+let _pwPlan = 'semester';     // selected plan: 'monthly' | 'semester' | 'annual'
+
+function selectPwPlan(plan) {
+  _pwPlan = plan;
+  ['monthly','semester','annual'].forEach(p => {
+    document.getElementById('pwp-' + p)?.classList.toggle('active', p === plan);
+  });
+  const btn  = document.getElementById('pw-cta-btn');
+  const note = document.getElementById('pw-trial-note');
+  if (plan === 'monthly') {
+    if (btn)  btn.textContent  = 'Start Free Trial →';
+    if (note) note.textContent = '🎁 7-day free trial — no charge today';
+  } else if (plan === 'semester') {
+    if (btn)  btn.textContent  = 'Get Semester Access →';
+    if (note) note.textContent = '🎁 7-day free trial — no charge today';
+  } else {
+    if (btn)  btn.textContent  = 'Get Annual Access →';
+    if (note) note.textContent = '💰 Save $9 vs paying semester by semester';
+  }
+}
 
 function setUserTier(tier) {
   const prev = _userTier;
@@ -12435,6 +13568,12 @@ function isPremium() { return _userTier === 'premium'; }
 
 function _syncPremiumUI() {
   const pro = isPremium();
+  // Nav tier badge
+  const tierBadge = document.getElementById('nav-tier-badge');
+  if (tierBadge) {
+    tierBadge.textContent = pro ? '✦ PRO' : 'FREE';
+    tierBadge.classList.toggle('pro', pro);
+  }
   // Settings upgrade / manage buttons
   const upgradeBtn  = document.getElementById('settings-upgrade-btn');
   const manageBtn   = document.getElementById('settings-manage-btn');
@@ -12443,6 +13582,12 @@ function _syncPremiumUI() {
   // Account menu upgrade button
   const amUpgradeBtn = document.getElementById('am-upgrade-btn');
   if (amUpgradeBtn) amUpgradeBtn.style.display = pro ? 'none' : 'block';
+  // GPA toggle — show lock icon for free users
+  const gpaBtn = document.getElementById('gpa-toggle-btn');
+  if (gpaBtn) {
+    const lbl = gpaBtn.querySelector('.gpa-toggle-label');
+    if (lbl) lbl.textContent = pro ? '∑ GPA Calculator' : '∑ GPA Calculator 🔒';
+  }
   // Streak freeze button
   const sfBtn = document.getElementById('streak-freeze-btn');
   if (sfBtn) {
@@ -12586,6 +13731,18 @@ async function loadFriendsScreen() {
   document.getElementById('fr-hero-xp').textContent   = xp.toLocaleString() + ' XP · Lv ' + lvl;
   document.getElementById('fr-my-code').textContent   = code;
   document.getElementById('fr-hero-tree').textContent = _stageEmoji(xp);
+  // Show invite link button
+  const inviteBtn = document.getElementById('fr-invite-btn');
+  if (inviteBtn) inviteBtn.style.display = '';
+
+  // Auto-fill pending friend code from invite link
+  const pendingCode = localStorage.getItem('sq_pending_friend_code');
+  if (pendingCode) {
+    localStorage.removeItem('sq_pending_friend_code');
+    const inp = document.getElementById('fr-add-input');
+    if (inp) { inp.value = pendingCode; inp.focus(); }
+    showToast('🌲 Invite code pre-filled — tap Add to connect!', 3500);
+  }
 
   // Push my public profile (keeps it fresh)
   _upsertPublicProfile();
@@ -12622,7 +13779,13 @@ async function loadFriendsScreen() {
     profiles.length > 1 ? `#${myRank} of ${profiles.length} on leaderboard` : 'Add friends to see your rank';
 
   if (profiles.length <= 1) {
-    listEl.innerHTML = `<div class="fr-empty">No friends yet 🌱<br>Share your code <strong>${code}</strong> to get started!</div>`;
+    listEl.innerHTML = `<div class="fr-empty" style="padding:28px 16px 20px">
+      <div style="font-size:32px;margin-bottom:10px">🌲</div>
+      <div style="font-weight:800;font-size:14px;color:#FFFEF8;margin-bottom:6px">No friends yet</div>
+      <div style="font-size:12px;line-height:1.5;margin-bottom:12px">Your friend code is <strong style="color:var(--g4);letter-spacing:1px;font-family:'DM Mono',monospace">${code}</strong></div>
+      <button onclick="shareInviteLink()" class="fr-invite-btn" style="margin-top:0">🔗 Share Invite Link</button>
+      <button onclick="copyFriendCode()" style="background:none;border:none;color:rgba(255,255,255,0.45);font-size:12px;cursor:pointer;margin-top:8px;padding:4px 0">or copy code</button>
+    </div>`;
     podEl.style.display = 'none';
     if (titleEl) titleEl.style.display = 'none';
     return;
@@ -12659,6 +13822,7 @@ async function loadFriendsScreen() {
         <div class="fr-row-sub">Lv ${p.level || 1} · 🔥 ${p.streak || 0}-day streak</div>
       </div>
       <div class="fr-row-xp">${(p.xp || 0).toLocaleString()}</div>
+      ${!isMe ? `<button class="fr-remove-btn" onclick="removeFriend('${p.uid}')" title="Remove friend">✕</button>` : ''}
     </div>`;
   }).join('');
 }
@@ -12707,9 +13871,48 @@ async function addFriend() {
 }
 
 function copyFriendCode() {
-  if (!currentUser) return;
+  if (!currentUser) { showToast('Sign in to get your friend code 🌲', 2500); return; }
   const code = _friendCode(currentUser.uid);
   navigator.clipboard.writeText(code).then(() => showToast('Friend code copied! 🌲', 2500));
+}
+
+async function shareInviteLink() {
+  if (!currentUser) { showToast('Sign in to share your invite link 🌲', 2500); return; }
+  const code = _friendCode(currentUser.uid);
+  const name = localStorage.getItem('sq_name') || 'a friend';
+  const inviteUrl = `https://getsequoia.app?code=${code}`;
+  const shareText = `${name} is inviting you to join them on Sequoia 🌲 — the study app that grows as you do. Join the leaderboard: ${inviteUrl}`;
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: 'Join me on Sequoia 🌲', text: shareText, url: inviteUrl });
+      track('friend_invite_shared', { method: 'native' });
+      return;
+    } catch (_) {}
+  }
+  // Fallback: copy to clipboard
+  try {
+    await navigator.clipboard.writeText(inviteUrl);
+    showToast('Invite link copied! 🌲 Send it to a friend.', 3000);
+    track('friend_invite_shared', { method: 'clipboard' });
+  } catch (_) {
+    showToast('Your invite link: ' + inviteUrl, 5000);
+  }
+}
+
+async function removeFriend(friendUid) {
+  if (!currentUser) return;
+  if (!confirm('Remove this friend from your leaderboard?')) return;
+  try {
+    await db.collection('users').doc(currentUser.uid).update({
+      friends: firebase.firestore.FieldValue.arrayRemove(friendUid)
+    });
+    _frLoaded = false;
+    showToast('Friend removed 🌿', 2000);
+    loadFriendsScreen();
+    track('friend_removed');
+  } catch (e) {
+    showToast('Couldn\'t remove friend — try again.', 2500);
+  }
 }
 
 // ── AI WEEKLY SCHEDULE ────────────────────────────────────
@@ -12836,6 +14039,8 @@ function toggleSchedBlock(el, id) {
 function openPaywall(context) { lockScroll();
   _paywallContext = context || 'generic';
   track('paywall_opened', { context: _paywallContext });
+  // Reset to semester plan on every open
+  selectPwPlan('semester');
   // Contextual copy
   const heading = document.getElementById('pw-heading');
   const sub     = document.getElementById('pw-sub');
@@ -12852,6 +14057,18 @@ function openPaywall(context) { lockScroll();
     } else if (context === 'ai-schedule') {
       heading.innerHTML = "Get your week<br>planned for you.";
       sub.textContent   = "AI builds a study schedule around your deadlines, weights, and free time — automatically.";
+    } else if (context === 'gpa-calc') {
+      heading.innerHTML = "See how each assignment<br>moves your GPA.";
+      sub.textContent   = "The GPA impact calculator is a Premium feature. Know exactly what's worth your time.";
+    } else if (context === 'streak-shield') {
+      heading.innerHTML = "Protect your streak<br>on hard days.";
+      sub.textContent   = "Premium gives you 2 streak shields per month — burn one instead of losing your streak.";
+    } else if (context === 'analytics') {
+      heading.innerHTML = "See how you study<br>week over week.";
+      sub.textContent   = "Premium unlocks full study analytics — hours, XP trends, and completion rate.";
+    } else if (context === 'nav-badge') {
+      heading.innerHTML = "Unlock your full<br>grove potential.";
+      sub.textContent   = "Less than $10 to protect your GPA all semester.";
     } else {
       heading.innerHTML = "Unlock your full<br>grove potential.";
       sub.textContent   = "Every decoration, every feature. Cancel anytime.";
@@ -12875,6 +14092,7 @@ async function startCheckout() {
     const res  = await fetch(API + '/create-checkout-session', {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + idToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan: _pwPlan }),
     });
     const data = await res.json();
     if (data.ok && data.url) {
@@ -13089,6 +14307,79 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+// ── iOS ADD TO HOME SCREEN PROMPT ────────────────────────
+function _shouldShowIOSPrompt() {
+  if (!_isIOS()) return false;
+  if (_isIOSStandalone()) return false; // already installed
+  if (localStorage.getItem('sq_ios_prompt_dismissed')) {
+    // Re-show after 14 days
+    const ts = parseInt(localStorage.getItem('sq_ios_prompt_dismissed'));
+    if (Date.now() - ts < 14 * 24 * 3600 * 1000) return false;
+  }
+  return true;
+}
+
+function _showIOSInstallPrompt() {
+  if (!_shouldShowIOSPrompt()) return;
+  if (document.getElementById('ios-install-sheet')) return;
+
+  const sheet = document.createElement('div');
+  sheet.id = 'ios-install-sheet';
+  sheet.style.cssText = [
+    'position:fixed', 'bottom:0', 'left:0', 'right:0', 'z-index:9500',
+    'background:#0F2010', 'border-top:1px solid rgba(76,161,48,0.35)',
+    'border-radius:20px 20px 0 0',
+    'padding:20px 24px calc(28px + env(safe-area-inset-bottom,0px))',
+    'box-shadow:0 -8px 32px rgba(0,0,0,0.55)',
+    'animation:settingsSlideUp .3s cubic-bezier(0.34,1.4,0.64,1)',
+    'font-family:\'DM Sans\',sans-serif',
+  ].join(';');
+  sheet.innerHTML = `
+    <div style="width:40px;height:4px;background:rgba(255,255,255,0.18);border-radius:2px;margin:0 auto 18px"></div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+      <span style="font-size:36px">🌲</span>
+      <div>
+        <div style="font-size:16px;font-weight:800;color:#FFFEF8;font-family:'Playfair Display',serif">Add to Home Screen</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:2px">Opens instantly, works offline, no App Store needed</div>
+      </div>
+    </div>
+    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);border-radius:14px;padding:14px 16px;margin-bottom:16px">
+      <div style="font-size:12px;color:rgba(255,255,255,0.80);line-height:2">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+          <span style="font-size:16px;flex-shrink:0">1.</span>
+          <span>Tap the <strong style="color:#fff">Share</strong> button
+          <svg style="vertical-align:middle;display:inline-block;margin-left:3px" width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 2v10M6 6l4-4 4 4" stroke="#4CA130" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="3" y="10" width="14" height="8" rx="2" stroke="#4CA130" stroke-width="1.5"/>
+          </svg>
+          at the bottom of your browser</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:16px;flex-shrink:0">2.</span>
+          <span>Scroll down and tap <strong style="color:#fff">Add to Home Screen</strong> <span style="font-size:13px">＋</span></span>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button onclick="_dismissIOSPrompt()" style="flex:1;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:rgba(255,255,255,0.45);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Maybe later</button>
+      <button onclick="_dismissIOSPrompt(true)" style="flex:2;padding:12px;border-radius:14px;border:none;background:var(--g2);color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Got it, I'll do it now!</button>
+    </div>`;
+  document.body.appendChild(sheet);
+  track('ios_install_prompt_shown');
+}
+
+function _dismissIOSPrompt(didIt) {
+  localStorage.setItem('sq_ios_prompt_dismissed', String(Date.now()));
+  const el = document.getElementById('ios-install-sheet');
+  if (el) el.remove();
+  if (didIt) {
+    showToast('🌲 Tap Share → Add to Home Screen!', 5000);
+    track('ios_install_prompt_accepted');
+  } else {
+    track('ios_install_prompt_dismissed');
+  }
+}
+
 // ── PWA INSTALL PROMPT ───────────────────────────────────
 let _pwaInstallEvent = null;
 window.addEventListener('beforeinstallprompt', e => {
@@ -13186,7 +14477,16 @@ function _showPwaInstallBanner() {
         Can't generate a Canvas token? Use your <strong style="color:var(--text)">Calendar Feed URL</strong> instead — it syncs all your assignments from Canvas without needing IT approval.<br>
         <span style="opacity:0.7">In Canvas → Calendar → click the calendar icon at the bottom right → copy the URL.</span>
       </div>
-      <div id="set-ical-status" style="display:none;font-size:11px;font-weight:600;color:var(--g4);margin-bottom:8px">✓ Calendar feed connected</div>
+      <div id="set-ical-status" style="display:none;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span id="ical-sync-icon" style="font-size:13px">✓</span>
+          <span id="ical-sync-text" style="font-size:11px;font-weight:600;color:var(--g4);flex:1">Calendar feed connected</span>
+          <button id="ical-sync-btn" onclick="manualIcalSync()"
+            style="background:rgba(76,161,48,0.15);border:1px solid rgba(76,161,48,0.30);border-radius:8px;
+            color:var(--g4);font-size:11px;font-weight:700;padding:4px 10px;cursor:pointer;white-space:nowrap;
+            font-family:'DM Sans',sans-serif">↺ Sync</button>
+        </div>
+      </div>
       <input class="settings-input" id="set-ical-url" type="url"
         placeholder="https://school.instructure.com/feeds/calendars/user_…ics"
         style="font-size:12px">
@@ -13231,6 +14531,29 @@ function _showPwaInstallBanner() {
         <button class="theme-opt" id="topt-dark"  onclick="setTheme('dark')">🌙 Dark</button>
       </div>
       <div class="theme-note" id="theme-note"></div>
+    </div>
+
+    <hr class="settings-divider">
+
+    <!-- Notification Preferences -->
+    <div class="settings-field">
+      <label>Push Notification Reminders</label>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;font-weight:normal;color:var(--text)">
+          <input type="checkbox" id="set-notif-morning" style="accent-color:var(--g2);width:16px;height:16px;flex-shrink:0" onchange="saveNotifPrefs()">
+          <span>
+            <span style="font-weight:700">Morning reminders</span>
+            <span style="color:var(--light);font-size:11px;display:block;margin-top:1px">Daily nudge to stay on track with assignments</span>
+          </span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;font-weight:normal;color:var(--text)">
+          <input type="checkbox" id="set-notif-evening" style="accent-color:var(--g2);width:16px;height:16px;flex-shrink:0" onchange="saveNotifPrefs()">
+          <span>
+            <span style="font-weight:700">Evening streak reminders</span>
+            <span style="color:var(--light);font-size:11px;display:block;margin-top:1px">Alert when your streak is at risk at end of day</span>
+          </span>
+        </label>
+      </div>
     </div>
 
     <hr class="settings-divider">
@@ -13316,6 +14639,54 @@ function _showPwaInstallBanner() {
       <div class="syl-review-list" id="syl-review-list"></div>
       <button class="syl-confirm-btn" id="syl-confirm-btn" onclick="confirmSyllabusImport()">Add Assignments →</button>
       <button class="syl-back-btn" onclick="sylGoBack()">← Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── WEIGHT CLASSIFIER MODAL ── -->
+<div id="wc-overlay" onclick="if(event.target===this)closeWeightClassifier()">
+  <div class="wc-sheet" style="position:relative">
+    <button class="wc-close" onclick="closeWeightClassifier()">✕</button>
+    <div class="syl-handle"></div>
+
+    <!-- Step 1: Paste grade breakdown -->
+    <div id="wc-step1">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
+        <div class="wc-title">Set Grade Weights</div>
+        <div style="font-size:11px;font-weight:600;color:var(--mid)">Step 1 of 2</div>
+      </div>
+      <div class="wc-sub">Paste the grading breakdown from your syllabus — even just the percentages table. Sequoia will classify your assignments and calculate how much each one is worth.</div>
+      <div style="font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Grade breakdown</div>
+      <textarea class="wc-ta" id="wc-grade-ta" placeholder="e.g.&#10;Exams: 40%&#10;Homework: 25%&#10;Quizzes: 15%&#10;Labs: 20%"></textarea>
+      <div style="font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Apply to course (optional)</div>
+      <select class="wc-cat-sel" id="wc-course-filter" style="width:100%;max-width:100%;margin-bottom:14px">
+        <option value="">All assignments</option>
+      </select>
+      <div class="wc-err" id="wc-err1"></div>
+      <button class="wc-parse-btn" id="wc-parse-btn" onclick="runWeightClassification()">Classify Assignments →</button>
+    </div>
+
+    <!-- Step 2: Review & edit classified results -->
+    <div id="wc-step2" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
+        <div class="wc-title">Review Weights</div>
+        <div style="font-size:11px;font-weight:600;color:var(--mid)">Step 2 of 2</div>
+      </div>
+      <div class="wc-sub">AI classified your assignments. Change any category with the dropdown — weights recalculate automatically. You can also edit individual weights directly.</div>
+      <div class="wc-cat-row" id="wc-cat-chips"></div>
+      <div style="overflow-x:auto">
+        <table class="wc-table">
+          <thead><tr>
+            <th>Assignment</th>
+            <th>Category</th>
+            <th style="text-align:right">Weight</th>
+          </tr></thead>
+          <tbody id="wc-tbody"></tbody>
+        </table>
+      </div>
+      <div class="wc-err" id="wc-err2"></div>
+      <button class="wc-confirm-btn" id="wc-confirm-btn" onclick="confirmWeightClassification()">Apply Weights →</button>
+      <button class="syl-back-btn" onclick="wcGoBack()" style="margin-top:8px">← Back</button>
     </div>
   </div>
 </div>
@@ -13582,17 +14953,39 @@ function _showPwaInstallBanner() {
   <div id="paywall-card">
     <div class="pw-pill">✦ Premium</div>
     <div class="pw-heading" id="pw-heading">Unlock your full<br>grove potential.</div>
-    <div class="pw-sub" id="pw-sub">Every decoration, every feature. Cancel anytime.</div>
-    <div class="pw-price-row">
-      <div class="pw-price">$7.99</div>
-      <div class="pw-price-period">/ month</div>
+    <div class="pw-sub" id="pw-sub">Every feature. Every decoration. Cancel anytime.</div>
+
+    <!-- Plan picker -->
+    <div class="pw-plans">
+      <div class="pw-plan" id="pwp-monthly" onclick="selectPwPlan('monthly')">
+        <div class="pw-plan-name">Monthly</div>
+        <div class="pw-plan-price">$6.99</div>
+        <div class="pw-plan-period">/month</div>
+        <div class="pw-plan-save"></div>
+      </div>
+      <div class="pw-plan active" id="pwp-semester" onclick="selectPwPlan('semester')">
+        <div class="pw-plan-badge">Most Popular</div>
+        <div class="pw-plan-name">Semester</div>
+        <div class="pw-plan-price">$14.99</div>
+        <div class="pw-plan-period">/semester</div>
+        <div class="pw-plan-save">$2.50/mo</div>
+      </div>
+      <div class="pw-plan" id="pwp-annual" onclick="selectPwPlan('annual')">
+        <div class="pw-plan-badge badge-val">Best Value</div>
+        <div class="pw-plan-name">Annual</div>
+        <div class="pw-plan-price">$24.99</div>
+        <div class="pw-plan-period">/year</div>
+        <div class="pw-plan-save">Save $9</div>
+      </div>
     </div>
-    <div class="pw-trial-note">🎁 7-day free trial — no charge today</div>
+    <div class="pw-trial-note" id="pw-trial-note">🎁 7-day free trial — no charge today</div>
+
     <div class="pw-features">
-      <div class="pw-feat"><div class="pw-feat-icon">🎨</div><div class="pw-feat-text"><strong>All decorations</strong> — seasonal drops, lanterns, butterflies, crystals &amp; more</div></div>
-      <div class="pw-feat"><div class="pw-feat-icon">🧊</div><div class="pw-feat-text"><strong>Streak freeze</strong> — protect your streak once a week when life gets busy</div></div>
-      <div class="pw-feat"><div class="pw-feat-icon">✨</div><div class="pw-feat-text"><strong>Enhanced stats card</strong> — aurora scene, name banner, full-res share image</div></div>
-      <div class="pw-feat"><div class="pw-feat-icon">⚡</div><div class="pw-feat-text"><strong>AI quick-pick</strong> — instant "what should I study right now?" recommendations</div></div>
+      <div class="pw-feat"><div class="pw-feat-icon">📊</div><div class="pw-feat-text"><strong>GPA impact calculator</strong> — see exactly how each assignment moves your final grade</div></div>
+      <div class="pw-feat"><div class="pw-feat-icon">🧊</div><div class="pw-feat-text"><strong>Streak shields</strong> — 2 per month, protect your streak on bad days</div></div>
+      <div class="pw-feat"><div class="pw-feat-icon">⚡</div><div class="pw-feat-text"><strong>AI quick-pick &amp; schedule</strong> — instant study plan built around your weights &amp; deadlines</div></div>
+      <div class="pw-feat"><div class="pw-feat-icon">🎨</div><div class="pw-feat-text"><strong>All decorations &amp; cosmetics</strong> — seasonal drops, foxes, owls, crystals &amp; more</div></div>
+      <div class="pw-feat"><div class="pw-feat-icon">📈</div><div class="pw-feat-text"><strong>Extended XP cap</strong> — 450 XP/day vs 300 on free, plus full study analytics</div></div>
     </div>
     <button class="pw-cta" id="pw-cta-btn" onclick="startCheckout()">Start Free Trial →</button>
     <button class="pw-dismiss" onclick="closePaywall()">Maybe later</button>
@@ -13684,8 +15077,43 @@ function _showPwaInstallBanner() {
 
 <!-- UNDO TOAST -->
 <div id="undo-toast">
-  <span class="ut-text" id="ut-text">Assignment marked done</span>
+  <div style="display:flex;flex-direction:column;gap:1px;min-width:0">
+    <span class="ut-text" id="ut-text">Assignment marked done</span>
+    <span id="ut-xp-sub" style="font-size:11px;color:var(--g4);font-weight:700;display:none"></span>
+  </div>
   <button class="ut-btn" onclick="undoComplete()">Undo</button>
+</div>
+
+<!-- Cap Hit Toast -->
+<div id="cap-hit-toast">
+  <div class="cht-top">
+    <span class="cht-icon">🌙</span>
+    <div>
+      <div class="cht-title">Daily XP cap reached!</div>
+      <div class="cht-sub" id="cht-cap-sub">You earned 300 XP today — great work.</div>
+    </div>
+    <button onclick="_hideCapHit()" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:16px;cursor:pointer;flex-shrink:0;padding:0 0 0 4px;line-height:1">✕</button>
+  </div>
+  <div class="cht-reset" id="cht-reset-label">Your cap resets in —</div>
+  <button class="cht-upgrade-btn" id="cht-upgrade-btn" onclick="_hideCapHit();openPaywall('cap-hit')" style="display:none">
+    ✦ Unlock 2× XP during exam weeks with Premium
+  </button>
+</div>
+
+<!-- Big Win Celebration Card -->
+<div id="big-win-card">
+  <div class="bw-header">
+    <span class="bw-emoji" id="bw-emoji">🌲</span>
+    <div>
+      <div class="bw-label" id="bw-label">Big assignment done!</div>
+      <div class="bw-title" id="bw-title"></div>
+    </div>
+  </div>
+  <div class="bw-pills" id="bw-pills"></div>
+  <div class="bw-actions">
+    <button class="bw-share-btn" onclick="_bigWinShare()">📤 Share progress</button>
+    <button class="bw-dismiss-btn" onclick="_hideBigWin()">Got it ✓</button>
+  </div>
 </div>
 </body>
 </html>
