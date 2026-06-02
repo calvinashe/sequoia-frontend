@@ -14875,35 +14875,58 @@ function _checkUpgradeRedirect() {
     history.replaceState({}, '', window.location.pathname);
     setTimeout(() => showToast('🌲 Welcome to Premium! Activating your account…', 4000), 800);
 
-    // Wait for Firebase auth to resolve, then use onSnapshot for instant unlock
-    // as soon as the Stripe webhook writes tier='premium' to Firestore.
     let _unsub = null;
+    let _synced = false;
+
+    function _applyPremium() {
+      if (_synced) return;
+      _synced = true;
+      if (_unsub) { _unsub(); _unsub = null; }
+      localStorage.setItem('sq_tier', 'premium');
+      showToast('✦ Premium unlocked! Reloading…', 2000);
+      setTimeout(() => location.reload(), 2000);
+    }
+
+    // Fast path: call /sync-premium directly — checks Stripe and writes to Firestore.
+    // This works even if the webhook is delayed or misconfigured (common on mobile).
+    async function _syncStripe() {
+      if (_synced || !currentUser) return;
+      try {
+        const idToken = await currentUser.getIdToken();
+        const res  = await fetch(API + '/sync-premium', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + idToken },
+        });
+        const data = await res.json();
+        if (data.ok && data.tier === 'premium') _applyPremium();
+      } catch(_) {}
+    }
+
+    // Wait for Firebase auth to resolve
     let _authWait = 0;
     const _waitForAuth = setInterval(() => {
       _authWait++;
-      if (_authWait > 25) { // ~50s — auth should always resolve by now
+      if (_authWait > 25) {
         clearInterval(_waitForAuth);
-        _showUpgradeStuck();
+        if (!_synced) _showUpgradeStuck();
         return;
       }
-      if (!currentUser) return; // still resolving
+      if (!currentUser) return;
       clearInterval(_waitForAuth);
 
-      // Real-time listener — fires the moment webhook writes tier = 'premium'
+      // 1. Firestore onSnapshot — fires instantly if webhook already wrote premium
       _unsub = db.collection('users').doc(currentUser.uid).onSnapshot(snap => {
-        if (!snap.exists) return;
-        if (snap.data().tier === 'premium') {
-          if (_unsub) { _unsub(); _unsub = null; }
-          localStorage.setItem('sq_tier', 'premium');
-          showToast('✦ Premium unlocked! Reloading…', 2000);
-          setTimeout(() => location.reload(), 2000);
-        }
-      }, () => { /* ignore permission errors during auth setup */ });
+        if (snap.exists && snap.data().tier === 'premium') _applyPremium();
+      }, () => {});
 
-      // Safety: if onSnapshot never fires premium after 90s, show the stuck banner
-      setTimeout(() => {
-        if (_unsub) { _unsub(); _unsub = null; _showUpgradeStuck(); }
-      }, 90000);
+      // 2. Direct Stripe sync after 4s — fallback for mobile/delayed webhooks
+      setTimeout(_syncStripe, 4000);
+      // 3. Retry sync at 12s and 30s in case Stripe is slow
+      setTimeout(_syncStripe, 12000);
+      setTimeout(_syncStripe, 30000);
+
+      // 4. Give up after 60s
+      setTimeout(() => { if (!_synced) { if (_unsub) { _unsub(); _unsub = null; } _showUpgradeStuck(); } }, 60000);
     }, 2000);
   }
 }
