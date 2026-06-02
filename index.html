@@ -7702,6 +7702,15 @@ function saveSessionHistory(entries) {
 }
 let sessionEntries = loadSessionHistory();
 
+// iOS Safari / mobile: page may be restored from bfcache after Stripe redirect.
+// DOMContentLoaded doesn't fire for bfcache restores — pageshow does.
+// Without this, returning from Stripe on iOS Safari never triggers _checkUpgradeRedirect().
+window.addEventListener('pageshow', e => {
+  if (e.persisted && new URLSearchParams(window.location.search).get('upgraded') === '1') {
+    _checkUpgradeRedirect();
+  }
+});
+
 window.addEventListener('DOMContentLoaded', () => {
   fetch(`${API}/health`, { signal: AbortSignal.timeout ? AbortSignal.timeout(90000) : undefined }).catch(() => {});
   _checkUpgradeRedirect();  // show success toast if returning from Stripe
@@ -14965,12 +14974,15 @@ function _checkUpgradeRedirect() {
 
       // 2. Direct Stripe sync after 4s — fallback for mobile/delayed webhooks
       setTimeout(_syncStripe, 4000);
-      // 3. Retry sync at 12s and 30s in case Stripe is slow
-      setTimeout(_syncStripe, 12000);
-      setTimeout(_syncStripe, 30000);
+      // 3. Retry at 15s, 35s, 60s, 90s — Render free tier can take 30-45s to cold-start,
+      //    so we need enough coverage for the backend to fully wake before giving up.
+      setTimeout(_syncStripe, 15000);
+      setTimeout(_syncStripe, 35000);
+      setTimeout(_syncStripe, 60000);
+      setTimeout(_syncStripe, 90000);
 
-      // 4. Give up after 60s
-      setTimeout(() => { if (!_synced) { if (_unsub) { _unsub(); _unsub = null; } _showUpgradeStuck(); } }, 60000);
+      // 4. Give up after 150s (extended from 60s to cover slow Render cold starts)
+      setTimeout(() => { if (!_synced) { if (_unsub) { _unsub(); _unsub = null; } _showUpgradeStuck(); } }, 150000);
     }, 2000);
   }
 }
