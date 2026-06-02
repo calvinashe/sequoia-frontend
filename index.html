@@ -4536,7 +4536,8 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 
 /* ── LIGHT THEME GAPS — polish pass ─────────────────────── */
 [data-theme="light"] .nav-settings      { color:var(--g1); }
-[data-theme="light"] .ai-pick-btn:hover { color:var(--g1); }
+[data-theme="light"] .ai-pick-btn { color:var(--g1); border-color:rgba(76,161,48,0.55); background:linear-gradient(135deg,rgba(76,161,48,0.14),rgba(46,96,32,0.08)); }
+[data-theme="light"] .ai-pick-btn:hover { color:var(--g1); background:linear-gradient(135deg,rgba(76,161,48,0.22),rgba(46,96,32,0.14)); }
 [data-theme="light"] .add-btn:hover     { color:#fff; }
 /* Hero stat text on light bg */
 [data-theme="light"] .hero-stat .sv     { color:var(--g1); }
@@ -7903,10 +7904,17 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+// Capitalise the first letter of every word (handles "calvin ashe" → "Calvin Ashe")
+function _toTitleCase(s) {
+  if (!s) return s;
+  return s.replace(/\b\w/g, c => c.toUpperCase());
+}
+
 function setGreeting(name) {
   const h = new Date().getHours();
   const g = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-  document.getElementById('dash-greeting-title').textContent = name ? `${g}, ${name.split(' ')[0]} 👋` : `${g} 👋`;
+  const firstName = name ? _toTitleCase(name.split(' ')[0]) : '';
+  document.getElementById('dash-greeting-title').textContent = firstName ? `${g}, ${firstName} 👋` : `${g} 👋`;
 }
 
 // ── SCREEN NAV ──────────────────────────────────────────
@@ -7945,7 +7953,7 @@ function showScreen(i) {
   _navTabBtns.forEach(b => b.classList.toggle('active', parseInt(b.dataset.screen) === i));
   _navBtabs.forEach(b   => b.classList.toggle('active', parseInt(b.dataset.screen) === i));
   window.scrollTo(0, 0);
-  if (i === 1 && allAssignments.length) renderCalendar(allAssignments);
+  if (i === 1) renderCalendar(allAssignments);
   if (i === 3) { syncTreeScreen(); _sc2ForestEnter(); }
   else         { _sc2ForestLeave(); }
   if (i === 4) syncWrapUp();
@@ -9647,12 +9655,22 @@ function checkBadges(extraStats = {}) {
 function _awardBadge(badge) {
   if (localStorage.getItem(badge.id)) return; // double-check
   localStorage.setItem(badge.id, '1');
-  // Persist to Firestore via the same granted_bonuses array starterGrant uses
-  if (currentUser && !isDemo) {
+  // Persist to Firestore so the badge survives localStorage clears and device switches.
+  // Retry up to 3 times if currentUser isn't ready yet or the write fails.
+  function _persistBadge(attempts) {
+    if (isDemo) return;
+    if (!currentUser) {
+      // Auth not ready yet — wait and retry
+      if (attempts < 6) setTimeout(() => _persistBadge(attempts + 1), 1000);
+      return;
+    }
     db.collection('users').doc(currentUser.uid).set({
       granted_bonuses: firebase.firestore.FieldValue.arrayUnion(badge.id)
-    }, { merge: true }).catch(() => {});
+    }, { merge: true }).catch(e => {
+      if (attempts < 3) setTimeout(() => _persistBadge(attempts + 1), 2000 * (attempts + 1));
+    });
   }
+  _persistBadge(0);
   // Celebration toast (slight delay so it doesn't stack with XP burst)
   setTimeout(() => {
     showToast(`${badge.emoji} Badge unlocked: ${badge.name}!`, 4000);
@@ -13265,7 +13283,7 @@ function syncWrapUp() {
   document.getElementById('stat-badge-stage-val').textContent = st.name;
 
   // Name banner — personalised + aurora for premium; generic tagline for free
-  const rawName = (localStorage.getItem('sq_name') || '').trim();
+  const rawName = _toTitleCase((localStorage.getItem('sq_name') || '').trim());
   const nameBanner = document.getElementById('sc-name-banner');
   if (nameBanner) {
     if (isPremium()) {
@@ -13939,7 +13957,15 @@ function renderNotifList() {
     return;
   }
   const icons = { streak_risk:'🔥', due_soon:'📅', xp_milestone:'⭐', new_stage:'🌲', weekly:'📊', system:'🌿' };
-  el.innerHTML = _notifCache.map(n => `
+  // Deduplicate system notifications with the same title (e.g. multiple "Push notifications enabled")
+  const _seenTitles = new Set();
+  const deduped = _notifCache.filter(n => {
+    if (n.type !== 'system') return true;
+    if (_seenTitles.has(n.title)) return false;
+    _seenTitles.add(n.title);
+    return true;
+  });
+  el.innerHTML = deduped.map(n => `
     <div class="notif-item ${n.read ? '' : 'unread'}">
       <div class="notif-icon">${icons[n.type] || '🔔'}</div>
       <div class="notif-body">
@@ -14081,7 +14107,12 @@ async function enablePushNotifs() {
       { merge: true }
     );
     updatePushBtn(true);
-    addNotification('system', 'Push notifications enabled 🎉', 'You\'ll get streak reminders and due date alerts even when the app is closed.');
+    // Only add the "push enabled" notification once per device — avoids duplicates
+    // when the user (re-)subscribes multiple times.
+    if (!localStorage.getItem('sq_push_enabled_notif_added')) {
+      localStorage.setItem('sq_push_enabled_notif_added', '1');
+      addNotification('system', 'Push notifications enabled 🎉', 'You\'ll get streak reminders and due date alerts even when the app is closed.');
+    }
   } catch(e) {
     console.warn('Push subscribe failed:', e);
     showToast("⚠️ Couldn't enable notifications — try again or check browser permissions.");
@@ -14339,8 +14370,12 @@ function _syncStreakRepairBtn() {
   const alreadyUsed = usedMonth === thisMonth;
   const currentStreak = getStreak();
 
-  // Show if: had a meaningful streak that broke, current streak is small, not used this month
-  const shouldShow = oldStreak > 2 && currentStreak <= oldStreak && breakDate && !alreadyUsed;
+  // Only show if the break was recent (within 30 days) — stale records from old semesters
+  // shouldn't surface a "Repair" button that no longer makes sense.
+  const breakDateMs = breakDate ? new Date(breakDate).getTime() : 0;
+  const daysSinceBreak = breakDateMs ? (Date.now() - breakDateMs) / 86400000 : 999;
+  // Show if: had a meaningful streak that broke recently, current streak is small, not used this month
+  const shouldShow = oldStreak > 2 && currentStreak <= oldStreak && breakDate && !alreadyUsed && daysSinceBreak <= 30;
   btn.style.display = shouldShow ? 'flex' : 'none';
 
   if (shouldShow) {
@@ -14420,7 +14455,7 @@ async function loadFriendsScreen() {
   if (!currentUser) {
     // Demo mode — populate with friendly placeholder state instead of leaving "Loading…"
     const xp = getXP(), lvl = levelFor(xp);
-    const name = localStorage.getItem('sq_name') || 'Sequoia Student';
+    const name = _toTitleCase(localStorage.getItem('sq_name') || 'Sequoia Student');
     document.getElementById('fr-hero-name').textContent = name;
     document.getElementById('fr-hero-xp').textContent   = xp.toLocaleString() + ' XP · Lv ' + lvl;
     document.getElementById('fr-hero-tree').textContent = _stageEmoji(xp);
@@ -14437,7 +14472,7 @@ async function loadFriendsScreen() {
 
   // Update my hero card
   const xp     = getXP(), streak = getStreak();
-  const name   = localStorage.getItem('sq_name') || 'Sequoia Student';
+  const name   = _toTitleCase(localStorage.getItem('sq_name') || 'Sequoia Student');
   const lvl    = levelFor(xp);
   document.getElementById('fr-hero-name').textContent = name;
   document.getElementById('fr-hero-xp').textContent   = xp.toLocaleString() + ' XP · Lv ' + lvl;

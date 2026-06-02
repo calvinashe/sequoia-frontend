@@ -1,5 +1,5 @@
 // Sequoia Service Worker
-const CACHE = 'sequoia-v33';
+const CACHE = 'sequoia-v49';
 const BASE  = '';
 const SHELL = [
   '/',
@@ -39,6 +39,7 @@ self.addEventListener('fetch', e => {
     || url.hostname.includes('onrender.com')
     || url.hostname.includes('firebaseapp.com')
     || url.hostname.includes('googleapis.com')
+    || url.hostname.includes('gstatic.com')   // Firebase SDK scripts — always fetch fresh
     || url.hostname.includes('stripe.com')
     || url.hostname.includes('posthog.com');
 
@@ -80,14 +81,20 @@ self.addEventListener('push', e => {
   );
 });
 
-// ── Notification click: open app ─────────────────────────
+// ── Notification click: open app and navigate to deep link ───────────────
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   const target = e.notification.data?.url || BASE + '/';
   e.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
       for (const client of list) {
-        if (client.url.includes(self.location.origin)) return client.focus();
+        if (client.url.includes(self.location.origin)) {
+          // Navigate to the target URL (honours ?tab= deep links) then focus
+          if ('navigate' in client) {
+            return client.navigate(target).then(c => c?.focus());
+          }
+          return client.focus();
+        }
       }
       return clients.openWindow(target);
     })
