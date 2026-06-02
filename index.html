@@ -1406,6 +1406,26 @@ input.g-slider::-moz-range-thumb {
 .hm-label { font-size:9px; font-weight:700; color:rgba(255,255,255,0.40); text-transform:uppercase; letter-spacing:.3px; }
 .hm-label.hm-today { color:var(--g4); }
 
+/* ── XP HISTORY BAR CHART ────────────────────────────────── */
+.xph-wrap { padding:0 0 4px; }
+.xph-title { font-size:10px; font-weight:700; color:rgba(255,255,255,0.38); text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px; }
+.xph-bars { display:flex; gap:5px; align-items:flex-end; height:52px; }
+.xph-col { display:flex; flex-direction:column; align-items:center; gap:3px; flex:1; height:100%; justify-content:flex-end; }
+.xph-bar {
+  width:100%; border-radius:4px 4px 2px 2px; min-height:3px;
+  background:rgba(76,161,48,0.30);
+  transition:height .3s ease;
+  position:relative;
+}
+.xph-bar.xph-today { background:rgba(76,161,48,0.80); box-shadow:0 0 8px rgba(76,161,48,0.25); }
+.xph-bar.xph-zero  { background:rgba(255,255,255,0.06); }
+.xph-lbl { font-size:9px; font-weight:700; color:rgba(255,255,255,0.35); text-transform:uppercase; }
+.xph-lbl.xph-lbl-today { color:var(--g4); }
+[data-theme="light"] .xph-bar      { background:rgba(76,161,48,0.25); }
+[data-theme="light"] .xph-bar.xph-today { background:rgba(76,161,48,0.70); box-shadow:none; }
+[data-theme="light"] .xph-bar.xph-zero  { background:rgba(0,0,0,0.06); }
+[data-theme="light"] .xph-lbl      { color:var(--mid); }
+
 /* ── FRIEND REMOVE / INVITE ──────────────────────────────── */
 .fr-remove-btn {
   background:none; border:1px solid rgba(255,255,255,0.12); border-radius:8px;
@@ -4658,6 +4678,37 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 [data-theme="dark"] .settings-section  { border-bottom-color:rgba(76,161,48,0.09); }
 [data-theme="dark"] .settings-label    { color:rgba(255,255,255,0.45); }
 [data-theme="dark"] .settings-row      { border-bottom-color:rgba(76,161,48,0.09); }
+/* Settings panel — dark mode panel background and form fields */
+[data-theme="dark"] .settings-panel    { background:#0E1F10; box-shadow:-4px 0 40px rgba(0,0,0,0.55); }
+[data-theme="dark"] .settings-title    { color:#FFFEF8; }
+[data-theme="dark"] .settings-close    { color:rgba(255,255,255,0.4); }
+[data-theme="dark"] .settings-close:hover { color:#FFFEF8; }
+[data-theme="dark"] .settings-field label { color:rgba(255,255,255,0.45); }
+[data-theme="dark"] .settings-input    { background:#162C18; color:#FFFEF8; border-color:rgba(76,161,48,0.28); }
+[data-theme="dark"] .settings-input:focus { border-color:var(--g3); }
+[data-theme="dark"] .settings-input::placeholder { color:rgba(255,255,255,0.3); }
+[data-theme="dark"] .settings-divider  { border-top-color:rgba(76,161,48,0.1); }
+[data-theme="dark"] .settings-saved-msg { color:var(--g4); }
+
+/* Streak break modal — dark mode: use deep forest background so white text is readable */
+[data-theme="dark"] #streak-break-sheet {
+  background: #0E1F10;
+}
+
+/* Streak break modal — light mode: override hardcoded white text to legible dark values */
+[data-theme="light"] #sb-sub { color: var(--mid); }
+[data-theme="light"] #sb-repair-row p,
+[data-theme="light"] #sb-upgrade-row p { color: var(--light); }
+[data-theme="light"] #streak-break-sheet > button:last-of-type {
+  color: var(--mid);
+  border-color: var(--border);
+}
+
+/* Friends leaderboard refresh button — light mode visibility fix */
+[data-theme="light"] #fr-refresh-btn {
+  color: var(--mid) !important;
+}
+[data-theme="light"] #fr-refresh-btn:hover { color: var(--g2) !important; }
 
 /* Study screen desktop — subtle ambient glow so centered card feels intentional */
 @media (min-width:641px) {
@@ -4767,7 +4818,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
     <button class="al-demo-link" onclick="loadDemoFromAuth()">🌱 Try Demo Mode — no account needed</button>
 
     <!-- Pricing (below demo so free value is shown before the price) -->
-    <p class="al-price">Free to start &nbsp;·&nbsp; <strong>Premium $7.99/mo</strong> &nbsp;·&nbsp; Cancel anytime</p>
+    <p class="al-price">Free to start &nbsp;·&nbsp; <strong>Premium from $6.99/mo</strong> &nbsp;·&nbsp; Cancel anytime</p>
 
     <!-- Benefit chips -->
     <div class="al-benefits">
@@ -5692,6 +5743,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
             <span class="slog-today-xp" id="slog-today-xp"></span>
           </div>
           <div id="study-heatmap"></div>
+          <div class="xph-wrap" id="xp-history-chart"></div>
           <div id="session-entries"></div>
         </div>
 
@@ -6404,7 +6456,10 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
     <div class="fr-podium" id="fr-podium" style="display:none"></div>
 
     <!-- Full leaderboard -->
-    <div class="fr-section-title" id="fr-lb-title" style="display:none">Friends · This Semester</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div class="fr-section-title" id="fr-lb-title" style="display:none;margin:16px 0 8px">Friends · This Semester</div>
+      <button id="fr-refresh-btn" onclick="_refreshLeaderboard()" style="display:none;background:none;border:none;color:rgba(255,255,255,0.4);font-size:12px;cursor:pointer;padding:4px 8px;border-radius:8px;transition:color .15s;" onmouseover="this.style.color='rgba(255,255,255,0.75)'" onmouseout="this.style.color='rgba(255,255,255,0.4)'">↻ Refresh</button>
+    </div>
     <div class="fr-card" id="fr-list">
       <div class="fr-loading">Loading friends…</div>
     </div>
@@ -6495,6 +6550,68 @@ async function loadUserData(uid) {
     if (Array.isArray(d.granted_bonuses)) {
       d.granted_bonuses.forEach(key => localStorage.setItem(key, '1'));
     }
+    // Restore weight overrides so custom grade weights survive device switches
+    if (d.weight_overrides) localStorage.setItem('sq_weight_overrides', JSON.stringify(d.weight_overrides));
+    // Restore study heatmap so the 7-day history persists across devices/reinstalls
+    if (d.study_history)    localStorage.setItem('sq_study_history',    JSON.stringify(d.study_history));
+    // Restore XP bar chart history across devices
+    if (d.xp_history)       localStorage.setItem('sq_xp_history',       JSON.stringify(d.xp_history));
+    // Restore free-tier session count so clearing localStorage can't bypass the daily cap
+    if (d.sessions_today)   localStorage.setItem('sq_sessions_today',   JSON.stringify(d.sessions_today));
+    // Restore streak freeze/repair state cross-device
+    if (d.streak_freeze_date)   localStorage.setItem('sq_freeze_date',             d.streak_freeze_date);
+    if (d.streak_before_break)  localStorage.setItem('sq_streak_before_break',     String(d.streak_before_break));
+    if (d.streak_break_date)    localStorage.setItem('sq_streak_break_date',       d.streak_break_date);
+    if (d.repair_used_month)    localStorage.setItem('sq_repair_used_month',       d.repair_used_month);
+    // Restore timezone offset so streak midnight checks use correct local date on any device
+    if (d.tz_offset !== undefined) localStorage.setItem('sq_tz_offset', String(d.tz_offset));
+    // Restore equipped decorations across devices/reinstalls
+    if (d.equipped) localStorage.setItem('sq_equipped', JSON.stringify(d.equipped));
+    // Show payment failed banner if Stripe dunning is active
+    if (d.payment_failed) {
+      setTimeout(() => {
+        const existing = document.getElementById('payment-failed-banner');
+        if (existing) return;
+        const banner = document.createElement('div');
+        banner.id = 'payment-failed-banner';
+        banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10100;background:#7A2020;color:#fff;' +
+          'font-size:13px;font-weight:600;padding:13px 16px;text-align:center;border-bottom:1px solid rgba(255,120,120,0.4);';
+        banner.innerHTML = '💳 Payment failed — <button onclick="openCustomerPortal()" style="background:rgba(255,255,255,0.2);' +
+          'border:none;border-radius:8px;color:#fff;padding:3px 10px;font-size:12px;font-weight:700;cursor:pointer;margin-left:4px">Update card →</button>' +
+          '<button onclick="this.parentElement.remove()" style="margin-left:8px;background:none;border:none;color:rgba(255,255,255,0.5);' +
+          'font-size:16px;cursor:pointer;padding:0 4px">✕</button>';
+        document.body.prepend(banner);
+      }, 2000);
+    }
+    // Surface Canvas token-invalid state — backend sets this flag when the token returns 401/403.
+    // Push notifications will have already nudged the user; show an in-app banner as a fallback.
+    if (d.canvas_token_invalid) {
+      setTimeout(() => {
+        if (document.getElementById('token-invalid-banner')) return;
+        const b = document.createElement('div');
+        b.id = 'token-invalid-banner';
+        b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10100;background:#7A4E1A;color:#fff;' +
+          'font-size:13px;font-weight:600;padding:13px 16px;text-align:center;border-bottom:1px solid rgba(255,180,80,0.35);';
+        b.innerHTML = '⚠️ Your Canvas token has expired — <button onclick="openSettings();document.getElementById(\'token-invalid-banner\').remove()" ' +
+          'style="background:rgba(255,255,255,0.2);border:none;border-radius:8px;color:#fff;padding:3px 10px;font-size:12px;font-weight:700;cursor:pointer;margin-left:4px">Reconnect →</button>' +
+          '<button onclick="this.parentElement.remove()" style="margin-left:8px;background:none;border:none;color:rgba(255,255,255,0.5);font-size:16px;cursor:pointer;padding:0 4px">✕</button>';
+        document.body.prepend(b);
+      }, 2500);
+    }
+    // Claim any pending referral XP (earned when someone joins via this user's invite link)
+    if (d.referral_xp_pending && d.referral_xp_pending > 0) {
+      const refXP = d.referral_xp_pending;
+      // Atomically clear the pending amount before granting so a crash can't double-grant
+      userRef.set({ referral_xp_pending: 0 }, { merge: true }).then(() => {
+        grantXP(refXP, { source: 'bonus', amount: refXP, assignment_id: 'referral_xp_' + currentUser.uid });
+        const plural = refXP === 75 ? 'Someone joined' : `${Math.round(refXP / 75)} people joined`;
+        setTimeout(() => {
+          showToast(`🌱 +${refXP} XP — ${plural} via your invite link!`, 4500);
+          addNotification('xp', `🌱 Referral reward`, `+${refXP} XP — someone joined via your invite!`);
+          checkBadges();
+        }, 1500);
+      }).catch(() => {});
+    }
     // Fetch notification badge separately so it can't crash the user data load
     userRef.collection('notifications').where('read', '==', false).get()
       .then(snap => _setBadge(snap.size)).catch(() => {});
@@ -6529,6 +6646,22 @@ async function initNewUser(user, name) {
   const snap = await db.collection('users').doc(user.uid).get().catch(() => ({ exists: false }));
   if (snap.exists) return; // already exists, don't overwrite
 
+  // Migrate pending iCal URL for users who connected the calendar before signing in.
+  // obConnectIcal() stores sq_pending_ical_url when !currentUser so /save-ical-url can be
+  // called here once the auth record exists.
+  const pendingIcalUrl = localStorage.getItem('sq_pending_ical_url');
+  if (pendingIcalUrl) {
+    try {
+      const idToken = await user.getIdToken();
+      await fetch(API + '/save-ical-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+        body: JSON.stringify({ ical_url: pendingIcalUrl }),
+      });
+    } catch(_) {}
+    localStorage.removeItem('sq_pending_ical_url');
+  }
+
   // Demo data is fake — never seed it into a real account.
   // If the user played demo before signing up, start them clean at 0.
   // If they had genuine localStorage data (used the app before creating an account), migrate it.
@@ -6540,15 +6673,48 @@ async function initNewUser(user, name) {
     xp:                 fromDemo ? 0 : parseInt(localStorage.getItem('sq_xp')            || '0'),
     streak:             fromDemo ? 0 : parseInt(localStorage.getItem('sq_streak')        || '0'),
     last_study:         fromDemo ? '' : (localStorage.getItem('sq_last_study')           || ''),
-    done_ids:           fromDemo ? [] : JSON.parse(localStorage.getItem('sq_done')       || '[]'),
+    done_ids:           fromDemo ? [] : (() => { try { return JSON.parse(localStorage.getItem('sq_done') || '[]'); } catch(e) { return []; } })(),
     canvas_url:         localStorage.getItem('sq_url')                                   || '',
     // canvas_token is intentionally NOT written here — it goes to the private
     // Firestore subcollection via _saveCanvasTokenSecurely(), which fires from
     // the migration block in onAuthStateChanged immediately after sign-up.
     pomo_sessions:      fromDemo ? 0 : parseInt(localStorage.getItem('sq_pomo_sessions') || '0'),
-    manual_assignments: fromDemo ? [] : JSON.parse(localStorage.getItem('sq_manual')     || '[]'),
+    manual_assignments: fromDemo ? [] : (() => { try { return JSON.parse(localStorage.getItem('sq_manual') || '[]'); } catch(e) { return []; } })(),
     created_at:         firebase.firestore.FieldValue.serverTimestamp(),
   }).catch(() => {});
+
+  // ── Auto-connect friend from invite link ─────────────────────
+  // If the user arrived via a friend invite (?code=XXXXXX), the code was stored
+  // in sq_pending_friend_code. Wire up the friendship now so the invite isn't a dead end.
+  const pendingCode = localStorage.getItem('sq_pending_friend_code');
+  if (pendingCode) {
+    try {
+      const snap = await db.collection('public_profiles')
+        .where('friendCode', '==', pendingCode.toUpperCase()).limit(1).get();
+      if (!snap.empty) {
+        const inviterUid  = snap.docs[0].id;
+        const inviterName = snap.docs[0].data().name || 'your friend';
+        // Connect both ways via the secure backend endpoint (Admin SDK, no Firestore rule bypass needed)
+        let friendAdded = false;
+        try {
+          const idToken = await user.getIdToken();
+          const addRes = await fetch(API + '/add-friend', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+            body: JSON.stringify({ friend_code: pendingCode.toUpperCase() }),
+          });
+          const addData = await addRes.json().catch(() => ({}));
+          friendAdded = addData.ok === true;
+        } catch(_) {}
+        // Bonus XP for joining via invite
+        starterGrant && starterGrant('referral_join_bonus', 50,
+          `🌱 +50 XP — you joined via ${inviterName}'s invite!`);
+        // Inviter XP (75 XP) is credited server-side in /add-friend via Admin SDK
+        showToast(`Connected with ${inviterName} on the leaderboard 🌲`, 4000);
+      }
+    } catch(_) {}
+    localStorage.removeItem('sq_pending_friend_code');
+  }
 }
 
 // Update nav avatar + account menu with user info
@@ -6756,13 +6922,38 @@ async function signInWithGoogle() {
 async function signOutUser() {
   closeAccountMenu();
   await auth.signOut();
-  ['sq_token','sq_url','sq_name','sq_xp','sq_streak','sq_last_study',
-   'sq_done','sq_sessions','sq_pomo_sessions','sq_manual',
-   'sq_xp_today','sq_xp_today_date','sq_tier','sq_leaves',
-   'sq_assign_cache','sq_assign_cache_time','sq_purchased_decos',
-   'sq_freeze_date','sq_streak_before_break','sq_streak_break_date',
-  ].forEach(k => localStorage.removeItem(k));
+  // Wipe every sq_* key so no data leaks between accounts on a shared device.
+  // Using a prefix sweep is safer than maintaining a manual allowlist.
+  Object.keys(localStorage).filter(k => k.startsWith('sq_')).forEach(k => localStorage.removeItem(k));
   location.reload();
+}
+
+async function _deleteAccount() {
+  if (!currentUser) return;
+  _showConfirm(
+    '⚠️ Delete your account? This permanently erases all your XP, tree, badges, and history. This cannot be undone.',
+    async () => {
+      closeSettings();
+      showToast('Deleting your account…', 4000);
+      try {
+        const idToken = await currentUser.getIdToken();
+        const res = await fetch(API + '/delete-account', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + idToken },
+        });
+        const data = await res.json();
+        if (data.ok) {
+          Object.keys(localStorage).filter(k => k.startsWith('sq_')).forEach(k => localStorage.removeItem(k));
+          await auth.signOut();
+          location.reload();
+        } else {
+          showToast('⚠️ Could not delete account: ' + (data.error || 'unknown error'), 5000);
+        }
+      } catch(e) {
+        showToast('⚠️ Delete failed — check your connection and try again.', 4000);
+      }
+    }
+  );
 }
 
 // Demo from auth screen — bypass login
@@ -7130,6 +7321,14 @@ async function connectCanvas() {
     localStorage.setItem('sq_token', token);
     localStorage.setItem('sq_url', url);
     localStorage.setItem('sq_name', name);
+
+    // If coming from demo mode, exit demo BEFORE calling saveUserData so the
+    // write isn't silently dropped (saveUserData returns early when isDemo=true).
+    const _wasDemo = isDemo;
+    if (_wasDemo) {
+      isDemo = false;
+    }
+
     // Save name + URL to Firestore main doc (safe to expose).
     // The Canvas TOKEN goes to the private subcollection via the backend so
     // it's only accessible through the Admin SDK — not the Firestore JS SDK.
@@ -7138,8 +7337,7 @@ async function connectCanvas() {
     setGreeting(name);
 
     // If coming from demo mode, restore snapshotted data and exit demo cleanly
-    if (isDemo) {
-      isDemo = false;
+    if (_wasDemo) {
       const s = window._demoSnap || {};
       const restore = (k, v) => v !== null && v !== undefined ? localStorage.setItem(k, v) : localStorage.removeItem(k);
       restore('sq_xp', s.xp); restore('sq_done', s.done); restore('sq_streak', s.streak);
@@ -7220,13 +7418,44 @@ async function obConnectIcal() {
         localStorage.setItem('sq_ical_connected', '1');
       }
     } else {
-      // Store temporarily; will be saved after sign-in
-      localStorage.setItem('sq_ical_pending', icalUrl);
+      // Not signed in — mark as connected locally and stash the URL so we can
+      // save it to Firestore once the user completes sign-up (see initNewUser)
       localStorage.setItem('sq_ical_connected', '1');
+      localStorage.setItem('sq_pending_ical_url', icalUrl);
+    }
+
+    // Validate the iCal URL by doing a test sync before closing onboarding
+    if (btn) btn.textContent = 'Verifying feed…';
+    let syncOk = false;
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (currentUser) headers['Authorization'] = 'Bearer ' + await currentUser.getIdToken();
+      const syncRes = await fetch(API + '/ical-sync', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ ical_url: icalUrl }),
+      });
+      const syncData = await syncRes.json();
+      if (syncData.ok) {
+        syncOk = true;
+      } else {
+        const errMsg = syncRes.status === 403 ? 'Your school blocked this feed. Try a different URL.' :
+                       syncRes.status === 404 ? 'Calendar feed not found. Double-check the URL.' :
+                       'Feed returned an error. Check the URL and try again.';
+        if (errEl) { errEl.textContent = errMsg; errEl.classList.add('show'); }
+      }
+    } catch(_) {
+      // Network error — allow proceeding anyway (iCal sync will retry)
+      syncOk = true;
+    }
+
+    if (!syncOk) {
+      if (btn) { btn.textContent = 'Connect Calendar →'; btn.disabled = false; }
+      return;
     }
 
     // Enter the app
-    grantXP && grantXP(50, 'calendar-connected');
+    grantXP && grantXP(50, { source: 'bonus', amount: 50, assignment_id: 'ical_connect_bonus' });
     closeOnboard();
     loadIcalAssignments();
   } catch(e) {
@@ -7267,6 +7496,12 @@ function obGoManual() {
   closeOnboard();
   // Open the Courses modal so they set up courses immediately
   setTimeout(() => openCoursesModal && openCoursesModal(), 400);
+  // Show a quick-start guide so they know what to do next
+  setTimeout(() => {
+    showToast('📚 Add a course → add assignments → start a focus session to earn XP!', 5000);
+  }, 1200);
+  // Mark that they chose manual mode so we can show a persistent dashboard callout
+  localStorage.setItem('sq_manual_mode', '1');
 }
 
 function loadDemo() {
@@ -7294,7 +7529,7 @@ function loadDemo() {
     _demoHistory[_key] = _d === 0 ? 2 : 1; // today counts as 2 sessions
   }
   localStorage.setItem('sq_study_history', JSON.stringify(_demoHistory));
-  renderStudyHeatmap(); // render immediately so heatmap matches the 12-day streak counter
+  renderStudyHeatmap(); renderXPHistoryChart(); // render immediately so heatmap matches the 12-day streak counter
   localStorage.removeItem('sq_done');
   // Seed realistic completed count to match 12-day streak / 2850 XP narrative
   const _demoDoneIds = ['demo_p1','demo_p2','demo_p3','demo_p4','demo_p5','demo_p6','demo_p7','demo_p8'];
@@ -7421,6 +7656,18 @@ window.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => showToast('🌲 Invite link detected — go to Friends to accept!', 4000), 2500);
   }
 
+  // Deep-link tab routing from push notifications (?tab=study, ?tab=tree, etc.)
+  const _tabParam = _urlParams.get('tab');
+  if (_tabParam) {
+    const _tabMap = { home: 0, dashboard: 0, calendar: 1, study: 2, tree: 3, mytree: 3, friends: 5 };
+    const _tabIdx = _tabMap[_tabParam];
+    if (_tabIdx !== undefined) {
+      // Defer until after auth resolves and app renders
+      setTimeout(() => showScreen(_tabIdx), 900);
+    }
+    history.replaceState({}, '', window.location.pathname);
+  }
+
   // Auto-launch demo mode when ?demo=1 is in the URL
   if (_urlParams.get('demo') === '1') {
     // Set isDemo immediately so the main auth handler won't overwrite demo data
@@ -7523,6 +7770,9 @@ window.addEventListener('DOMContentLoaded', () => {
         _checkLevelMigration();
         // Show extension install nudge for users who chose extension but haven't synced yet
         _checkExtPendingNudge();
+        // Show streak break modal on first open after a missed day
+        // (covers the case where the user opens the app fresh the next morning)
+        setTimeout(_showStreakBreakNudge, 2000);
         // If this is a post-Stripe redirect and Firestore already has premium, unlock now.
         // (Covers the case where the webhook fired before auth resolved.)
         const params = new URLSearchParams(window.location.search);
@@ -7533,8 +7783,11 @@ window.addEventListener('DOMContentLoaded', () => {
         }
       }
     });
-    // Keep timezone offset fresh on every login (user may travel or change device)
-    saveUserData({ tz_offset: -new Date().getTimezoneOffset() });
+    // Keep timezone offset fresh on every login (user may travel or change device).
+    // Also write to localStorage so prevDay() / _localDateStr() can use it immediately.
+    const _tzOff = -new Date().getTimezoneOffset();
+    localStorage.setItem('sq_tz_offset', String(_tzOff));
+    saveUserData({ tz_offset: _tzOff });
     // Migrate Canvas token from localStorage to secure Firestore subcollection if needed.
     // Once migrated, the token is removed from localStorage and all future Canvas API
     // calls use a Firebase ID token — the backend reads the Canvas token server-side.
@@ -7576,6 +7829,11 @@ window.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('settings-overlay').classList.contains('show'))   { closeSettings(); return; }
     if (document.getElementById('deco-shop-modal').classList.contains('show'))    { closeDecoShopModal(); return; }
     if (document.getElementById('syllabus-overlay').classList.contains('show'))   { closeSyllabusImport(); return; }
+    if (document.getElementById('wc-overlay').classList.contains('show'))         { closeWeightClassifier(); return; }
+    if (document.getElementById('courses-overlay').classList.contains('show'))    { closeCoursesModal(); return; }
+    if (document.getElementById('aipick-overlay').classList.contains('show'))     { closeAIPick(); return; }
+    if (document.getElementById('streak-break-overlay')?.style.display !== 'none') { closeStreakBreakModal(); return; }
+    if (document.getElementById('paywall-overlay')?.classList.contains('show'))    { closePaywall(); return; }
   });
 });
 
@@ -7698,13 +7956,28 @@ function disconnect() {
     restore('sq_last_study', s.last); restore('sq_name', s.name);
     location.reload(); return;
   }
-  if (confirm('Disconnect Canvas? Your XP stays saved.')) {
-    localStorage.removeItem('sq_token'); localStorage.removeItem('sq_url'); location.reload();
-  }
+  // confirm() is silently blocked in iOS PWA (standalone) mode — use a toast-confirm instead.
+  _showConfirm('Disconnect Canvas? Your XP and progress stay saved.', () => {
+    // Clear all Canvas connection methods: token, iCal feed, and browser extension
+    localStorage.removeItem('sq_token');
+    localStorage.removeItem('sq_url');
+    localStorage.removeItem('sq_ical_connected');
+    localStorage.removeItem('sq_ext_last_sync');
+    localStorage.removeItem('sq_assign_cache');
+    localStorage.removeItem('sq_assign_ts');
+    // Remove iCal URL from Firestore (stored in private/ical, not private/canvas)
+    if (currentUser) {
+      db.collection('users').doc(currentUser.uid)
+        .collection('private').doc('ical')
+        .set({ ical_url: null }, { merge: true }).catch(() => {});
+    }
+    location.reload();
+  });
 }
 
 // ── ASSIGNMENTS ─────────────────────────────────────────
 let _wakeInterval = null;
+let _loadAssignmentsInProgress = false; // prevents concurrent duplicate fetch calls
 
 function _wakeHTML(attempt, max) {
   const attemptLabel = (attempt && max) ? `<div class="wake-attempt">Attempt ${attempt} of ${max}…</div>` : '';
@@ -7842,7 +8115,13 @@ async function _canvasHeaders(token, url) {
 }
 
 async function loadAssignments(token, url) {
+  // Prevent concurrent duplicate calls (e.g. refresh button + background sync firing at the same time)
+  if (_loadAssignmentsInProgress) return;
+  _loadAssignmentsInProgress = true;
+  try {
   const list = document.getElementById('assign-list');
+  // Clear any leftover wake interval from a previous (possibly concurrent) call
+  if (_wakeInterval) { clearInterval(_wakeInterval); _wakeInterval = null; }
 
   // ── Instant render from cache if fresh ──
   const cached = _getCachedAssignments();
@@ -7932,6 +8211,9 @@ async function loadAssignments(token, url) {
       }
       return;
     }
+  }
+  } finally {
+    _loadAssignmentsInProgress = false;
   }
 }
 
@@ -8229,6 +8511,11 @@ let _calWeekOffset = 0; // weeks to shift the calendar view
 
 function calShiftWeeks(delta) {
   _calWeekOffset += delta;
+  // Reset pinned tooltip state so the old tip doesn't linger after the DOM rebuild
+  const tip = document.getElementById('cal-tip');
+  if (tip) { tip._pinned = false; tip.classList.remove('visible'); }
+  _calPinKey = null;
+  if (_calDismiss) { document.removeEventListener('click', _calDismiss); _calDismiss = null; }
   renderCalendar(allAssignments);
 }
 
@@ -8350,7 +8637,7 @@ function renderUpcomingList(assignments) {
 
 function calShowTip(e, dateKey) {
   const tip   = document.getElementById('cal-tip');
-  const items = (allAssignments || []).filter(a => a.due_at && a.due_at.slice(0,10) === dateKey);
+  const items = (allAssignments || []).filter(a => a.due_at && _fmtDate(new Date(a.due_at)) === dateKey);
   const d     = new Date(dateKey + 'T12:00:00');
   document.getElementById('cal-tip-date').textContent =
     d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
@@ -8364,6 +8651,7 @@ function calShowTip(e, dateKey) {
 }
 function calHideTip() {
   const tip = document.getElementById('cal-tip');
+  if (!tip) return;
   if (tip._pinned) return; // stay visible if user clicked
   tip.classList.remove('visible');
 }
@@ -8478,6 +8766,12 @@ function rowIcon(w, i) {
 }
 
 function renderAssignments(list, _skipCal) {
+  // Refresh days_until on every render so urgency tags stay accurate when the
+  // app is left open overnight — without this, "tomorrow" stays stale after midnight.
+  const _nowMs = Date.now();
+  (allAssignments || []).forEach(a => {
+    if (a.due_at) a.days_until = (new Date(a.due_at) - _nowMs) / 86400000;
+  });
   const el = document.getElementById('assign-list');
   const fl = filteredList();
   if (!fl.length) {
@@ -8596,8 +8890,22 @@ function emptyState(icon, title, sub) {
 
 function toggleDone(id, el, title, weight) {
   if (completedIds.has(id)) {
-    // Un-complete: only allowed while undo toast is still showing
-    if (_undoId === id) undoComplete();
+    if (_undoId === id) {
+      // Within the undo window — full undo with XP rollback
+      undoComplete();
+    } else {
+      // Outside undo window — allow un-completing without XP rollback
+      // (XP already granted/settled; just remove from done list)
+      _showConfirm(`Mark "${title.slice(0, 40)}" as incomplete?`, () => {
+        completedIds.delete(id);
+        localStorage.setItem('sq_done', JSON.stringify([...completedIds]));
+        saveUserData({ done_ids: [...completedIds] });
+        totalCompleted = Math.max(0, totalCompleted - 1);
+        document.getElementById('hstat-done').textContent = totalCompleted;
+        setTimeout(() => renderAssignments(allAssignments), 200);
+        showToast('↩ Marked as incomplete — XP from this assignment is kept.');
+      });
+    }
     return;
   }
   completedIds.add(id);
@@ -8631,8 +8939,17 @@ function toggleDone(id, el, title, weight) {
     days_early:    daysEarly,
   });
   updateStreak(); totalCompleted++;
+  _trackDaysEarly(daysEarly);
   track('assignment_done', { xp_earned: xp, weight_pct: weight, course: a?.course || '' });
+  // Track whether this fires a first-done bonus so undoComplete() can reverse it
+  _undoBonusGrantKey = null; _undoBonusXP = 0; _undoBonusApplied = false;
+  if (!localStorage.getItem('sq_grant_first_done')) {
+    _undoBonusGrantKey = 'sq_grant_first_done';
+    _undoBonusXP = 25;
+    setTimeout(() => { _undoBonusApplied = true; }, 900); // fires after starterGrant's 800ms delay
+  }
   starterGrant('sq_grant_first_done', 25, '✅ +25 XP — First assignment crushed! Keep the momentum.');
+  checkBadges();
   document.getElementById('hstat-done').textContent = totalCompleted;
 
   // ── Show appropriate celebration ────────────────────────
@@ -8661,7 +8978,7 @@ function getLeaves() {
   return seed;
 }
 function addLeaves(amount) {
-  const bal = getLeaves() + amount;
+  const bal = Math.max(0, getLeaves() + amount); // clamp at 0 so XP rollbacks can't go negative
   localStorage.setItem('sq_leaves', String(bal));
   saveUserData({ leaves: bal });
   _renderLeavesBalance();
@@ -8679,6 +8996,13 @@ function _renderLeavesBalance() {
 }
 
 function loadXPStreak() {
+  // Re-sync completedIds from localStorage so the count is never stale
+  // after a Firestore restore (loadUserData writes sq_done but doesn't
+  // update the in-memory Set/counter).
+  const _freshDone = JSON.parse(localStorage.getItem('sq_done') || '[]');
+  completedIds   = new Set(_freshDone);
+  totalCompleted = completedIds.size;
+
   const xp = getXP(), streak = getStreak();
   document.getElementById('nav-xp').textContent       = xp.toLocaleString() + ' XP';
   document.getElementById('nav-streak').textContent   = '🔥 ' + streak;
@@ -8716,17 +9040,20 @@ function showLevelUp(stageIdx) {
     treeWrap.innerHTML = '';
     treeWrap.appendChild(clone);
   }
+  lockScroll();
   overlay.classList.add('show');
 }
 
 function closeLevelUp() {
   document.getElementById('levelup-overlay').classList.remove('show');
+  unlockScroll();
   updateDashTree();
   syncTreeScreen();
 }
 
 // ── SETTINGS ────────────────────────────────────────────
 function openSettings() {
+  lockScroll();
   document.getElementById('set-name').value  = localStorage.getItem('sq_name')  || '';
   document.getElementById('set-url').value   = localStorage.getItem('sq_url')   || '';
   document.getElementById('set-token').value = '';
@@ -8770,6 +9097,10 @@ function applyTheme(mode) {
   const theme = mode === 'auto' ? (h >= 6 && h < 19 ? 'light' : 'dark') : mode;
   document.documentElement.setAttribute('data-theme', theme);
 }
+// Auto-mode: re-apply every 5 minutes so light↔dark switches at 6am/7pm without reload.
+setInterval(() => {
+  if ((localStorage.getItem('sq_theme') || 'dark') === 'auto') applyTheme('auto');
+}, 5 * 60 * 1000);
 
 function setTheme(mode) {
   localStorage.setItem('sq_theme', mode);
@@ -8795,6 +9126,7 @@ function updateThemeNote(mode) {
 
 function closeSettings() {
   document.getElementById('settings-overlay').classList.remove('show');
+  unlockScroll();
 }
 
 function saveNotifPrefs() {
@@ -8903,6 +9235,7 @@ async function loadIcalAssignments(showSpinner) {
         if (ps !== 0) return ps;
         return (a.due_at || '9999') < (b.due_at || '9999') ? -1 : 1;
       });
+      _loadWeightOverrides(); // apply any saved weight overrides to newly merged iCal items
       renderAssignments(allAssignments);
       buildQPick && buildQPick();
       if (showSpinner) showToast(`🗓 Synced ${added} assignment${added !== 1 ? 's' : ''} from calendar`, 2500);
@@ -8983,8 +9316,17 @@ async function loadExtensionAssignments() {
     const data = await res.json();
     if (!data.ok || !data.assignments?.length) return;
 
-    // Merge — skip IDs already present (avoid duping Canvas API or iCal results)
-    const existingIds = new Set(allAssignments.map(a => String(a.id)));
+    // Merge — skip IDs already present (avoid duping Canvas API or iCal results).
+    // Canvas API assignments are stored with an 'a' prefix (e.g. 'a12345') by
+    // _applyAssignments, but extension assignments carry the raw Canvas numeric ID.
+    // Build a set covering both forms so dedup works regardless of which loaded first.
+    const existingIds = new Set();
+    allAssignments.forEach(a => {
+      const s = String(a.id);
+      existingIds.add(s);
+      if (s.startsWith('a')) existingIds.add(s.slice(1)); // also check without prefix
+      else existingIds.add('a' + s);                       // also check with prefix
+    });
     let added = 0;
     data.assignments.forEach(a => {
       if (!existingIds.has(String(a.id))) {
@@ -8999,6 +9341,7 @@ async function loadExtensionAssignments() {
         if (ps !== 0) return ps;
         return (a.due_at || '9999') < (b.due_at || '9999') ? -1 : 1;
       });
+      _loadWeightOverrides(); // apply any saved weight overrides to newly merged extension items
       renderAssignments(allAssignments);
       buildQPick && buildQPick();
       localStorage.setItem('sq_ext_last_sync', Date.now());
@@ -9017,7 +9360,7 @@ async function loadExtensionAssignments() {
           existing.push({
             id:    'ext-' + c.id,
             name:  code,
-            color: COURSE_COLORS[existing.length % COURSE_COLORS.length],
+            color: courseColor(code),
             cats:  (c.cats || []).map(cat => ({ name: cat.name, weight: cat.weight })),
           });
           coursesAdded++;
@@ -9119,6 +9462,14 @@ function _trackDailyXP(amount) {
   const used   = stored === today ? parseInt(localStorage.getItem('sq_xp_today') || '0') : 0;
   localStorage.setItem('sq_xp_today_date', today);
   localStorage.setItem('sq_xp_today', used + amount);
+  // Track per-day XP history for the 7-day bar chart
+  if (amount > 0) {
+    const hist = JSON.parse(localStorage.getItem('sq_xp_history') || '{}');
+    hist[today] = (hist[today] || 0) + amount;
+    localStorage.setItem('sq_xp_history', JSON.stringify(hist));
+    // Sync to Firestore so the chart survives device switches
+    saveUserData({ xp_history: hist });
+  }
 }
 
 // Internal: immediately apply XP to localStorage and update all UI
@@ -9168,7 +9519,96 @@ function starterGrant(key, amount, message) {
   }, 800);  // slight delay so the UI has settled
 }
 
+// ── BADGE SYSTEM ─────────────────────────────────────────────
+// Each badge has a unique id (used as the granted_bonuses key), display info,
+// and an earned() predicate that receives live stats. Check is lightweight —
+// predicates read only from already-computed arguments, never hit Firestore.
+const BADGE_DEFS = [
+  // ── Assignments ──────────────────────────────────────────────
+  { id:'badge_first_done',    emoji:'✅', name:'First Step',         desc:'Complete your first assignment',            earned: s => s.done >= 1 },
+  { id:'badge_done_5',        emoji:'📚', name:'Getting It Done',    desc:'Complete 5 assignments',                    earned: s => s.done >= 5 },
+  { id:'badge_done_10',       emoji:'📖', name:'Getting Serious',    desc:'Complete 10 assignments',                   earned: s => s.done >= 10 },
+  { id:'badge_done_25',       emoji:'💪', name:'Assignment Machine', desc:'Complete 25 assignments',                   earned: s => s.done >= 25 },
+  { id:'badge_done_50',       emoji:'🏅', name:'Half-Century',       desc:'Complete 50 assignments',                   earned: s => s.done >= 50 },
+  { id:'badge_done_100',      emoji:'🏆', name:'Centurion',          desc:'Complete 100 assignments',                  earned: s => s.done >= 100 },
+  // ── Focus sessions ───────────────────────────────────────────
+  { id:'badge_first_session', emoji:'⏱',  name:'Focus Unlocked',    desc:'Finish your first Pomodoro session',        earned: s => s.sessions >= 1 },
+  { id:'badge_sessions_10',   emoji:'🎯', name:'In the Zone',        desc:'Complete 10 focus sessions',                earned: s => s.sessions >= 10 },
+  { id:'badge_sessions_50',   emoji:'🔥', name:'Flow State',         desc:'Complete 50 focus sessions',                earned: s => s.sessions >= 50 },
+  { id:'badge_sessions_100',  emoji:'💎', name:'Study Machine',      desc:'Complete 100 focus sessions',               earned: s => s.sessions >= 100 },
+  { id:'badge_sessions_200',  emoji:'🧠', name:'Deep Work',          desc:'Complete 200 focus sessions',               earned: s => s.sessions >= 200 },
+  // ── Streaks ──────────────────────────────────────────────────
+  { id:'badge_streak_3',      emoji:'🌱', name:'Habit Forming',      desc:'Keep a 3-day study streak',                 earned: s => s.streak >= 3 },
+  { id:'badge_streak_7',      emoji:'🌿', name:'Week Warrior',       desc:'Keep a 7-day study streak',                 earned: s => s.streak >= 7 },
+  { id:'badge_streak_14',     emoji:'⚡', name:'Two-Week Strong',    desc:'Keep a 14-day study streak',                earned: s => s.streak >= 14 },
+  { id:'badge_streak_30',     emoji:'🌲', name:'Unstoppable',        desc:'Keep a 30-day study streak',                earned: s => s.streak >= 30 },
+  { id:'badge_streak_60',     emoji:'🌊', name:'Sixty Days Solid',   desc:'Keep a 60-day study streak',                earned: s => s.streak >= 60 },
+  { id:'badge_streak_100',    emoji:'🔱', name:'Legend',             desc:'Keep a 100-day study streak',               earned: s => s.streak >= 100 },
+  // ── Tree stages ──────────────────────────────────────────────
+  { id:'badge_xp_500',        emoji:'💫', name:'XP Rising',          desc:'Earn 500 total XP',                         earned: s => s.xp >= 500 },
+  { id:'badge_xp_2500',       emoji:'✨', name:'XP Grinder',         desc:'Earn 2,500 total XP',                       earned: s => s.xp >= 2500 },
+  { id:'badge_sapling',       emoji:'🌿', name:'Sapling',            desc:'Grow your tree to Sapling stage',           earned: s => s.xp >= 1200 },
+  { id:'badge_grove',         emoji:'🌳', name:'Grove Keeper',       desc:'Grow your tree to Grove Tree stage',        earned: s => s.xp >= 4800 },
+  { id:'badge_ancient',       emoji:'🏔', name:'Ancient Sequoia',    desc:'Reach the Ancient Sequoia stage',           earned: s => s.xp >= 10000 },
+  // ── Early submissions ────────────────────────────────────────
+  { id:'badge_early_bird',    emoji:'🌅', name:'Early Bird',         desc:'Submit an assignment 3+ days before due',   earned: s => s.maxDaysEarly >= 3 },
+  { id:'badge_early_pro',     emoji:'🚀', name:'Way Ahead',          desc:'Submit an assignment 5+ days before due',   earned: s => s.maxDaysEarly >= 5 },
+  { id:'badge_early_legend',  emoji:'🦅', name:'Eagle Scout',        desc:'Submit an assignment 7+ days before due',   earned: s => s.maxDaysEarly >= 7 },
+  // ── Social ───────────────────────────────────────────────────
+  { id:'badge_friend_1',      emoji:'🤝', name:'Study Buddy',        desc:'Add your first friend to the leaderboard',  earned: s => s.friends >= 1 },
+  { id:'badge_friends_3',     emoji:'🌿', name:'Study Grove',        desc:'Have 3 friends on the leaderboard',         earned: s => s.friends >= 3 },
+  { id:'badge_friends_5',     emoji:'🌲', name:'Study Forest',       desc:'Have 5 friends on the leaderboard',         earned: s => s.friends >= 5 },
+];
+
+// Called after any stat change — checks all badges and fires toast for new ones
+function checkBadges(extraStats = {}) {
+  if (isDemo) return; // don't award badges in demo mode
+  const xp       = getXP();
+  const streak   = getStreak();
+  const done     = completedIds.size;
+  const sessions = parseInt(localStorage.getItem('sq_pomo_sessions') || '0');
+  const maxDaysEarly = parseInt(localStorage.getItem('sq_badge_max_early') || '0');
+  const friends  = parseInt(localStorage.getItem('sq_badge_friends') || '0');
+  const stats    = { xp, streak, done, sessions, maxDaysEarly, friends, ...extraStats };
+
+  BADGE_DEFS.forEach(b => {
+    if (!b.earned(stats)) return;
+    if (localStorage.getItem(b.id)) return; // already awarded
+    _awardBadge(b);
+  });
+}
+
+function _awardBadge(badge) {
+  if (localStorage.getItem(badge.id)) return; // double-check
+  localStorage.setItem(badge.id, '1');
+  // Persist to Firestore via the same granted_bonuses array starterGrant uses
+  if (currentUser && !isDemo) {
+    db.collection('users').doc(currentUser.uid).set({
+      granted_bonuses: firebase.firestore.FieldValue.arrayUnion(badge.id)
+    }, { merge: true }).catch(() => {});
+  }
+  // Celebration toast (slight delay so it doesn't stack with XP burst)
+  setTimeout(() => {
+    showToast(`${badge.emoji} Badge unlocked: ${badge.name}!`, 4000);
+    addNotification('badge', `${badge.emoji} ${badge.name} earned!`, badge.desc);
+  }, 1200);
+}
+
+// Track max days-early across all assignments for the Early Bird badge
+function _trackDaysEarly(daysEarly) {
+  const prev = parseInt(localStorage.getItem('sq_badge_max_early') || '0');
+  if (daysEarly > prev) localStorage.setItem('sq_badge_max_early', String(daysEarly));
+}
+
+// Track friend count for the Study Buddy badge (call after leaderboard loads)
+function _trackFriendCount(count) {
+  localStorage.setItem('sq_badge_friends', String(count));
+}
+
 function updateStreak() {
+  // In demo mode the streak is cosmetic — never break it from real-calendar math.
+  // Just keep sq_last_study fresh so signing-in after demo doesn't carry over stale dates.
+  if (isDemo) { localStorage.setItem('sq_last_study', _localDateStr()); return; }
   const today = _localDateStr();
   const last  = localStorage.getItem('sq_last_study');
   let streak  = getStreak();
@@ -9181,28 +9621,37 @@ function updateStreak() {
       // Freeze active: don't break streak, just increment
       streak++;
       localStorage.removeItem('sq_freeze_date'); // freeze consumed
+      saveUserData({ streak_freeze_date: null });
     } else {
-      // Streak is breaking — save it before resetting so user can repair
+      // Streak is breaking — save it before resetting so user can repair (cross-device)
       if (streak > 2) {
         localStorage.setItem('sq_streak_before_break', String(streak));
         localStorage.setItem('sq_streak_break_date', today);
-        setTimeout(_showStreakBreakNudge, 3000);
+        saveUserData({ streak_before_break: streak, streak_break_date: today });
+        // Show the modal after a short delay — long enough for any XP animations to finish
+        setTimeout(_showStreakBreakNudge, 1800);
       }
       streak = 1;
     }
   }
   localStorage.setItem('sq_streak', streak);
   localStorage.setItem('sq_last_study', today);
+  // Track all-time best streak for the semester archive
+  const _prevBest = parseInt(localStorage.getItem('sq_best_streak') || '0');
+  if (streak > _prevBest) localStorage.setItem('sq_best_streak', String(streak));
   saveUserData({ streak, last_study: today });
   document.getElementById('nav-streak').textContent     = '🔥 ' + streak;
   document.getElementById('hstat-streak').textContent   = streak;
   checkStreakRisk();
   _syncStreakRepairBtn();
+  checkBadges();
 }
 
 function prevDay() {
-  const d = new Date(); d.setDate(d.getDate() - 1);
-  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  // Use the same timezone-offset logic as _localDateStr() so streak comparisons are consistent
+  const offset = parseInt(localStorage.getItem('sq_tz_offset') || '0');
+  const d = new Date(Date.now() + offset * 60000 - 86400000);
+  return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0');
 }
 
 function checkStreakRisk() {
@@ -9210,8 +9659,9 @@ function checkStreakRisk() {
   const last    = localStorage.getItem('sq_last_study');
   const today   = _localDateStr();
   const hour    = new Date().getHours();
-  // At risk: has a streak, hasn't studied today, and it's past noon
-  const atRisk  = streak > 0 && last !== today && hour >= 12;
+  // At risk: has a streak, hasn't studied today, and it's between 2pm–10pm
+  // (avoids showing during morning/night when the student can't reasonably act on it)
+  const atRisk  = streak > 0 && last !== today && hour >= 14 && hour < 22;
   const chip    = document.getElementById('streak-risk-chip');
   const navBadge = document.getElementById('nav-streak');
   if (chip)     chip.classList.toggle('show', atRisk);
@@ -9229,11 +9679,45 @@ function _showStreakBreakNudge() {
   const today = _localDateStr();
   if (localStorage.getItem('sq_streak_nudge_shown') === today) return;
   localStorage.setItem('sq_streak_nudge_shown', today);
-  const isPremium = localStorage.getItem('sq_tier') === 'premium';
-  const msg = isPremium
-    ? `Your ${before}-day streak just reset — start a fresh one today! Your tree is still growing 🌱`
-    : `Your ${before}-day streak just reset. Study now to start fresh — or get Premium to use a Streak Freeze 🔥`;
-  showToast(msg, 7000);
+  // Show the dedicated streak break modal instead of a toast
+  _openStreakBreakModal(before);
+}
+
+function _openStreakBreakModal(streakBefore) {
+  const overlay = document.getElementById('streak-break-overlay');
+  const sheet   = document.getElementById('streak-break-sheet');
+  if (!overlay || !sheet) return;
+  // Populate content
+  const sub     = document.getElementById('sb-sub');
+  const pro     = isPremium();
+  const canRepair = pro && !!localStorage.getItem('sq_streak_before_break');
+  document.getElementById('sb-title').textContent = `Your ${streakBefore}-day streak reset.`;
+  sub.textContent = pro
+    ? `That's ${streakBefore} days of hard work — and it's not gone. Your tree kept growing, and you can repair this streak once this month.`
+    : `That's ${streakBefore} days of real effort. Your tree is still growing 🌱 — start a fresh streak today, or get Premium to freeze future streaks.`;
+  // Show right CTA
+  document.getElementById('sb-repair-row').style.display  = (pro && canRepair) ? 'block' : 'none';
+  document.getElementById('sb-upgrade-row').style.display = !pro ? 'block' : 'none';
+  // Animate in
+  overlay.style.display = 'flex';
+  lockScroll();
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      sheet.style.transform = 'translateY(0)';
+      // Move focus into the modal for screen readers / keyboard navigation
+      const title = document.getElementById('sb-title');
+      if (title) title.focus();
+    });
+  });
+  overlay.onclick = e => { if (e.target === overlay) closeStreakBreakModal(); };
+}
+
+function closeStreakBreakModal() {
+  const overlay = document.getElementById('streak-break-overlay');
+  const sheet   = document.getElementById('streak-break-sheet');
+  if (!overlay) return;
+  sheet.style.transform = 'translateY(100%)';
+  setTimeout(() => { overlay.style.display = 'none'; unlockScroll(); }, 380);
 }
 
 // ── LEVEL FORMULA MIGRATION (v1→v2) ─────────────────────
@@ -9254,7 +9738,7 @@ const STAGES = [
   { name:'Seedling',        xpMin:0,     xpNext:1200,  levelMin:1  },
   { name:'Sapling',         xpMin:1200,  xpNext:4800,  levelMin:11 },
   { name:'Grove Tree',      xpMin:4800,  xpNext:10000, levelMin:26 },
-  { name:'Ancient Sequoia', xpMin:10000, xpNext:99999, levelMin:38 },
+  { name:'Ancient Sequoia', xpMin:10000, xpNext:99999, levelMin:46 },
 ];
 function stageFor(xp) { let s=STAGES[0]; for(let i=STAGES.length-1;i>=0;i--){if(xp>=STAGES[i].xpMin){s=STAGES[i];break;}} return s; }
 function levelFor(xp) {
@@ -9275,7 +9759,10 @@ function updateDashTree() {
   const xpBar = document.getElementById('dash-xp-bar');
   if (xpBar) { xpBar.style.width = '0%'; requestAnimationFrame(() => requestAnimationFrame(() => { xpBar.style.width = pct + '%'; })); }
   document.getElementById('dash-xp-lvl').textContent  = 'Level ' + lv;
-  document.getElementById('dash-xp-next').textContent = (st.xpNext - xp).toLocaleString() + ' XP to next stage';
+  const isMaxStage = STAGES.indexOf(st) === STAGES.length - 1;
+  document.getElementById('dash-xp-next').textContent = isMaxStage
+    ? 'Max stage reached 🌲'
+    : (st.xpNext - xp).toLocaleString() + ' XP to next stage';
   document.getElementById('hstat-level').textContent  = lv;
   // Inject current stage tree into hero
   const heroTree = document.getElementById('dash-hero-tree');
@@ -9600,6 +10087,7 @@ function toggleDecoration(id) {
     equipped.push(id);
   }
   localStorage.setItem('sq_equipped', JSON.stringify(equipped));
+  saveUserData({ equipped });
   renderDecorations();
   updateHeroDecorations();
 }
@@ -9658,6 +10146,7 @@ function confirmDecoXPBuy() {
   if (!equipped.includes(d.id)) {
     equipped.push(d.id);
     localStorage.setItem('sq_equipped', JSON.stringify(equipped));
+    saveUserData({ equipped });
   }
 
   closeDecoShopModal();
@@ -10519,7 +11008,10 @@ function _bumpTodaySessionCount() {
   const today = _localDateStr();
   const raw   = JSON.parse(localStorage.getItem('sq_sessions_today') || '{"date":"","count":0}');
   const count = raw.date === today ? raw.count + 1 : 1;
-  localStorage.setItem('sq_sessions_today', JSON.stringify({date:today, count}));
+  const entry = {date: today, count};
+  localStorage.setItem('sq_sessions_today', JSON.stringify(entry));
+  // Sync to Firestore so the cap survives localStorage clear (basic obfuscation-level protection)
+  saveUserData({ sessions_today: entry });
 }
 
 const FREE_SESSION_LIMIT = 3;
@@ -10533,7 +11025,7 @@ function pomoToggle() {
       return;
     }
   }
-  if (pomoRunning) { pomoSecs=rem(); pomoAt=null; pomoRunning=false; clearInterval(pomoInt); }
+  if (pomoRunning) { pomoSecs=rem(); pomoAt=null; pomoRunning=false; clearInterval(pomoInt); pomoInt=null; }
   else { pomoAt=Date.now()-((phaseDur()-pomoSecs)*1000); pomoRunning=true; pomoInt=setInterval(pomoTick,500); track('session_started', { goal: document.getElementById('pomo-goal')?.value?.trim() || '' }); }
   renderPomoUI();
 }
@@ -10567,12 +11059,18 @@ function pomoTick() {
   renderPomoUI();
 }
 function pomoReset() {
-  clearInterval(pomoInt); pomoRunning=false; pomoPhase='focus'; pomoSecs=FOCUS_DUR;
-  pomoAt=null; pomoCount=0; pomoCycle=0; pomoXP=0; renderPomoUI();
+  clearInterval(pomoInt); pomoInt=null; pomoRunning=false; pomoPhase='focus'; pomoSecs=FOCUS_DUR;
+  pomoAt=null; pomoCount=0; pomoCycle=0; pomoXP=0;
+  // Clear goal field and display so the next session starts blank
+  const goalEl = document.getElementById('pomo-goal');
+  const goalDisplay = document.getElementById('pomo-goal-display');
+  if (goalEl) goalEl.value = '';
+  if (goalDisplay) { goalDisplay.textContent = ''; goalDisplay.style.display = 'none'; }
+  renderPomoUI();
 }
 function endSessionEarly() {
   if (!pomoRunning) return;
-  clearInterval(pomoInt); pomoRunning=false;
+  clearInterval(pomoInt); pomoInt=null; pomoRunning=false;
   if (pomoPhase==='focus') {
     const elapsed = phaseDur() - rem();
     const mult = getStreakMultiplier();
@@ -10601,6 +11099,21 @@ function showSessionComplete(xpEarned) {
   const overlay = document.getElementById('session-complete');
   document.getElementById('sc-xp-big').textContent    = '+' + xpEarned + ' XP';
   document.getElementById('sc-stage-name').textContent = st.name;
+  // Dynamic session subtitle: streak milestone or session count
+  const _scStreak = getStreak();
+  const _scSub = document.getElementById('sc-sub');
+  if (_scSub) {
+    const _scSessions = parseInt(localStorage.getItem('sq_pomo_sessions') || '0');
+    if (_scStreak > 0 && _scStreak % 7 === 0) {
+      _scSub.textContent = `🔥 ${_scStreak}-day streak! You're on fire.`;
+    } else if (_scSessions === 1) {
+      _scSub.textContent = 'First session done — keep it going!';
+    } else if (_scSessions % 10 === 0) {
+      _scSub.textContent = `Session #${_scSessions} complete — you're building a habit 🌱`;
+    } else {
+      _scSub.textContent = 'Break time — you\'ve earned it.';
+    }
+  }
   const isMaxStage = STAGES.indexOf(st) === STAGES.length - 1;
   document.getElementById('sc-xp-label').textContent   = xp.toLocaleString() + ' / ' + (isMaxStage ? '∞' : st.xpNext.toLocaleString()) + ' XP';
   document.getElementById('sc-bar-fill').style.width   = '0%';
@@ -10716,10 +11229,12 @@ function openAssignDetail(id) {
   } else {
     btn.textContent = 'Mark Complete ✓'; btn.className = 'ad-done-btn';
   }
+  lockScroll();
   document.getElementById('assign-detail').classList.add('show');
 }
 function closeAssignDetail() {
   document.getElementById('assign-detail').classList.remove('show');
+  unlockScroll();
   _adCurrentId = null;
 }
 function adBackdropClick(e) {
@@ -10760,6 +11275,14 @@ function renderStreakCal(streak) {
 // ── ADD ASSIGNMENT ──────────────────────────────────────────
 // ── COURSES MANAGEMENT SYSTEM ────────────────────────────────────────────────
 const COURSE_COLORS = ['#4CA130','#3B82F6','#F59E0B','#8B5CF6','#EC4899','#14B8A6','#F97316'];
+
+// Deterministic color for a course name — same name always gets same color across all screens
+function courseColor(name) {
+  if (!name) return COURSE_COLORS[0];
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (Math.imul(31, h) + name.charCodeAt(i)) | 0;
+  return COURSE_COLORS[Math.abs(h) % COURSE_COLORS.length];
+}
 let _selCourseColor  = COURSE_COLORS[0];
 let _expandedCourseId = null;
 
@@ -10877,7 +11400,7 @@ function addCat(courseId) {
   const nameEl = document.getElementById('cs-catname-' + courseId);
   const wtEl   = document.getElementById('cs-catwt-'   + courseId);
   const name   = nameEl ? nameEl.value.trim() : '';
-  const weight = wtEl ? (parseInt(wtEl.value) || 0) : 0;
+  const weight = wtEl ? Math.max(0, Math.min(100, parseInt(wtEl.value) || 0)) : 0;
   if (!name)   { if (nameEl) nameEl.focus(); return; }
   if (!weight) { if (wtEl)   wtEl.focus();   return; }
   const courses = getCourses();
@@ -11129,9 +11652,10 @@ async function _autoParseCanvasSyllabi() {
   for (const c of toparse) {
     _setSylCardState(c.course_id, 'loading', '⏳ Parsing…', 'Parsing with AI…');
     try {
+      const _sylToken = currentUser ? await currentUser.getIdToken() : null;
       const res  = await fetch(API + '/parse-syllabus', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(_sylToken ? { 'Authorization': 'Bearer ' + _sylToken } : {}) },
         body: JSON.stringify({
           content: c.syllabus_html,
           content_type: 'html',
@@ -11217,9 +11741,10 @@ async function parsePastedSyllabus() {
     courseName = otherInput.value.trim();
   }
   try {
+    const _pasteSylToken = currentUser ? await currentUser.getIdToken() : null;
     const res  = await fetch(API + '/parse-syllabus', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(_pasteSylToken ? { 'Authorization': 'Bearer ' + _pasteSylToken } : {}) },
       body: JSON.stringify({ content: text, content_type: 'text', course_name: courseName }),
     });
     const data = await res.json();
@@ -11640,7 +12165,7 @@ function _loadWeightOverrides() {
 function submitAddAssign() {
   const title  = document.getElementById('aa-title').value.trim();
   const due    = document.getElementById('aa-due').value;
-  const weight = parseFloat(document.getElementById('aa-weight').value) || 0;
+  const weight = Math.max(0, Math.min(100, parseFloat(document.getElementById('aa-weight').value) || 0));
   const err    = document.getElementById('aa-err');
   // Read course from select or plain input
   const courseEl = document.getElementById('aa-course');
@@ -11679,7 +12204,6 @@ function submitAddAssign() {
   renderAssignments(allAssignments);
   buildQPick();
   closeAddAssign();
-  showXPBurst(0, document.getElementById('aa-title'));
 }
 function adToggleDone() {
   if (!_adCurrentId) return;
@@ -11731,10 +12255,12 @@ function renderPomoUI() {
   p.ring.style.stroke=pomoPhase==='focus'?'var(--g2)':'var(--orange)';
   p.phaseLbl.textContent=pomoPhase==='focus'?'Focus':(pomoCycle===0?'Long Break':'Short Break');
   const pos=pomoCount%4;
+  // After completing all 4 sessions (pos===0, not at start), show all dots as done during long break
+  const allDone = pos===0 && pomoCount>0 && pomoPhase==='break';
   for(let i=0;i<4;i++){
-    p.dots[i].className='p-dot'+(i<pos?' done':i===pos&&pomoPhase==='focus'?' active':'');
+    p.dots[i].className='p-dot'+(allDone||i<pos?' done':i===pos&&pomoPhase==='focus'?' active':'');
   }
-  p.meta.textContent=`Session ${Math.min((pomoCount%4)+(pomoPhase==='focus'?1:0),4)} of 4`;
+  p.meta.textContent=`Session ${allDone?4:Math.min(pos+(pomoPhase==='focus'?1:0),4)} of 4`;
   const mult = getStreakMultiplier();
   const baseSessionXP = Math.round(50 * mult);
   const liveXP = (pomoRunning && pomoPhase==='focus') ? Math.round((1-pct)*baseSessionXP) : 0;
@@ -11770,7 +12296,9 @@ function logSession(label, xp) {
   const _hdata = JSON.parse(localStorage.getItem('sq_study_history') || '{}');
   _hdata[_hk] = (_hdata[_hk] || 0) + 1;
   localStorage.setItem('sq_study_history', JSON.stringify(_hdata));
+  saveUserData({ study_history: _hdata }); // sync heatmap across devices
   renderSessionLog();
+  checkBadges();
 }
 
 function renderStudyHeatmap() {
@@ -11793,12 +12321,42 @@ function renderStudyHeatmap() {
   el.innerHTML = `<div class="hm-row">${cols.join('')}</div>`;
 }
 
+function renderXPHistoryChart() {
+  const el = document.getElementById('xp-history-chart');
+  if (!el) return;
+  const history = JSON.parse(localStorage.getItem('sq_xp_history') || '{}');
+  const today = new Date();
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const k = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    days.push({ k, xp: history[k] || 0, isToday: i === 0, abbr: ['Su','Mo','Tu','We','Th','Fr','Sa'][d.getDay()] });
+  }
+  const maxXP = Math.max(...days.map(d => d.xp), 1);
+  const hasSomeXP = days.some(d => d.xp > 0);
+  if (!hasSomeXP) { el.innerHTML = ''; return; } // hide chart until there's data
+  const bars = days.map(d => {
+    const pct  = Math.max(d.xp / maxXP, d.xp > 0 ? 0.08 : 0); // min 8% height if any XP
+    const hPx  = Math.round(pct * 44);
+    const cls  = d.isToday ? 'xph-bar xph-today' : d.xp === 0 ? 'xph-bar xph-zero' : 'xph-bar';
+    const lblCls = d.isToday ? 'xph-lbl xph-lbl-today' : 'xph-lbl';
+    const tip  = d.xp > 0 ? `${d.xp.toLocaleString()} XP${d.isToday ? ' today' : ''}` : 'No XP';
+    return `<div class="xph-col">
+      <div class="${cls}" style="height:${hPx}px" title="${tip}"></div>
+      <div class="${lblCls}">${d.abbr}</div>
+    </div>`;
+  }).join('');
+  el.innerHTML = `<div class="xph-title">XP This Week</div><div class="xph-bars">${bars}</div>`;
+}
+
 function renderSessionLog() {
   const el = document.getElementById('session-entries');
   const todayXPEl = document.getElementById('slog-today-xp');
   if (!el) return;
 
   renderStudyHeatmap();
+  renderXPHistoryChart();
 
   if (!sessionEntries.length) {
     el.innerHTML = `<div class="slog-empty"><div class="slog-empty-icon">🌱</div>No sessions yet<br><button onclick="pomoToggle()" style="margin-top:10px;background:var(--g2);color:#fff;border:none;border-radius:100px;padding:7px 18px;font-size:12px;font-weight:700;cursor:pointer">Start now →</button></div>`;
@@ -12225,9 +12783,12 @@ function spawnCompletionBurst(cx, cy) {
 }
 
 // ── UNDO TOAST ──────────────────────────────────────────
-let _undoTimer  = null;
-let _undoId     = null;
-let _undoXP     = 0;
+let _undoTimer        = null;
+let _undoId           = null;
+let _undoXP           = 0;
+let _undoBonusGrantKey  = null;  // localStorage key for bonus that fired with this completion
+let _undoBonusXP        = 0;     // bonus amount (e.g. 25 for first-done)
+let _undoBonusApplied   = false; // true once the 800ms bonus timer fires
 
 function showUndoToast(id, title, xp, weight, daysEarly) {
   _undoId  = id;
@@ -12254,6 +12815,8 @@ function showUndoToast(id, title, xp, weight, daysEarly) {
 function hideUndoToast() {
   document.getElementById('undo-toast').classList.remove('show');
   _undoId = null; _undoXP = 0;
+  // Note: bonus state (_undoBonusGrantKey etc.) is intentionally NOT cleared here
+  // so undoComplete() can still access it after hideUndoToast() is called.
 }
 
 // ── BIG WIN CELEBRATION ─────────────────────────────────
@@ -12328,8 +12891,13 @@ async function undoComplete() {
   if (!_undoId) return;
   const id  = _undoId;
   const xp  = _undoXP;   // capture before hideUndoToast() zeroes them
+  // Capture bonus state before hideUndoToast() clears it
+  const bonusKey     = _undoBonusGrantKey;
+  const bonusXP      = _undoBonusXP;
+  const bonusApplied = _undoBonusApplied;
   hideUndoToast();
   _hideBigWin();
+  _undoBonusGrantKey = null; _undoBonusXP = 0; _undoBonusApplied = false;
 
   // Reverse the completion
   completedIds.delete(id);
@@ -12337,10 +12905,16 @@ async function undoComplete() {
   totalCompleted = Math.max(0, totalCompleted - 1);
   document.getElementById('hstat-done').textContent = totalCompleted;
 
+  // Reverse the first-done bonus grant if it fired during this completion
+  if (bonusKey) {
+    localStorage.removeItem(bonusKey); // allow it to re-fire on next completion
+  }
+  const totalXPToReverse = xp + (bonusApplied ? bonusXP : 0);
+
   // Reverse the XP and leaves locally (leaves are earned 1:1 with XP)
-  const newXP = Math.max(0, getXP() - xp);
+  const newXP = Math.max(0, getXP() - totalXPToReverse);
   localStorage.setItem('sq_xp', newXP);
-  if (xp > 0) spendLeaves(xp);
+  if (totalXPToReverse > 0) spendLeaves(totalXPToReverse);
   saveUserData({ xp: newXP, done_ids: [...completedIds] });
   document.getElementById('nav-xp').textContent      = newXP.toLocaleString() + ' XP';
   document.getElementById('dash-xp-amt').textContent = newXP.toLocaleString() + ' XP';
@@ -12349,7 +12923,7 @@ async function undoComplete() {
   const _todayStr = _localDateStr();
   if (localStorage.getItem('sq_xp_today_date') === _todayStr) {
     const _used = parseInt(localStorage.getItem('sq_xp_today') || '0');
-    localStorage.setItem('sq_xp_today', Math.max(0, _used - xp));
+    localStorage.setItem('sq_xp_today', Math.max(0, _used - totalXPToReverse));
   }
 
   renderAssignments(allAssignments);
@@ -12672,21 +13246,14 @@ function syncWrapUp() {
     }
   }
 
-  // Earned badges
-  const badges = [];
-  if (sessions >= 1)   badges.push('🌱 First Session');
-  if (sessions >= 10)  badges.push('📚 Study Regular');
-  if (sessions >= 25)  badges.push('🔥 Grind Mode');
-  if (streak >= 7)     badges.push('⚡ Week Warrior');
-  if (streak >= 14)    badges.push('🏆 Fortnight Streak');
-  if (done >= 5)       badges.push('✅ Getting It Done');
-  if (done >= 20)      badges.push('💪 Assignment Machine');
-  if (xp >= 1200)      badges.push('🌲 Sapling Reached');
-  if (xp >= 4800)      badges.push('🌳 Grove Grown');
-  if (xp >= 10000)     badges.push('🏔 Ancient Sequoia');
-  if (isDemo)          badges.push('🎮 Demo Mode');
+  // Earned badges — driven by BADGE_DEFS so wrap-up matches the badge engine
+  const maxDaysEarly = parseInt(localStorage.getItem('sq_badge_max_early') || '0');
+  const friendCount  = parseInt(localStorage.getItem('sq_badge_friends')   || '0');
+  const badgeStats   = { xp, streak, done, sessions, maxDaysEarly, friends: friendCount };
+  const earnedBadges = BADGE_DEFS.filter(b => b.earned(badgeStats) || localStorage.getItem(b.id));
+  if (isDemo) earnedBadges.push({ emoji: '🎮', name: 'Demo Mode' });
   const badgeWrap = document.getElementById('stats-earned-badges');
-  if (badgeWrap) badgeWrap.innerHTML = badges.slice(0, 6).map(b => `<span class="seb">${b}</span>`).join('');
+  if (badgeWrap) badgeWrap.innerHTML = earnedBadges.slice(0, 9).map(b => `<span class="seb" title="${b.name}">${b.emoji} ${b.name}</span>`).join('');
 }
 
 function startRegrow() {
@@ -12832,21 +13399,24 @@ function startRegrow() {
 // Save current semester stats to Firestore before resetting
 async function saveSemesterToArchive() {
   if (!currentUser || isDemo) return;
-  const xp       = getXP();
-  const streak   = getStreak();
-  const sessions = parseInt(localStorage.getItem('sq_pomo_sessions') || '0');
-  const done     = completedIds.size;
+  const xp         = getXP();
+  const streak     = getStreak();
+  const bestStreak = Math.max(streak, parseInt(localStorage.getItem('sq_best_streak') || '0'));
+  const sessions   = parseInt(localStorage.getItem('sq_pomo_sessions') || '0');
+  const done       = completedIds.size;
   const now      = new Date();
   const _sm = now.getMonth();
   const _semLabel = _sm <= 4 ? 'Spring' : _sm <= 7 ? 'Summer' : 'Fall';
   const sem      = _semLabel + ' ' + now.getFullYear();
   const st       = stageFor(xp);
   const stageIdx = STAGES.indexOf(st);
+  // NOTE: do NOT swallow errors here — confirmNewSemester depends on this throwing to
+  // prevent wiping semester data when the archive write fails (e.g. offline/Firestore down)
   await db.collection('users').doc(currentUser.uid).collection('semesters').add({
-    sem, xp, streak, sessions, done,
+    sem, xp, streak: bestStreak, sessions, done,
     stage: st.name, stage_idx: stageIdx,
     archived_at: firebase.firestore.FieldValue.serverTimestamp(),
-  }).catch(() => {});
+  });
 }
 
 // Open archive overlay and load past semesters from Firestore
@@ -12924,11 +13494,25 @@ async function confirmNewSemester() {
     await saveSemesterToArchive();
     saved = true;
   } catch (e) {
-    // saveSemesterToArchive itself swallows errors, but just in case
     saved = false;
   }
 
   if (postEl) postEl.style.pointerEvents = origPointerEvents;
+
+  // ── Guard: do NOT wipe semester data if the archive save failed ──────────
+  // If Firestore is down or the user is offline, the archive write throws.
+  // Block the reset and show a clear error — they can retry when back online.
+  if (!saved && !isDemo) {
+    _showConfirm(
+      'Your semester stats couldn\'t be saved right now (check your connection). Reset anyway and lose your history, or wait and try again?',
+      () => {
+        // User confirmed — reset even without archive (their choice)
+        _resetSemesterState();
+        _showInfoToast('Semester reset — stats couldn\'t be archived.');
+      }
+    );
+    return;
+  }
 
   _resetSemesterState();
 
@@ -12943,7 +13527,25 @@ function _resetSemesterState() {
   localStorage.setItem('sq_pomo_sessions','0'); localStorage.setItem('sq_done','[]');
   localStorage.setItem('sq_leaves','0');         // fresh leaf balance for new semester
   localStorage.removeItem('sq_sessions');
-  localStorage.removeItem('sq_equipped');         // clear equipped decos (purchases stay)
+  localStorage.removeItem('sq_equipped');           // clear equipped decos (purchases stay)
+  localStorage.removeItem('sq_manual');             // old semester's manual/syllabus assignments
+  localStorage.removeItem('sq_assign_cache');       // stale Canvas cache from old semester
+  localStorage.removeItem('sq_assign_ts');          // associated cache timestamp
+  localStorage.removeItem('sq_weight_overrides');   // old semester's per-assignment weight overrides
+  // Clear streak state so new semester starts clean — without these, updateStreak()
+  // fires a false streak-break nudge on day 2 of the new semester.
+  localStorage.removeItem('sq_last_study');
+  localStorage.removeItem('sq_streak_before_break');
+  localStorage.removeItem('sq_streak_break_date');
+  localStorage.removeItem('sq_streak_nudge_shown');
+  localStorage.removeItem('sq_repair_used_month');
+  localStorage.removeItem('sq_freeze_date');
+  localStorage.removeItem('sq_xp_history');         // fresh weekly XP chart for new semester
+  localStorage.removeItem('sq_best_streak');        // reset best-streak tracker for new semester
+  localStorage.removeItem('sq_sessions_today');     // reset free-tier session limit for new semester
+  localStorage.removeItem('sq_ical_last_sync');     // force re-sync of iCal on next load
+  // Also clear in-memory assignment list so old semester's iCal/extension data doesn't bleed through
+  allAssignments = [];
   sessionEntries = []; renderSessionLog();
   completedIds = new Set(); totalCompleted = 0; treeFaded = false;
   saveUserData({ xp: 0, streak: 0, pomo_sessions: 0, done_ids: [], last_study: '', leaves: 0 });
@@ -13404,9 +14006,14 @@ async function enablePushNotifs() {
     const existing_subs = (snap.exists && snap.data().push_subscriptions) || {};
     const key = btoa(subJson.endpoint).slice(-20);
     existing_subs[key] = subJson;
-    // Save timezone offset so backend can calculate user's local hour
+    // Save timezone offset so backend can calculate user's local hour.
+    // Use direct Firestore write (not debounced saveUserData) — push subscriptions
+    // must persist immediately; the 400ms debounce risks losing data if the page suspends.
     const tzOffset = -new Date().getTimezoneOffset(); // minutes east of UTC
-    await saveUserData({ push_subscriptions: existing_subs, tz_offset: tzOffset });
+    await db.collection('users').doc(currentUser.uid).set(
+      { push_subscriptions: existing_subs, tz_offset: tzOffset },
+      { merge: true }
+    );
     updatePushBtn(true);
     addNotification('system', 'Push notifications enabled 🎉', 'You\'ll get streak reminders and due date alerts even when the app is closed.');
   } catch(e) {
@@ -13423,17 +14030,32 @@ function _showIOSNotifGuide() {
   if (existing) { existing.remove(); return; } // toggle off if already showing
   const guide = document.createElement('div');
   guide.className = 'ios-notif-guide';
-  guide.innerHTML = `
-    <div class="ios-guide-title">📲 Get notifications on iPhone</div>
-    <ol class="ios-guide-steps">
-      <li>Open this page in <strong>Safari</strong></li>
-      <li>Tap the <strong>Share</strong> button <span style="font-size:15px">⎋</span></li>
-      <li>Tap <strong>"Add to Home Screen"</strong></li>
-      <li>Open Sequoia from your Home Screen</li>
-      <li>Come back here and tap Enable</li>
-    </ol>
-    <div style="font-size:11px;color:var(--light);margin-top:8px">Requires iOS 16.4 or later in Safari.</div>
-  `;
+  if (_isIOSStandalone()) {
+    // Already installed as PWA — guide them to iOS Settings
+    guide.innerHTML = `
+      <div class="ios-guide-title">📲 Enable in iPhone Settings</div>
+      <ol class="ios-guide-steps">
+        <li>Open the <strong>Settings</strong> app</li>
+        <li>Scroll down and tap <strong>Sequoia</strong></li>
+        <li>Tap <strong>Notifications</strong> → Allow Notifications</li>
+        <li>Come back here and tap Enable</li>
+      </ol>
+      <div style="font-size:11px;color:var(--light);margin-top:8px">Requires iOS 16.4 or later.</div>
+    `;
+  } else {
+    // Not yet installed — guide them through Add to Home Screen
+    guide.innerHTML = `
+      <div class="ios-guide-title">📲 Get notifications on iPhone</div>
+      <ol class="ios-guide-steps">
+        <li>Open this page in <strong>Safari</strong></li>
+        <li>Tap the <strong>Share</strong> button <span style="font-size:15px">⎋</span></li>
+        <li>Tap <strong>"Add to Home Screen"</strong></li>
+        <li>Open Sequoia from your Home Screen</li>
+        <li>Come back here and tap Enable</li>
+      </ol>
+      <div style="font-size:11px;color:var(--light);margin-top:8px">Requires iOS 16.4 or later in Safari.</div>
+    `;
+  }
   footer.appendChild(guide);
 }
 
@@ -13524,8 +14146,12 @@ function scheduleNotifications(assignments) {
     if (msUntil > 0 && msUntil < 25 * 60 * 60 * 1000) { // due within 25h
       notified.add(a.id);
       localStorage.setItem(lsKey, JSON.stringify([...notified]));
+      const dueDate = _fmtDate(new Date(a.due_at));
+      const dueLabel = msUntil < 3600000 ? 'in under an hour'
+                     : dueDate === today  ? 'today'
+                     : 'tomorrow';
       addNotification('due_soon', 'Due soon 📅',
-        `${a.title} (${a.course}) is due ${msUntil < 3600000 ? 'in under an hour' : 'tomorrow'}.`);
+        `${a.title} (${a.course}) is due ${dueLabel}.`);
     }
   });
   // Clean up old day keys to avoid localStorage bloat
@@ -13560,10 +14186,10 @@ function selectPwPlan(plan) {
     if (note) note.textContent = '🎁 7-day free trial — no charge today';
   } else if (plan === 'semester') {
     if (btn)  btn.textContent  = 'Get Semester Access →';
-    if (note) note.textContent = '🎁 7-day free trial — no charge today';
+    if (note) note.textContent = '✅ One-time payment · charged today · no subscription, no renewal';
   } else {
     if (btn)  btn.textContent  = 'Get Annual Access →';
-    if (note) note.textContent = '💰 Save $9 vs paying semester by semester';
+    if (note) note.textContent = '✅ One-time payment · save $9 vs month-by-month';
   }
 }
 
@@ -13628,6 +14254,7 @@ function _useStreakFreeze() {
     return;
   }
   localStorage.setItem('sq_freeze_date', today);
+  saveUserData({ streak_freeze_date: today });
   const history = JSON.parse(localStorage.getItem('sq_study_history') || '{}');
   history[today] = (history[today] || 0) + 1;
   localStorage.setItem('sq_study_history', JSON.stringify(history));
@@ -13669,7 +14296,12 @@ function _useStreakRepair() {
   localStorage.setItem('sq_repair_used_month', thisMonth);
   localStorage.removeItem('sq_streak_before_break');
   localStorage.removeItem('sq_streak_break_date');
-  saveUserData({ streak: oldStreak });
+  saveUserData({
+    streak:               oldStreak,
+    streak_before_break:  null,
+    streak_break_date:    null,
+    repair_used_month:    thisMonth,
+  });
 
   // Update UI
   document.getElementById('nav-streak').textContent   = '🔥 ' + oldStreak;
@@ -13733,7 +14365,7 @@ async function loadFriendsScreen() {
     return;
   }
   if (_frLoaded) return; // already loaded this session — avoid re-fetching on every nav
-  _frLoaded = true;
+  _frLoaded = true; // optimistically set; reset to false on network failure so user can retry
   const uid  = currentUser.uid;
   const code = _friendCode(uid);
 
@@ -13786,11 +14418,18 @@ async function loadFriendsScreen() {
     return;
   }
 
+  // Track friend count for badge system
+  _trackFriendCount(friends.filter(f => f !== uid).length);
+  checkBadges();
+
   // Sort by XP descending
   profiles.sort((a, b) => (b.xp || 0) - (a.xp || 0));
   const myRank = profiles.findIndex(p => p.uid === uid) + 1;
   document.getElementById('fr-hero-rank').textContent =
     profiles.length > 1 ? `#${myRank} of ${profiles.length} on leaderboard` : 'Add friends to see your rank';
+  // Show refresh button once leaderboard has data
+  const refreshBtn = document.getElementById('fr-refresh-btn');
+  if (refreshBtn) refreshBtn.style.display = profiles.length > 1 ? 'block' : 'none';
 
   if (profiles.length <= 1) {
     listEl.innerHTML = `<div class="fr-empty" style="padding:28px 16px 20px">
@@ -13856,23 +14495,26 @@ async function addFriend() {
   msg.textContent = 'Searching…'; msg.style.color = 'rgba(255,255,255,0.4)';
 
   try {
-    // Find user with this friend code
-    const snap = await db.collection('public_profiles').where('friendCode', '==', code).limit(1).get();
-    if (snap.empty) {
-      msg.textContent = 'Code not found. Double-check and try again.'; msg.style.color = '#FF9878';
+    // Use backend endpoint — bidirectional write via Admin SDK (no client security rule needed)
+    const idToken = await currentUser.getIdToken();
+    const res = await fetch(API + '/add-friend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+      body: JSON.stringify({ friend_code: code }),
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      const errMsg = data.error === 'Friend code not found' ? 'Code not found. Double-check and try again.'
+                   : data.error === "That's your own code"  ? "That's your own code!"
+                   : data.error || 'Something went wrong.';
+      msg.textContent = errMsg; msg.style.color = '#FF9878';
       btn.disabled = false; return;
     }
-    const friendUid = snap.docs[0].id;
-    const friendName = snap.docs[0].data().name || 'your friend';
-
-    // Add to my friends array (and them to mine - best effort)
-    const uid = currentUser.uid;
-    await db.collection('users').doc(uid).set(
-      { friends: firebase.firestore.FieldValue.arrayUnion(friendUid) }, { merge: true }
-    );
-    db.collection('users').doc(friendUid).set(
-      { friends: firebase.firestore.FieldValue.arrayUnion(uid) }, { merge: true }
-    ).catch(() => {});
+    const friendName = data.name || 'your friend';
+    if (data.already_friends) {
+      msg.textContent = `${friendName} is already on your leaderboard ✓`; msg.style.color = 'rgba(255,255,255,0.5)';
+      btn.disabled = false; return;
+    }
 
     msg.textContent = `Added ${friendName}! 🌲`; msg.style.color = '#7ED458';
     input.value = '';
@@ -13882,6 +14524,13 @@ async function addFriend() {
     msg.textContent = 'Something went wrong. Try again.'; msg.style.color = '#FF9878';
   }
   btn.disabled = false;
+}
+
+function _refreshLeaderboard() {
+  _frLoaded = false;
+  const listEl = document.getElementById('fr-list');
+  if (listEl) listEl.innerHTML = '<div class="fr-loading">Refreshing leaderboard…</div>';
+  loadFriendsScreen();
 }
 
 function copyFriendCode() {
@@ -13915,18 +14564,25 @@ async function shareInviteLink() {
 
 async function removeFriend(friendUid) {
   if (!currentUser) return;
-  if (!confirm('Remove this friend from your leaderboard?')) return;
-  try {
-    await db.collection('users').doc(currentUser.uid).update({
-      friends: firebase.firestore.FieldValue.arrayRemove(friendUid)
-    });
-    _frLoaded = false;
-    showToast('Friend removed 🌿', 2000);
-    loadFriendsScreen();
-    track('friend_removed');
-  } catch (e) {
-    showToast('Couldn\'t remove friend — try again.', 2500);
-  }
+  // confirm() is silently blocked in iOS PWA (standalone) mode — use a toast-confirm instead.
+  _showConfirm('Remove this friend from your leaderboard?', async () => {
+    try {
+      const idToken = await currentUser.getIdToken();
+      const res = await fetch(API + '/remove-friend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+        body: JSON.stringify({ friend_uid: friendUid }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Failed');
+      _frLoaded = false;
+      showToast('Friend removed 🌿', 2000);
+      loadFriendsScreen();
+      track('friend_removed');
+    } catch (e) {
+      showToast('Couldn\'t remove friend — try again.', 2500);
+    }
+  });
 }
 
 // ── AI WEEKLY SCHEDULE ────────────────────────────────────
@@ -13979,9 +14635,10 @@ async function generateSchedule() {
   const avail      = _schedAvailability();
 
   try {
+    const _schedToken = currentUser ? await currentUser.getIdToken() : null;
     const res  = await fetch(`${API}/generate-schedule`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(_schedToken ? { 'Authorization': 'Bearer ' + _schedToken } : {}) },
       body: JSON.stringify({ assignments, availability: avail, session_length: sessionLen }),
     });
     const data = await res.json();
@@ -14076,7 +14733,7 @@ function openPaywall(context) { lockScroll();
       sub.textContent   = "The GPA impact calculator is a Premium feature. Know exactly what's worth your time.";
     } else if (context === 'streak-shield') {
       heading.innerHTML = "Protect your streak<br>on hard days.";
-      sub.textContent   = "Premium gives you 2 streak shields per month — burn one instead of losing your streak.";
+      sub.textContent   = "Premium gives you a Streak Freeze you can use once a day — protect your streak on busy days without losing your progress.";
     } else if (context === 'analytics') {
       heading.innerHTML = "See how you study<br>week over week.";
       sub.textContent   = "Premium unlocks full study analytics — hours, XP trends, and completion rate.";
@@ -14150,25 +14807,53 @@ function _checkUpgradeRedirect() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('upgraded') === '1') {
     history.replaceState({}, '', window.location.pathname);
-    setTimeout(() => showToast('🌲 Welcome to Premium! Setting up your account…', 4000), 800);
-    // Wait for Firebase auth to resolve before polling (auth is async — currentUser may be null on cold load)
-    let authWait = 0;
-    const poll = setInterval(async () => {
-      authWait++;
-      if (authWait > 20) { clearInterval(poll); return; } // give up after ~40s
-      if (!currentUser) return; // still waiting for auth
-      try {
-        const doc = await db.collection('users').doc(currentUser.uid).get({ source: 'server' });
-        if (doc.exists && doc.data().tier === 'premium') {
-          clearInterval(poll);
+    setTimeout(() => showToast('🌲 Welcome to Premium! Activating your account…', 4000), 800);
+
+    // Wait for Firebase auth to resolve, then use onSnapshot for instant unlock
+    // as soon as the Stripe webhook writes tier='premium' to Firestore.
+    let _unsub = null;
+    let _authWait = 0;
+    const _waitForAuth = setInterval(() => {
+      _authWait++;
+      if (_authWait > 25) { // ~50s — auth should always resolve by now
+        clearInterval(_waitForAuth);
+        _showUpgradeStuck();
+        return;
+      }
+      if (!currentUser) return; // still resolving
+      clearInterval(_waitForAuth);
+
+      // Real-time listener — fires the moment webhook writes tier = 'premium'
+      _unsub = db.collection('users').doc(currentUser.uid).onSnapshot(snap => {
+        if (!snap.exists) return;
+        if (snap.data().tier === 'premium') {
+          if (_unsub) { _unsub(); _unsub = null; }
           localStorage.setItem('sq_tier', 'premium');
-          // Reload the page so all premium UI unlocks cleanly
-          showToast('✦ Premium unlocked! Loading your account…', 2000);
+          showToast('✦ Premium unlocked! Reloading…', 2000);
           setTimeout(() => location.reload(), 2000);
         }
-      } catch(_) {}
+      }, () => { /* ignore permission errors during auth setup */ });
+
+      // Safety: if onSnapshot never fires premium after 90s, show the stuck banner
+      setTimeout(() => {
+        if (_unsub) { _unsub(); _unsub = null; _showUpgradeStuck(); }
+      }, 90000);
     }, 2000);
   }
+}
+
+function _showUpgradeStuck() {
+  // Payment went through but webhook hasn't written yet — show a persistent, helpful banner
+  const banner = document.createElement('div');
+  banner.id = 'upgrade-stuck-banner';
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10200;background:#1A3A1A;color:#fff;' +
+    'font-size:13px;font-weight:600;padding:14px 16px;text-align:center;border-bottom:1px solid rgba(76,161,48,0.4);';
+  banner.innerHTML = '✦ Your payment is processing — Premium is activating. ' +
+    '<button onclick="location.reload()" style="margin-left:8px;background:var(--g2);color:#fff;border:none;' +
+    'border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer">Refresh</button>' +
+    '<button onclick="this.parentElement.remove()" style="margin-left:6px;background:none;border:none;color:rgba(255,255,255,0.5);' +
+    'font-size:16px;cursor:pointer;padding:0 4px">✕</button>';
+  document.body.prepend(banner);
 }
 
 // Toast queue — prevents stacking when multiple fire rapidly
@@ -14193,6 +14878,36 @@ function _nextToast() {
     t.style.opacity = '0';
     setTimeout(() => { t.remove(); _nextToast(); }, 270);
   }, duration);
+}
+
+// iOS-PWA-safe confirmation dialog (window.confirm is suppressed in standalone mode)
+function _showConfirm(message, onConfirm) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10100;display:flex;align-items:flex-end;justify-content:center;padding-bottom:calc(30px + env(safe-area-inset-bottom,0px));';
+  const card = document.createElement('div');
+  card.style.cssText = 'background:var(--card,#1A3A1A);border:1px solid rgba(76,161,48,0.3);border-radius:20px;padding:24px 20px 16px;max-width:360px;width:calc(100% - 32px);text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.5);';
+  const msg = document.createElement('p');
+  msg.style.cssText = 'margin:0 0 20px;font-size:15px;font-weight:600;color:var(--text,#fff);line-height:1.4;';
+  msg.textContent = message;
+  const btnRow = document.createElement('div');
+  btnRow.style.cssText = 'display:flex;gap:10px;';
+  const btnCancel = document.createElement('button');
+  btnCancel.textContent = 'Cancel';
+  btnCancel.style.cssText = 'flex:1;padding:12px;border-radius:100px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);color:var(--text,#fff);font-size:14px;font-weight:600;cursor:pointer;';
+  const btnOK = document.createElement('button');
+  btnOK.textContent = 'Confirm';
+  btnOK.style.cssText = 'flex:1;padding:12px;border-radius:100px;border:none;background:#e05555;color:#fff;font-size:14px;font-weight:700;cursor:pointer;';
+  btnRow.appendChild(btnCancel);
+  btnRow.appendChild(btnOK);
+  card.appendChild(msg);
+  card.appendChild(btnRow);
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+  lockScroll();
+  const close = () => { overlay.remove(); unlockScroll(); };
+  btnCancel.addEventListener('click', close);
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+  btnOK.addEventListener('click', () => { close(); onConfirm(); });
 }
 
 let _tourStep = 0;
@@ -14578,7 +15293,7 @@ function _showPwaInstallBanner() {
       background:linear-gradient(135deg,rgba(76,161,48,0.1),rgba(76,161,48,0.05));
       color:var(--g3);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;
       cursor:pointer;transition:all .2s;margin-bottom:10px;">
-      ✦ Upgrade to Premium — $7.99/mo
+      ✦ Upgrade to Premium — from $6.99/mo
     </button>
     <button id="settings-manage-btn" onclick="openCustomerPortal()" style="display:none;
       width:100%;padding:13px;border-radius:14px;border:1px solid rgba(255,255,255,0.12);
@@ -14599,6 +15314,7 @@ function _showPwaInstallBanner() {
 
     <hr class="settings-divider">
     <button class="settings-danger" onclick="disconnect()">Disconnect Canvas</button>
+    <button class="settings-danger" onclick="_deleteAccount()" style="margin-top:8px;opacity:0.6;font-size:12px;">Delete Account</button>
 
     <div style="margin-top:20px;text-align:center;font-size:11.5px;color:var(--light);line-height:2">
       <a href="privacy.html" target="_blank" style="color:var(--mid);text-decoration:underline">Privacy Policy</a>
@@ -14862,6 +15578,7 @@ function _showPwaInstallBanner() {
       <hr class="ad-divider">
       <label class="ad-notes-label">Notes</label>
       <textarea class="ad-notes" id="ad-notes" rows="4" placeholder="Add study notes, reminders, or ideas…"></textarea>
+      <div style="font-size:10px;color:rgba(255,255,255,0.28);margin-top:4px;text-align:right">Notes are saved on this device only</div>
       <div class="ad-notes-save" id="ad-notes-save">✓ Notes saved</div>
       <button class="ad-done-btn" id="ad-done-btn" onclick="adToggleDone()">Mark Complete ✓</button>
     </div>
@@ -14992,11 +15709,11 @@ function _showPwaInstallBanner() {
         <div class="pw-plan-save">Save $9</div>
       </div>
     </div>
-    <div class="pw-trial-note" id="pw-trial-note">🎁 7-day free trial — no charge today</div>
+    <div class="pw-trial-note" id="pw-trial-note">✅ One-time payment · charged today · no subscription, no renewal</div>
 
     <div class="pw-features">
       <div class="pw-feat"><div class="pw-feat-icon">📊</div><div class="pw-feat-text"><strong>GPA impact calculator</strong> — see exactly how each assignment moves your final grade</div></div>
-      <div class="pw-feat"><div class="pw-feat-icon">🧊</div><div class="pw-feat-text"><strong>Streak shields</strong> — 2 per month, protect your streak on bad days</div></div>
+      <div class="pw-feat"><div class="pw-feat-icon">🧊</div><div class="pw-feat-text"><strong>Streak Freeze</strong> — use once per day to protect your streak on busy days</div></div>
       <div class="pw-feat"><div class="pw-feat-icon">⚡</div><div class="pw-feat-text"><strong>AI quick-pick &amp; schedule</strong> — instant study plan built around your weights &amp; deadlines</div></div>
       <div class="pw-feat"><div class="pw-feat-icon">🎨</div><div class="pw-feat-text"><strong>All decorations &amp; cosmetics</strong> — seasonal drops, foxes, owls, crystals &amp; more</div></div>
       <div class="pw-feat"><div class="pw-feat-icon">📈</div><div class="pw-feat-text"><strong>Extended XP cap</strong> — 450 XP/day vs 300 on free, plus full study analytics</div></div>
@@ -15127,6 +15844,37 @@ function _showPwaInstallBanner() {
   <div class="bw-actions">
     <button class="bw-share-btn" onclick="_bigWinShare()">📤 Share progress</button>
     <button class="bw-dismiss-btn" onclick="_hideBigWin()">Got it ✓</button>
+  </div>
+</div>
+<!-- ── STREAK BREAK MODAL ─────────────────────────────────── -->
+<div id="streak-break-overlay" role="dialog" aria-modal="true" aria-labelledby="sb-title" style="display:none;position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;">
+  <div id="streak-break-sheet" style="background:var(--card);border-radius:24px 24px 0 0;padding:28px 24px 40px;max-width:480px;width:100%;box-shadow:0 -8px 48px rgba(0,0,0,0.5);transform:translateY(100%);transition:transform .35s cubic-bezier(.32,.72,0,1);">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:48px;margin-bottom:8px" id="sb-flame">🔥</div>
+      <div id="sb-title" tabindex="-1" style="font-size:20px;font-weight:800;color:var(--text);line-height:1.2;margin-bottom:6px">Your streak reset.</div>
+      <div id="sb-sub" style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.5;max-width:280px;margin:0 auto"></div>
+    </div>
+    <!-- Repair CTA (premium) -->
+    <div id="sb-repair-row" style="display:none;margin-bottom:14px;">
+      <button onclick="closeStreakBreakModal(); showScreen(3); setTimeout(_useStreakRepair, 400);"
+        style="width:100%;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--g2),var(--g3));color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">
+        🛠 Repair My Streak →
+      </button>
+      <p style="text-align:center;font-size:11px;color:rgba(255,255,255,0.35);margin:6px 0 0">Uses your one-time monthly repair</p>
+    </div>
+    <!-- Upgrade CTA (free) -->
+    <div id="sb-upgrade-row" style="display:none;margin-bottom:14px;">
+      <button onclick="closeStreakBreakModal(); openPaywall('streak-shield');"
+        style="width:100%;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--g2),var(--g3));color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">
+        🧊 Get Streak Freeze — Premium
+      </button>
+      <p style="text-align:center;font-size:11px;color:rgba(255,255,255,0.35);margin:6px 0 0">Protect future streaks on busy days</p>
+    </div>
+    <!-- Start fresh -->
+    <button onclick="closeStreakBreakModal();"
+      style="width:100%;padding:13px;border-radius:14px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:rgba(255,255,255,0.65);font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">
+      🌱 Start a fresh streak today
+    </button>
   </div>
 </div>
 </body>
