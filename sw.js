@@ -1,5 +1,5 @@
 // Sequoia Service Worker
-const CACHE = 'sequoia-v49';
+const CACHE = 'sequoia-v50';
 const BASE  = '';
 const SHELL = [
   '/',

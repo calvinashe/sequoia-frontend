@@ -4536,6 +4536,7 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 
 /* ── LIGHT THEME GAPS — polish pass ─────────────────────── */
 [data-theme="light"] .nav-settings      { color:var(--g1); }
+[data-theme="light"] .p-dot        { background:rgba(76,161,48,0.28); }
 [data-theme="light"] .ai-pick-btn { color:var(--g1); border-color:rgba(76,161,48,0.55); background:linear-gradient(135deg,rgba(76,161,48,0.14),rgba(46,96,32,0.08)); }
 [data-theme="light"] .ai-pick-btn:hover { color:var(--g1); background:linear-gradient(135deg,rgba(76,161,48,0.22),rgba(46,96,32,0.14)); }
 [data-theme="light"] .add-btn:hover     { color:#fff; }
@@ -7833,6 +7834,10 @@ window.addEventListener('DOMContentLoaded', () => {
             if (_iEl  && !_iEl.value)  _iEl.value  = _fname;
           }
         }
+        // Award any badges the user has earned — must run AFTER loadUserData so
+        // granted_bonuses are in localStorage, preventing duplicate toasts on
+        // subsequent Friends-page visits that also call checkBadges().
+        setTimeout(checkBadges, 800);
         // Show one-time toast for users affected by the level formula update
         _checkLevelMigration();
         // Show extension install nudge for users who chose extension but haven't synced yet
@@ -9128,7 +9133,7 @@ function closeLevelUp() {
 // ── SETTINGS ────────────────────────────────────────────
 function openSettings() {
   lockScroll();
-  document.getElementById('set-name').value  = localStorage.getItem('sq_name')  || '';
+  document.getElementById('set-name').value  = _toTitleCase(localStorage.getItem('sq_name')  || '');
   document.getElementById('set-url').value   = localStorage.getItem('sq_url')   || '';
   document.getElementById('set-token').value = '';
   document.getElementById('set-ical-url').value = '';
@@ -13965,6 +13970,10 @@ function renderNotifList() {
     _seenTitles.add(n.title);
     return true;
   });
+  // Sync the nav badge to the deduplicated unread count so the number
+  // matches what's actually visible in the panel.
+  const _unreadCount = deduped.filter(n => !n.read).length;
+  _setBadge(_unreadCount);
   el.innerHTML = deduped.map(n => `
     <div class="notif-item ${n.read ? '' : 'unread'}">
       <div class="notif-icon">${icons[n.type] || '🔔'}</div>
@@ -14535,10 +14544,10 @@ async function loadFriendsScreen() {
   if (profiles.length <= 1) {
     listEl.innerHTML = `<div class="fr-empty" style="padding:28px 16px 20px">
       <div style="font-size:32px;margin-bottom:10px">🌲</div>
-      <div style="font-weight:800;font-size:14px;color:#FFFEF8;margin-bottom:6px">No friends yet</div>
-      <div style="font-size:12px;line-height:1.5;margin-bottom:12px">Your friend code is <strong style="color:var(--g4);letter-spacing:1px;font-family:'DM Mono',monospace">${code}</strong></div>
+      <div style="font-weight:800;font-size:14px;color:var(--text);margin-bottom:6px">No friends yet</div>
+      <div style="font-size:12px;line-height:1.5;margin-bottom:12px;color:var(--mid)">Your friend code is <strong style="color:var(--g4);letter-spacing:1px;font-family:'DM Mono',monospace">${code}</strong></div>
       <button onclick="shareInviteLink()" class="fr-invite-btn" style="margin-top:0">🔗 Share Invite Link</button>
-      <button onclick="copyFriendCode()" style="background:none;border:none;color:rgba(255,255,255,0.45);font-size:12px;cursor:pointer;margin-top:8px;padding:4px 0">or copy code</button>
+      <button onclick="copyFriendCode()" style="background:none;border:none;color:var(--light);font-size:12px;cursor:pointer;margin-top:8px;padding:4px 0">or copy code</button>
     </div>`;
     podEl.style.display = 'none';
     if (titleEl) titleEl.style.display = 'none';
