@@ -5164,29 +5164,29 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
           <div style="width:28px;height:28px;border-radius:50%;background:rgba(76,161,48,0.2);border:1px solid rgba(76,161,48,0.3);
             display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;
             color:var(--g3);flex-shrink:0">1</div>
-          <div style="font-size:13.5px;line-height:1.6;padding-top:4px">
-            Click <strong style="color:rgba(255,255,255,0.85)">Install Extension</strong> below and add it to Chrome
+          <div style="font-size:13.5px;line-height:1.6;padding-top:4px;color:rgba(255,255,255,0.8)">
+            Click <strong style="color:#fff">Install Extension</strong> below and add it to Chrome
           </div>
         </div>
         <div style="display:flex;align-items:flex-start;gap:12px">
           <div style="width:28px;height:28px;border-radius:50%;background:rgba(76,161,48,0.2);border:1px solid rgba(76,161,48,0.3);
             display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;
             color:var(--g3);flex-shrink:0">2</div>
-          <div style="font-size:13.5px;line-height:1.6;padding-top:4px">
-            Finish creating your account here — the extension will link automatically
+          <div style="font-size:13.5px;line-height:1.6;padding-top:4px;color:rgba(255,255,255,0.8)">
+            Visit <strong style="color:#fff">your Canvas</strong> — the extension syncs your assignments automatically
           </div>
         </div>
         <div style="display:flex;align-items:flex-start;gap:12px">
           <div style="width:28px;height:28px;border-radius:50%;background:rgba(76,161,48,0.2);border:1px solid rgba(76,161,48,0.3);
             display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;
             color:var(--g3);flex-shrink:0">3</div>
-          <div style="font-size:13.5px;line-height:1.6;padding-top:4px">
-            Visit <strong style="color:rgba(255,255,255,0.85)">canvas.instructure.com</strong> — your assignments sync automatically
+          <div style="font-size:13.5px;line-height:1.6;padding-top:4px;color:rgba(255,255,255,0.8)">
+            Come back here — Sequoia loads your courses instantly 🌱
           </div>
         </div>
       </div>
 
-      <div style="margin-bottom:8px">
+      <div style="margin-bottom:16px">
         <div style="font-size:11px;color:rgba(255,255,255,0.35);text-align:center;margin-bottom:10px">What it syncs</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
           <span style="font-size:11.5px;padding:4px 10px;border-radius:20px;background:rgba(76,161,48,0.12);
@@ -5200,8 +5200,27 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         </div>
       </div>
 
-      <a class="ob-btn" href="https://chromewebstore.google.com/search/sequoia%20for%20canvas"
-        target="_blank" style="display:block;text-align:center;text-decoration:none;margin-bottom:10px">
+      <!-- Waiting-for-extension state (shown after Install is clicked) -->
+      <div id="ob-ext-waiting" style="display:none;text-align:center;padding:12px 16px;
+        background:rgba(76,161,48,0.08);border:1px solid rgba(76,161,48,0.2);border-radius:12px;margin-bottom:12px">
+        <div style="font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:8px">
+          ⏳ Waiting for extension to sync…
+        </div>
+        <a href="https://canvas.instructure.com" target="_blank"
+          style="display:inline-block;font-size:13.5px;font-weight:700;color:var(--g3);
+          text-decoration:none;padding:8px 18px;background:rgba(76,161,48,0.15);
+          border:1px solid rgba(76,161,48,0.3);border-radius:20px">
+          Open Canvas now →
+        </a>
+        <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:8px">
+          This page will advance automatically once detected
+        </div>
+      </div>
+
+      <a class="ob-btn" id="ob-ext-install-btn"
+        href="https://chromewebstore.google.com/search/sequoia%20for%20canvas"
+        target="_blank" onclick="obExtInstallClicked()"
+        style="display:block;text-align:center;text-decoration:none;margin-bottom:10px">
         🔌 Install Extension ↗
       </a>
       <button class="ob-btn" onclick="obExtSkip()" style="background:rgba(255,255,255,0.07);
@@ -7487,8 +7506,57 @@ function obExtSkip() {
   // Mark extension as chosen so the dashboard shows the install nudge
   localStorage.setItem('sq_ext_chosen', '1');
   localStorage.removeItem('sq_ext_synced'); // ensure nudge shows until first sync
+  _obExtStopPoll();
   closeOnboard();
   setTimeout(_checkExtPendingNudge, 500); // show after onboarding fades out
+}
+
+// ── Extension install detector ────────────────────────────────────────────────
+// After the user clicks "Install Extension", poll /extension-data every 5 s.
+// The moment the extension syncs (data.assignments.length > 0), auto-complete
+// onboarding so the user isn't left stranded on the install screen.
+let _obExtPollTimer = null;
+function obExtInstallClicked() {
+  // Show the waiting indicator
+  const waiting = document.getElementById('ob-ext-waiting');
+  if (waiting) waiting.style.display = 'block';
+  const btn = document.getElementById('ob-ext-install-btn');
+  if (btn) { btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none'; }
+
+  // Save name immediately
+  const extName = (document.getElementById('ob-ext-name')?.value || '').trim();
+  if (extName) {
+    localStorage.setItem('sq_name', extName);
+    setGreeting && setGreeting(extName);
+  }
+  localStorage.setItem('sq_ext_chosen', '1');
+
+  _obExtStopPoll(); // clear any previous poll
+  _obExtPollTimer = setInterval(_obExtPoll, 5000);
+}
+function _obExtStopPoll() {
+  if (_obExtPollTimer) { clearInterval(_obExtPollTimer); _obExtPollTimer = null; }
+}
+async function _obExtPoll() {
+  if (!currentUser) return;
+  try {
+    const idToken = await currentUser.getIdToken();
+    const res  = await fetch(API + '/extension-data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+      body: JSON.stringify({}),
+    });
+    const data = await res.json();
+    if (data.ok && data.assignments?.length > 0) {
+      // Extension has synced! Complete onboarding automatically.
+      _obExtStopPoll();
+      localStorage.setItem('sq_ext_last_sync', Date.now());
+      _checkExtPendingNudge && _checkExtPendingNudge();
+      closeOnboard();
+      // Brief celebration before landing on dashboard
+      showToast('🌲 Extension connected! Your assignments are loading…', 3500);
+    }
+  } catch(_) { /* network blip — retry next interval */ }
 }
 
 // ── Manual onboarding path ───────────────────────────────────────────────────
