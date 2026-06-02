@@ -5200,29 +5200,25 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         </div>
       </div>
 
-      <!-- Waiting-for-extension state (shown after Install is clicked) -->
-      <div id="ob-ext-waiting" style="display:none;text-align:center;padding:12px 16px;
-        background:rgba(76,161,48,0.08);border:1px solid rgba(76,161,48,0.2);border-radius:12px;margin-bottom:12px">
-        <div style="font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:8px">
-          ⏳ Waiting for extension to sync…
-        </div>
-        <a href="https://canvas.instructure.com" target="_blank"
-          style="display:inline-block;font-size:13.5px;font-weight:700;color:var(--g3);
-          text-decoration:none;padding:8px 18px;background:rgba(76,161,48,0.15);
-          border:1px solid rgba(76,161,48,0.3);border-radius:20px">
-          Open Canvas now →
-        </a>
-        <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:8px">
-          This page will advance automatically once detected
-        </div>
-      </div>
-
       <a class="ob-btn" id="ob-ext-install-btn"
         href="https://chromewebstore.google.com/detail/sequoia-for-canvas/hllbhhlbfiodgpkpjkconkhdaiklfnai"
         target="_blank" onclick="obExtInstallClicked()"
         style="display:block;text-align:center;text-decoration:none;margin-bottom:10px">
         🔌 Install Extension ↗
       </a>
+
+      <!-- Step 2: shown after Install is clicked — direct them to Canvas -->
+      <div id="ob-ext-step2" style="display:none;margin-bottom:10px">
+        <a class="ob-btn" href="https://canvas.instructure.com" target="_blank"
+          style="display:block;text-align:center;text-decoration:none;
+          background:linear-gradient(135deg,#1a4a8a,#1e5cad)">
+          📚 Now open your Canvas →
+        </a>
+        <div style="font-size:11.5px;color:rgba(255,255,255,0.4);text-align:center;margin-top:6px">
+          Sequoia will detect the extension automatically when you return
+        </div>
+      </div>
+
       <button class="ob-btn" onclick="obExtSkip()" style="background:rgba(255,255,255,0.07);
         border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6)">
         I'll do this later — enter Sequoia
@@ -7512,16 +7508,17 @@ function obExtSkip() {
 }
 
 // ── Extension install detector ────────────────────────────────────────────────
-// After the user clicks "Install Extension", poll /extension-data every 5 s.
-// The moment the extension syncs (data.assignments.length > 0), auto-complete
-// onboarding so the user isn't left stranded on the install screen.
+// After the user clicks "Install Extension", show the "Open Canvas" step and
+// poll /extension-data every 5 s. When the extension syncs its first batch,
+// auto-complete onboarding and load the assignments into the app.
 let _obExtPollTimer = null;
 function obExtInstallClicked() {
-  // Show the waiting indicator
-  const waiting = document.getElementById('ob-ext-waiting');
-  if (waiting) waiting.style.display = 'block';
+  // Reveal step 2: "Now open your Canvas →"
+  const step2 = document.getElementById('ob-ext-step2');
+  if (step2) step2.style.display = 'block';
+  // Dim the install button so it's clear they've already clicked it
   const btn = document.getElementById('ob-ext-install-btn');
-  if (btn) { btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none'; }
+  if (btn) btn.style.opacity = '0.55';
 
   // Save name immediately
   const extName = (document.getElementById('ob-ext-name')?.value || '').trim();
@@ -7548,13 +7545,14 @@ async function _obExtPoll() {
     });
     const data = await res.json();
     if (data.ok && data.assignments?.length > 0) {
-      // Extension has synced! Complete onboarding automatically.
+      // Extension has synced — complete onboarding and load assignments.
       _obExtStopPoll();
       localStorage.setItem('sq_ext_last_sync', Date.now());
       _checkExtPendingNudge && _checkExtPendingNudge();
       closeOnboard();
-      // Brief celebration before landing on dashboard
-      showToast('🌲 Extension connected! Your assignments are loading…', 3500);
+      showToast('🌲 Extension connected! Loading your assignments…', 3500);
+      // Load the synced assignments into the app
+      setTimeout(() => { loadExtensionAssignments && loadExtensionAssignments(); }, 600);
     }
   } catch(_) { /* network blip — retry next interval */ }
 }
