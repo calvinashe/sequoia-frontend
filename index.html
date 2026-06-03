@@ -2803,6 +2803,11 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 
 /* Leaderboard list */
 .fr-section-title { font-size:11px; font-weight:700; color:rgba(255,255,255,0.58); text-transform:uppercase; letter-spacing:.5px; margin:16px 0 8px; }
+.fr-lb-toggle { display:flex; gap:4px; background:rgba(255,255,255,0.06); border-radius:10px; padding:3px; }
+.fr-lb-tab { background:none; border:none; color:rgba(255,255,255,0.5); font-size:12px; font-weight:700; padding:5px 12px; border-radius:7px; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .15s; }
+.fr-lb-tab.active { background:rgba(76,161,48,0.22); color:var(--g4); }
+.fr-week-crown { font-size:13px; margin-left:3px; }
+.fr-row-week-xp { font-size:12px; font-weight:800; color:#F0C040; flex-shrink:0; }
 .fr-card {
   background:linear-gradient(165deg,#0B1C0E 0%,#070F05 100%);
   border:1px solid rgba(76,161,48,0.08); border-radius:16px; overflow:hidden;
@@ -4750,6 +4755,10 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 [data-theme="light"] .fr-add-input::placeholder { color:rgba(30,61,30,0.25); }
 [data-theme="light"] .fr-empty          { color:var(--mid); }
 [data-theme="light"] .fr-loading        { color:var(--mid); }
+[data-theme="light"] .fr-lb-toggle      { background:rgba(30,61,30,0.07); }
+[data-theme="light"] .fr-lb-tab         { color:var(--mid); }
+[data-theme="light"] .fr-lb-tab.active  { background:rgba(76,161,48,0.18); color:var(--g2); }
+[data-theme="light"] .fr-row-week-xp   { color:#8B6914; }
 /* deco-shop modal */
 [data-theme="light"] .dsm-card          { background:linear-gradient(180deg,#EFF6EC,#E4F0E0); border-color:rgba(76,161,48,0.25); }
 [data-theme="light"] .dsm-name          { color:var(--text); }
@@ -6642,8 +6651,11 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
     <div class="fr-podium" id="fr-podium" style="display:none"></div>
 
     <!-- Full leaderboard -->
-    <div style="display:flex;align-items:center;justify-content:space-between;">
-      <div class="fr-section-title" id="fr-lb-title" style="display:none;margin:16px 0 8px">Friends · This Semester</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px" id="fr-lb-header" style="display:none">
+      <div class="fr-lb-toggle" id="fr-lb-toggle" style="display:none">
+        <button class="fr-lb-tab active" id="fr-tab-alltime" onclick="_setLbTab('alltime')">All Time</button>
+        <button class="fr-lb-tab" id="fr-tab-weekly" onclick="_setLbTab('weekly')">This Week</button>
+      </div>
       <button id="fr-refresh-btn" onclick="_refreshLeaderboard()" style="display:none;background:none;border:none;color:rgba(255,255,255,0.4);font-size:12px;cursor:pointer;padding:4px 8px;border-radius:8px;transition:color .15s;" onmouseover="this.style.color='rgba(255,255,255,0.75)'" onmouseout="this.style.color='rgba(255,255,255,0.4)'">↻ Refresh</button>
     </div>
     <div class="fr-card" id="fr-list">
@@ -14794,6 +14806,41 @@ function _stageEmoji(xp) {
   return STAGE_EMOJI[0];
 }
 
+// Return ISO week key "YYYY-Www" for the week containing a given date
+function _isoWeekKey(d) {
+  const dt = d ? new Date(d) : new Date();
+  const day = dt.getDay() || 7; // Mon=1..Sun=7
+  dt.setDate(dt.getDate() + 4 - day); // Thursday of this week
+  const yearStart = new Date(dt.getFullYear(), 0, 1);
+  const week = Math.ceil((((dt - yearStart) / 86400000) + 1) / 7);
+  return `${dt.getFullYear()}-W${String(week).padStart(2,'0')}`;
+}
+
+// Sum XP earned this Mon–today from sq_xp_history
+function _getWeeklyXP() {
+  const hist = JSON.parse(localStorage.getItem('sq_xp_history') || '{}');
+  const now  = new Date();
+  const dayOfWeek = now.getDay() || 7; // Mon=1..Sun=7
+  let total = 0;
+  for (let i = 0; i < dayOfWeek; i++) {
+    const d = new Date(now);
+    d.setDate(now.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    total += hist[key] || 0;
+  }
+  return total;
+}
+
+let _lbTab = 'alltime'; // 'alltime' | 'weekly'
+let _lbProfiles = [];   // cached for tab switch without refetch
+
+function _setLbTab(tab) {
+  _lbTab = tab;
+  document.getElementById('fr-tab-alltime')?.classList.toggle('active', tab === 'alltime');
+  document.getElementById('fr-tab-weekly')?.classList.toggle('active', tab === 'weekly');
+  _renderLeaderboard(_lbProfiles, firebase.auth().currentUser?.uid);
+}
+
 async function _upsertPublicProfile() {
   if (!currentUser) return;
   const uid  = currentUser.uid;
@@ -14801,14 +14848,81 @@ async function _upsertPublicProfile() {
   const xp   = getXP(), streak = getStreak();
   const name = localStorage.getItem('sq_name') || 'Sequoia Student';
   const lvl  = levelFor(xp);
+  const weekXP = _getWeeklyXP();
+  const weekKey = _isoWeekKey();
   try {
     await db.collection('public_profiles').doc(uid).set({
       name, xp, streak, level: lvl, friendCode: code,
-      stage: _stageEmoji(xp), updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      stage: _stageEmoji(xp), weekXP, weekKey,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
     // Store code on user doc too for lookup
     await db.collection('users').doc(uid).set({ friendCode: code }, { merge: true });
   } catch(e) { /* non-critical */ }
+}
+
+function _renderLeaderboard(profiles, myUid) {
+  const listEl  = document.getElementById('fr-list');
+  const podEl   = document.getElementById('fr-podium');
+  const toggleEl = document.getElementById('fr-lb-toggle');
+  if (!listEl || !profiles.length) return;
+
+  const thisWeek = _isoWeekKey();
+  const byWeekly = _lbTab === 'weekly';
+
+  // Normalise weekly XP — only count if profile's weekKey matches current week
+  const sorted = [...profiles].map(p => ({
+    ...p,
+    _sortXP: byWeekly ? (p.weekKey === thisWeek ? (p.weekXP || 0) : 0) : (p.xp || 0)
+  })).sort((a, b) => b._sortXP - a._sortXP);
+
+  // Podium (top 3)
+  const medals  = ['🥇','🥈','🥉'];
+  const rankCls = ['rank-1','rank-2','rank-3'];
+  const top3    = sorted.slice(0, 3);
+  const podOrder = top3.length >= 3 ? [top3[1], top3[0], top3[2]] : top3.length === 2 ? [top3[0], top3[1]] : [top3[0]];
+  if (podEl) {
+    podEl.innerHTML = podOrder.map(p => {
+      const origRank = sorted.indexOf(p);
+      const isMe = p.uid === myUid;
+      const displayXP = byWeekly ? `${(p._sortXP || 0).toLocaleString()} XP this week` : `${(p.xp || 0).toLocaleString()} XP`;
+      return `<div class="fr-pod ${rankCls[origRank] || ''}">
+        <span class="fr-pod-medal">${medals[origRank] || ''}</span>
+        <span class="fr-pod-tree">${p.stage || '🌱'}</span>
+        <span class="fr-pod-name">${esc(p.name || 'Friend')}${isMe ? ' ✦' : ''}</span>
+        <span class="fr-pod-xp">${displayXP}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // Update my rank
+  const myRank = sorted.findIndex(p => p.uid === myUid) + 1;
+  const rankEl = document.getElementById('fr-hero-rank');
+  if (rankEl) rankEl.textContent = profiles.length > 1
+    ? `#${myRank} of ${profiles.length} ${byWeekly ? 'this week' : 'all time'}`
+    : 'Add friends to see your rank';
+
+  // Full list
+  listEl.innerHTML = sorted.map((p, idx) => {
+    const isMe = p.uid === myUid;
+    const isLeader = idx === 0 && byWeekly && p._sortXP > 0;
+    const xpDisplay = byWeekly
+      ? `<div class="fr-row-week-xp">${(p._sortXP || 0).toLocaleString()} XP</div>`
+      : `<div class="fr-row-xp">${(p.xp || 0).toLocaleString()}</div>`;
+    return `<div class="fr-row${isMe ? ' me' : ''}">
+      <span class="fr-rank-num">${idx + 1}</span>
+      <span class="fr-row-tree">${p.stage || '🌱'}</span>
+      <div class="fr-row-info">
+        <div class="fr-row-name">${esc(p.name || 'Friend')}${isMe ? '<span class="fr-me-chip">YOU</span>' : ''}${isLeader ? '<span class="fr-week-crown">👑</span>' : ''}</div>
+        <div class="fr-row-sub">Lv ${p.level || 1} · 🔥 ${p.streak || 0}-day streak</div>
+      </div>
+      ${xpDisplay}
+      ${!isMe ? `<button class="fr-remove-btn" onclick="removeFriend('${p.uid}')" title="Remove friend">✕</button>` : ''}
+    </div>`;
+  }).join('');
+
+  // Show toggle if there are friends
+  if (toggleEl) toggleEl.style.display = profiles.length > 1 ? 'flex' : 'none';
 }
 
 let _frLoaded = false;
@@ -14908,38 +15022,15 @@ async function loadFriendsScreen() {
 
   if (titleEl) titleEl.style.display = 'block';
 
-  // Podium (top 3)
-  const medals = ['🥇','🥈','🥉'];
-  const rankCls = ['rank-1','rank-2','rank-3'];
-  const top3 = profiles.slice(0, 3);
-  const podOrder = top3.length >= 3 ? [top3[1], top3[0], top3[2]] : top3.length === 2 ? [top3[0], top3[1]] : [top3[0]];
-  const podRanks  = top3.length >= 3 ? [1, 0, 2] : [0, 1];
+  // Cache profiles for tab-switching without refetch
+  _lbProfiles = profiles;
   podEl.style.display = 'flex';
-  podEl.innerHTML = podOrder.map((p, pi) => {
-    const origRank = profiles.indexOf(p);
-    const isMe = p.uid === uid;
-    return `<div class="fr-pod ${rankCls[origRank] || ''}">
-      <span class="fr-pod-medal">${medals[origRank] || ''}</span>
-      <span class="fr-pod-tree">${p.stage || '🌱'}</span>
-      <span class="fr-pod-name">${esc(p.name || 'Friend')}${isMe ? ' ✦' : ''}</span>
-      <span class="fr-pod-xp">${(p.xp || 0).toLocaleString()} XP</span>
-    </div>`;
-  }).join('');
 
-  // Full list
-  listEl.innerHTML = profiles.map((p, idx) => {
-    const isMe = p.uid === uid;
-    return `<div class="fr-row${isMe ? ' me' : ''}">
-      <span class="fr-rank-num">${idx + 1}</span>
-      <span class="fr-row-tree">${p.stage || '🌱'}</span>
-      <div class="fr-row-info">
-        <div class="fr-row-name">${esc(p.name || 'Friend')}${isMe ? '<span class="fr-me-chip">YOU</span>' : ''}</div>
-        <div class="fr-row-sub">Lv ${p.level || 1} · 🔥 ${p.streak || 0}-day streak</div>
-      </div>
-      <div class="fr-row-xp">${(p.xp || 0).toLocaleString()}</div>
-      ${!isMe ? `<button class="fr-remove-btn" onclick="removeFriend('${p.uid}')" title="Remove friend">✕</button>` : ''}
-    </div>`;
-  }).join('');
+  // Show the lb header row (toggle + refresh)
+  const hdrEl = document.getElementById('fr-lb-header');
+  if (hdrEl) hdrEl.style.display = 'flex';
+
+  _renderLeaderboard(profiles, uid);
 }
 
 async function addFriend() {
