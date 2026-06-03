@@ -2458,8 +2458,8 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 @keyframes petalDrift {
   0%   { transform:translate(0,0) rotate(0deg) scale(1); opacity:0; }
   12%  { opacity:0.85; }
-  50%  { transform:translate(var(--px,20px), -60px) rotate(var(--pr,120deg)) scale(0.85); opacity:0.7; }
-  100% { transform:translate(var(--px2,-10px), -140px) rotate(var(--pr2,280deg)) scale(0.5); opacity:0; }
+  50%  { transform:translate(var(--px,20px), 130px) rotate(var(--pr,120deg)) scale(0.85); opacity:0.7; }
+  100% { transform:translate(var(--px2,-10px), 280px) rotate(var(--pr2,280deg)) scale(0.5); opacity:0; }
 }
 @keyframes flameFlicker {
   0%   { transform:translateX(-50%) scaleX(1)   scaleY(1)    skewX(0deg);  opacity:0.9; }
@@ -8392,12 +8392,14 @@ async function loadCourses(token, url) {
     const res    = await fetch(`${API}/my-courses`, { headers: hdrs });
     const data   = await res.json();
     if (!data.ok || data.error) { gradesList.innerHTML = `<div class="loading-state" style="font-size:12px;color:var(--red)">${esc(data.error || 'Could not load grades')}</div>`; return; }
-    renderGrades((data.courses || []).map(c => ({
+    const newCourses = (data.courses || []).map(c => ({
       name:       c.name || 'Course',
       color:      c.color || '#4A9C28',
       current:    c.current_score ?? null,
       earned_pct: c.earned_pct ?? null,
-    })));
+    }));
+    renderGrades(newCourses);
+    _checkSemesterChange(newCourses.map(c => c.name));
   } catch (e) {
     gradesList.innerHTML = `<div class="loading-state" style="font-size:12px">Couldn't load grades — <button onclick="loadCourses('${esc(token)}','${esc(url)}')" style="background:none;border:none;color:var(--g3);font-weight:700;cursor:pointer;font-size:12px;padding:0">retry</button></div>`;
   }
@@ -10486,7 +10488,7 @@ function updateHeroDecorations() {
           style="animation:smokeRise ${dur}s ${del}s ease-in-out infinite;--sw:${(Math.random()-0.5)*20}px;"/>`;
       }
       overlay.innerHTML = `<svg style="position:absolute;overflow:visible;width:100%;height:100%;" xmlns="http://www.w3.org/2000/svg">
-        <g transform="translate(50%,100%)">
+        <g style="transform:translate(50%,92%)">
           ${makeShroom(-55,-22,1.0,0.92,0)}
           ${makeShroom(-76,-20,0.75,0.70,1)}
           ${makeShroom(-34,-18,0.85,0.78,2)}
@@ -10576,7 +10578,7 @@ function updateHeroDecorations() {
           <line x1="2.5"  y1="-2.5" x2="-2.5" y2="2.5" stroke="rgba(255,255,255,0.4)" stroke-width="0.5" transform="translate(0,-4)"/>
         </g>`;
       overlay.innerHTML = `<svg style="position:absolute;overflow:visible;width:100%;height:100%;" xmlns="http://www.w3.org/2000/svg">
-        <g transform="translate(50%,98%)">
+        <g style="transform:translate(50%,92%)">
           ${makeCrystal(-62,-28,28,'#A29BFE',0.92,0)}
           ${makeCrystal(-42,-22,22,'#6C5CE7',0.78,1)}
           ${makeCrystal(-80,-24,20,'#DDA0DD',0.65,2)}
@@ -10767,21 +10769,21 @@ function updateHeroDecorations() {
       }
       overlay.innerHTML = `
         ${stars}
-        <div style="position:absolute;top:11%;right:14%;width:20px;height:58%;
+        <div style="position:absolute;top:14%;right:14%;width:20px;height:55%;
           background:linear-gradient(to bottom,rgba(180,210,255,0.11),transparent 80%);
           transform:skewX(6deg);border-radius:0 0 50% 50%;
           animation:godRay 5s ease-in-out infinite;pointer-events:none;"></div>
-        <div style="position:absolute;top:5%;right:8%;width:46px;height:46px;border-radius:50%;
+        <div style="position:absolute;top:8%;right:8%;width:46px;height:46px;border-radius:50%;
           background:radial-gradient(circle at 38% 38%,#F4F4FF 0%,#C8D4F8 40%,#A0B4E8 70%,transparent 90%);
           box-shadow:0 0 22px 9px rgba(180,200,255,0.42),0 0 52px 20px rgba(120,150,240,0.16);
           animation:fireflyPulse 4.5s ease-in-out infinite;"></div>
-        <div style="position:absolute;top:6%;right:6.5%;width:42px;height:42px;border-radius:50%;
+        <div style="position:absolute;top:9%;right:6.5%;width:42px;height:42px;border-radius:50%;
           background:radial-gradient(circle at 62% 38%,rgba(8,12,30,0.42) 30%,transparent 62%);
           pointer-events:none;"></div>
-        <div style="position:absolute;top:2%;right:5%;width:57px;height:57px;border-radius:50%;
+        <div style="position:absolute;top:5%;right:5%;width:57px;height:57px;border-radius:50%;
           box-shadow:0 0 0 2px rgba(200,220,255,0.18);
           animation:fireflyPulse 4.5s 0.6s ease-in-out infinite;pointer-events:none;"></div>
-        <div style="position:absolute;top:-1%;right:2.5%;width:68px;height:68px;border-radius:50%;
+        <div style="position:absolute;top:2%;right:2.5%;width:68px;height:68px;border-radius:50%;
           box-shadow:0 0 0 1.5px rgba(180,200,255,0.09);
           animation:fireflyPulse 4.5s 1.1s ease-in-out infinite;pointer-events:none;"></div>
         <div style="position:absolute;inset:0;
@@ -10789,14 +10791,17 @@ function updateHeroDecorations() {
           pointer-events:none;"></div>`;
 
     } else if (id === 'northern_lights') {
+      // Stars as CSS divs (round, not stretched by SVG preserveAspectRatio)
       let nlStars = '';
       for (let i = 0; i < 20; i++) {
-        const sx = Math.random()*98, sy = 2+Math.random()*30;
-        const ss = 0.6+Math.random()*1.2;
-        nlStars += `<circle cx="${sx}%" cy="${sy}%" r="${ss}" fill="rgba(255,255,255,${0.3+Math.random()*0.5})"
-          style="animation:starWink ${2+Math.random()*3}s ${Math.random()*4}s ease-in-out infinite;"/>`;
+        const sx = Math.random()*96, sy = 1+Math.random()*28;
+        const ss = 1.2+Math.random()*2.4;
+        nlStars += `<div style="position:absolute;left:${sx}%;top:${sy}%;
+          width:${ss}px;height:${ss}px;border-radius:50%;
+          background:rgba(255,255,255,${0.3+Math.random()*0.5});
+          animation:starWink ${2+Math.random()*3}s ${Math.random()*4}s ease-in-out infinite;"></div>`;
       }
-      overlay.innerHTML = `
+      overlay.innerHTML = nlStars + `
         <svg style="position:absolute;left:0;top:0;width:100%;height:62%;pointer-events:none;overflow:hidden;"
           viewBox="0 0 200 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
           <defs>
@@ -10833,7 +10838,6 @@ function updateHeroDecorations() {
               <animateTransform attributeName="transform" type="translate" values="0,0;6,-2;0,0" dur="12s" repeatCount="indefinite"/>
             </path>
           </g>
-          ${nlStars}
         </svg>`;
 
     } else if (id === 'golden_hour') {
@@ -10972,7 +10976,7 @@ function updateHeroDecorations() {
           </svg>`;
       }
       const pileDat = [[-58,7,1.0],[-40,10,0.88],[-22,5,0.92],[0,9,0.80],[20,6,0.94],[38,10,0.76],[54,7,0.66]];
-      const pileSVG = `<svg style="position:absolute;bottom:0;left:50%;overflow:visible;" viewBox="0 0 0 0" xmlns="http://www.w3.org/2000/svg">
+      const pileSVG = `<svg style="position:absolute;bottom:2px;left:50%;transform:translateX(-50%);" width="240" height="38" viewBox="-120 -34 240 38" xmlns="http://www.w3.org/2000/svg">
         ${pileDat.map(([x,y,op],i)=>`<g transform="translate(${x},${-y}) rotate(${-30+i*10}) scale(1.1)">
           <path d="${leafPaths[i%3]}" fill="${autPal[i%autPal.length]}" opacity="${op}"/></g>`).join('')}
       </svg>`;
@@ -13387,6 +13391,87 @@ document.addEventListener('DOMContentLoaded',()=>{
   },{once:true});
 });
 
+// ── SEMESTER CHANGE DETECTION ────────────────────────────
+function _checkSemesterChange(newCourseNames) {
+  if (!newCourseNames || newCourseNames.length === 0) return;
+
+  const stored = localStorage.getItem('sq_last_course_names');
+  const lastSyncTs = parseInt(localStorage.getItem('sq_last_course_ts') || '0', 10);
+  const now = Date.now();
+
+  // Always save current courses
+  localStorage.setItem('sq_last_course_names', JSON.stringify(newCourseNames));
+  localStorage.setItem('sq_last_course_ts', String(now));
+
+  if (!stored) return; // first time — nothing to compare
+
+  // Only consider a semester change if at least 60 days have passed since last sync
+  const daysSince = (now - lastSyncTs) / 86400000;
+  if (daysSince < 60) return;
+
+  let oldNames;
+  try { oldNames = JSON.parse(stored); } catch { return; }
+  if (!oldNames || oldNames.length === 0) return;
+
+  // Check overlap — if >60% of courses are completely new, flag a semester change
+  const oldSet = new Set(oldNames.map(n => n.toLowerCase().trim()));
+  const overlap = newCourseNames.filter(n => oldSet.has(n.toLowerCase().trim())).length;
+  const overlapPct = overlap / Math.max(oldNames.length, newCourseNames.length);
+  if (overlapPct > 0.4) return; // too much overlap — same semester
+
+  // Already prompted this semester cycle?
+  const dismissKey = `sq_sem_change_dismissed_${new Date().getFullYear()}`;
+  if (localStorage.getItem(dismissKey)) return;
+
+  // Show the banner
+  _showSemesterChangeBanner(dismissKey);
+}
+
+function _showSemesterChangeBanner(dismissKey) {
+  const existing = document.getElementById('sem-change-banner');
+  if (existing) return;
+
+  const banner = document.createElement('div');
+  banner.id = 'sem-change-banner';
+  banner.style.cssText = `
+    position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+    z-index:9999;width:calc(100% - 32px);max-width:420px;
+    background:linear-gradient(135deg,#1A3A1A,#0D200D);
+    border:1.5px solid rgba(76,161,48,0.45);border-radius:18px;
+    padding:16px 18px;box-shadow:0 8px 32px rgba(0,0,0,0.5);
+    animation:fadeUp .4s ease;
+  `;
+  banner.innerHTML = `
+    <div style="display:flex;align-items:flex-start;gap:12px;">
+      <div style="font-size:26px;line-height:1;margin-top:2px">🌲</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:14px;font-weight:800;color:#FFFEF8;margin-bottom:4px">Looks like a new semester!</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.65);line-height:1.45;">
+          Your courses changed significantly. Release your old tree to the forest and start fresh — you'll get a shareable stats card.
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button onclick="showScreen(4);document.getElementById('sem-change-banner')?.remove()"
+            style="flex:1;padding:9px 12px;border-radius:12px;border:none;cursor:pointer;
+            background:linear-gradient(135deg,#4CA130,#2E6020);color:#fff;
+            font-size:12px;font-weight:800;font-family:'DM Sans',sans-serif;">
+            🌳 Release My Tree →
+          </button>
+          <button onclick="localStorage.setItem('${dismissKey}','1');document.getElementById('sem-change-banner')?.remove()"
+            style="padding:9px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);
+            background:none;color:rgba(255,255,255,0.5);font-size:12px;cursor:pointer;
+            font-family:'DM Sans',sans-serif;">
+            Later
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(banner);
+
+  // Auto-dismiss after 30s
+  setTimeout(() => banner.remove(), 30000);
+}
+
 // ── WRAP UP ─────────────────────────────────────────────
 let treeFaded=false;
 function syncWrapUp() {
@@ -13781,6 +13866,9 @@ function _resetSemesterState() {
   localStorage.removeItem('sq_best_streak');        // reset best-streak tracker for new semester
   localStorage.removeItem('sq_sessions_today');     // reset free-tier session limit for new semester
   localStorage.removeItem('sq_ical_last_sync');     // force re-sync of iCal on next load
+  localStorage.removeItem('sq_last_course_names'); // reset semester-change detector for new semester
+  localStorage.removeItem('sq_last_course_ts');
+  localStorage.removeItem('sq_sched_done');        // clear old schedule checkoffs
   // Also clear in-memory assignment list so old semester's iCal/extension data doesn't bleed through
   allAssignments = [];
   sessionEntries = []; renderSessionLog();
