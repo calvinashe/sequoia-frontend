@@ -87,6 +87,149 @@ body {
   overscroll-behavior-y:none;
 }
 
+/* ══════════════════════════════════════════════════════════
+   LANDING PAGE
+══════════════════════════════════════════════════════════ */
+#landing-screen {
+  position:fixed; inset:0; z-index:10001; overflow-y:auto;
+  background:#0A160A;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+  animation:ldFadeIn .4s ease;
+}
+#landing-screen.ld-out {
+  animation:ldFadeOut .35s ease forwards;
+  pointer-events:none;
+}
+@keyframes ldFadeIn  { from { opacity:0; } to { opacity:1; } }
+@keyframes ldFadeOut { from { opacity:1; } to { opacity:0; } }
+
+/* Nav */
+.ld-nav {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:18px 24px; position:sticky; top:0; z-index:10;
+  background:rgba(10,22,10,0.85); backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(76,161,48,0.1);
+}
+.ld-nav-logo { display:flex; align-items:center; gap:8px; }
+.ld-nav-icon {
+  width:30px; height:30px; border-radius:8px;
+  background:linear-gradient(135deg,#2E6020,#4CA130);
+  display:flex; align-items:center; justify-content:center;
+}
+.ld-nav-wordmark { font-family:'Playfair Display',serif; font-size:18px; font-weight:800; color:#FFFEF8; }
+.ld-nav-signin {
+  background:rgba(76,161,48,0.12); border:1px solid rgba(76,161,48,0.3);
+  color:var(--g4); font-family:'DM Sans',sans-serif; font-size:13px; font-weight:700;
+  padding:7px 16px; border-radius:20px; cursor:pointer; transition:all .15s;
+}
+.ld-nav-signin:hover { background:rgba(76,161,48,0.22); }
+
+/* Hero */
+.ld-hero {
+  text-align:center; padding:64px 24px 48px;
+  max-width:680px; margin:0 auto;
+}
+.ld-eyebrow {
+  display:inline-block; font-size:12px; font-weight:700; letter-spacing:.06em;
+  color:var(--g4); background:rgba(76,161,48,0.12); border:1px solid rgba(76,161,48,0.25);
+  border-radius:20px; padding:5px 14px; margin-bottom:24px;
+}
+.ld-headline {
+  font-family:'Playfair Display',serif; font-size:clamp(36px,6vw,64px);
+  font-weight:800; color:#FFFEF8; line-height:1.1; letter-spacing:-1px;
+  margin-bottom:20px;
+}
+.ld-sub {
+  font-size:clamp(15px,2vw,18px); color:rgba(255,255,254,0.6);
+  line-height:1.65; max-width:540px; margin:0 auto 32px;
+}
+.ld-sub em { color:var(--g4); font-style:normal; font-weight:700; }
+.ld-ctas { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom:16px; }
+.ld-btn-primary {
+  background:linear-gradient(135deg,#4CA130,#3A8A25);
+  color:#fff; font-family:'DM Sans',sans-serif; font-size:16px; font-weight:800;
+  padding:15px 28px; border-radius:14px; border:none; cursor:pointer;
+  box-shadow:0 4px 20px rgba(76,161,48,0.35); transition:all .15s;
+}
+.ld-btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 28px rgba(76,161,48,0.45); }
+.ld-btn-primary.ld-btn-lg { font-size:17px; padding:17px 32px; }
+.ld-btn-demo {
+  background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15);
+  color:rgba(255,255,254,0.7); font-family:'DM Sans',sans-serif; font-size:15px; font-weight:600;
+  padding:15px 24px; border-radius:14px; cursor:pointer; transition:all .15s; display:block;
+}
+.ld-btn-demo:hover { background:rgba(255,255,255,0.1); }
+.ld-price-note { font-size:12px; color:rgba(255,255,255,0.35); margin:0; }
+
+/* Tree stages */
+.ld-stages {
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  padding:0 24px 56px; flex-wrap:wrap; max-width:720px; margin:0 auto;
+}
+.ld-stage {
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  background:rgba(255,255,255,0.04); border:1px solid rgba(76,161,48,0.12);
+  border-radius:16px; padding:16px 20px; min-width:100px;
+  transition:all .2s;
+}
+.ld-stage:hover { background:rgba(76,161,48,0.08); border-color:rgba(76,161,48,0.25); }
+.ld-stage-hi { border-color:rgba(76,161,48,0.35); background:rgba(76,161,48,0.07); }
+.ld-stage-tree { font-size:36px; line-height:1; }
+.ld-stage-label { font-size:12px; font-weight:700; color:rgba(255,255,254,0.75); text-align:center; }
+.ld-stage-sub { font-size:10px; color:rgba(255,255,255,0.38); }
+.ld-stage-arrow { font-size:18px; color:rgba(76,161,48,0.4); flex-shrink:0; }
+
+/* Features grid */
+.ld-features {
+  display:grid; grid-template-columns:repeat(3,1fr); gap:16px;
+  max-width:900px; margin:0 auto; padding:0 24px 64px;
+}
+.ld-feat {
+  background:rgba(255,255,255,0.03); border:1px solid rgba(76,161,48,0.1);
+  border-radius:16px; padding:24px 20px;
+  transition:all .2s;
+}
+.ld-feat:hover { background:rgba(76,161,48,0.06); border-color:rgba(76,161,48,0.22); transform:translateY(-2px); }
+.ld-feat-icon { font-size:26px; margin-bottom:10px; }
+.ld-feat-title { font-size:14px; font-weight:800; color:#FFFEF8; margin-bottom:6px; }
+.ld-feat-body { font-size:13px; color:rgba(255,255,255,0.5); line-height:1.55; }
+
+/* Wrap-up banner */
+.ld-wrap-banner {
+  max-width:720px; margin:0 auto 64px; padding:0 24px;
+}
+.ld-wrap-inner {
+  background:linear-gradient(135deg,rgba(76,161,48,0.1),rgba(46,96,32,0.15));
+  border:1px solid rgba(76,161,48,0.22); border-radius:20px;
+  padding:32px 28px; text-align:center;
+}
+.ld-wrap-emoji { font-size:36px; margin-bottom:12px; }
+.ld-wrap-title { font-family:'Playfair Display',serif; font-size:20px; font-weight:800; color:#FFFEF8; margin-bottom:8px; }
+.ld-wrap-sub { font-size:14px; color:rgba(255,255,255,0.55); line-height:1.6; max-width:480px; margin:0 auto; }
+
+/* Bottom CTA */
+.ld-bottom {
+  text-align:center; padding:0 24px 80px; max-width:480px; margin:0 auto;
+  display:flex; flex-direction:column; align-items:center;
+}
+.ld-bottom-headline { font-family:'Playfair Display',serif; font-size:28px; font-weight:800; color:#FFFEF8; margin-bottom:10px; }
+.ld-bottom-sub { font-size:15px; color:rgba(255,255,255,0.5); margin-bottom:24px; }
+.ld-bottom-legal { font-size:11px; color:rgba(255,255,255,0.25); margin-top:16px; line-height:1.8; }
+.ld-bottom-legal a { color:rgba(76,161,48,0.6); }
+
+/* Responsive */
+@media (max-width:640px) {
+  .ld-features { grid-template-columns:1fr 1fr; }
+  .ld-stages   { gap:6px; }
+  .ld-stage    { min-width:72px; padding:12px; }
+  .ld-stage-tree { font-size:28px; }
+}
+@media (max-width:440px) {
+  .ld-features { grid-template-columns:1fr; }
+  .ld-stage-arrow { display:none; }
+}
+
 /* ── AUTH SCREEN ────────────────────────────────────────── */
 #auth-screen {
   position:fixed; inset:0; z-index:10000;
@@ -4908,6 +5051,124 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
      ONBOARDING
 ════════════════════════════════════════════════════════ -->
 <!-- ════════════════════════════════════════════════════════
+     LANDING PAGE  (shown to signed-out visitors)
+════════════════════════════════════════════════════════ -->
+<div id="landing-screen" style="display:none">
+
+  <!-- Nav -->
+  <nav class="ld-nav">
+    <div class="ld-nav-logo">
+      <div class="ld-nav-icon">
+        <svg viewBox="0 0 30 30" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
+          <rect x="13" y="22" width="4" height="7" rx="1" fill="#FFFEF8" opacity="0.8"/>
+          <polygon points="15,4 8,14 22,14" fill="#FFFEF8" opacity="0.7"/>
+          <polygon points="15,9 7,19 23,19" fill="#FFFEF8" opacity="0.85"/>
+          <polygon points="15,14 6,23 24,23" fill="#FFFEF8"/>
+        </svg>
+      </div>
+      <span class="ld-nav-wordmark">Sequoia</span>
+    </div>
+    <button class="ld-nav-signin" onclick="showAuthFromLanding('login')">Sign in →</button>
+  </nav>
+
+  <!-- Hero -->
+  <section class="ld-hero">
+    <div class="ld-eyebrow">For Canvas LMS students 🎓</div>
+    <h1 class="ld-headline">The study app<br>that grows as you do.</h1>
+    <p class="ld-sub">Connect Canvas. Get your assignments ranked by <em>grade weight × urgency</em> — not just due date. Earn XP and grow a real Sequoia tree every semester.</p>
+    <div class="ld-ctas">
+      <button class="ld-btn-primary" onclick="showAuthFromLanding('signup')">Start Growing Free →</button>
+      <button class="ld-btn-demo"    onclick="loadDemoFromLanding()">🌱 Try Demo First</button>
+    </div>
+    <p class="ld-price-note">Free to start &nbsp;·&nbsp; Premium from $6.99/mo &nbsp;·&nbsp; Cancel anytime</p>
+  </section>
+
+  <!-- Tree stage preview -->
+  <div class="ld-stages">
+    <div class="ld-stage">
+      <div class="ld-stage-tree">🌱</div>
+      <div class="ld-stage-label">Seedling</div>
+      <div class="ld-stage-sub">Day 1</div>
+    </div>
+    <div class="ld-stage-arrow">→</div>
+    <div class="ld-stage">
+      <div class="ld-stage-tree">🌿</div>
+      <div class="ld-stage-label">Sapling</div>
+      <div class="ld-stage-sub">Week 3</div>
+    </div>
+    <div class="ld-stage-arrow">→</div>
+    <div class="ld-stage ld-stage-hi">
+      <div class="ld-stage-tree">🌲</div>
+      <div class="ld-stage-label">Grove Tree</div>
+      <div class="ld-stage-sub">Mid-semester</div>
+    </div>
+    <div class="ld-stage-arrow">→</div>
+    <div class="ld-stage">
+      <div class="ld-stage-tree">🏔</div>
+      <div class="ld-stage-label">Ancient Sequoia</div>
+      <div class="ld-stage-sub">End of semester</div>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <section class="ld-features">
+    <div class="ld-feat">
+      <div class="ld-feat-icon">⚡</div>
+      <div class="ld-feat-title">Priority-ranked assignments</div>
+      <div class="ld-feat-body">Grade weight × urgency = what actually matters today. A 35% midterm due tomorrow beats a 5% quiz due Friday every time.</div>
+    </div>
+    <div class="ld-feat">
+      <div class="ld-feat-icon">🌲</div>
+      <div class="ld-feat-title">Your tree grows with you</div>
+      <div class="ld-feat-body">Every study session and assignment earns XP. Your Sequoia grows visually all semester, then joins the ancient forest at wrap-up.</div>
+    </div>
+    <div class="ld-feat">
+      <div class="ld-feat-icon">🤖</div>
+      <div class="ld-feat-title">AI weekly schedule</div>
+      <div class="ld-feat-body">Tell it your free hours. It builds a personalized study plan ranked by grade impact — not alphabetical, not random.</div>
+    </div>
+    <div class="ld-feat">
+      <div class="ld-feat-icon">📊</div>
+      <div class="ld-feat-title">Live grade forecasting</div>
+      <div class="ld-feat-body">"What if I score 85% on this exam?" See exactly how each upcoming assignment moves your final grade.</div>
+    </div>
+    <div class="ld-feat">
+      <div class="ld-feat-icon">🔥</div>
+      <div class="ld-feat-title">Streaks & XP rewards</div>
+      <div class="ld-feat-body">Study daily, build your streak, unlock decorations. Purely positive — no punishment for off days, just momentum for on ones.</div>
+    </div>
+    <div class="ld-feat">
+      <div class="ld-feat-icon">👥</div>
+      <div class="ld-feat-title">Friend leaderboard</div>
+      <div class="ld-feat-body">Add classmates and compete on weekly XP. A friendly race to see who put in the most hours this week.</div>
+    </div>
+  </section>
+
+  <!-- Semester wrap-up CTA -->
+  <section class="ld-wrap-banner">
+    <div class="ld-wrap-inner">
+      <div class="ld-wrap-emoji">🌲✨</div>
+      <div class="ld-wrap-title">End of semester, your tree joins the forest</div>
+      <div class="ld-wrap-sub">Get a shareable stats card — XP, study hours, streak, assignments. Start a new seedling for next semester.</div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="ld-bottom">
+    <h2 class="ld-bottom-headline">Ready to start growing?</h2>
+    <p class="ld-bottom-sub">Free to start. Connect Canvas in under 60 seconds.</p>
+    <button class="ld-btn-primary ld-btn-lg" onclick="showAuthFromLanding('signup')">Create Free Account →</button>
+    <button class="ld-btn-demo" onclick="loadDemoFromLanding()" style="margin-top:12px">or try demo first</button>
+    <p class="ld-bottom-legal">
+      By signing up you agree to our
+      <a href="terms.html" target="_blank">Terms</a> and
+      <a href="privacy.html" target="_blank">Privacy Policy</a>
+    </p>
+  </section>
+
+</div><!-- /landing-screen -->
+
+<!-- ════════════════════════════════════════════════════════
      AUTH SCREEN
 ════════════════════════════════════════════════════════ -->
 <div id="auth-screen">
@@ -7047,6 +7308,40 @@ function hideAuthScreen() {
   const s = document.getElementById('auth-screen'); if (s) s.classList.add('gone');
 }
 
+// ── Landing page helpers ──────────────────────────────────
+function _shouldShowLanding() {
+  // Skip landing for special URL params that indicate a specific flow
+  const p = new URLSearchParams(location.search);
+  if (p.get('invite') || p.get('ref') || p.get('demo') || p.get('tab') || p.get('upgraded')) return false;
+  return true;
+}
+function showLanding() {
+  const el = document.getElementById('landing-screen');
+  if (el) el.style.display = 'block';
+}
+function hideLanding(cb) {
+  const el = document.getElementById('landing-screen');
+  if (!el || el.style.display === 'none') { cb && cb(); return; }
+  el.classList.add('ld-out');
+  setTimeout(() => { el.style.display = 'none'; el.classList.remove('ld-out'); cb && cb(); }, 350);
+}
+function showAuthFromLanding(tab) {
+  hideLanding(() => {
+    showAuthScreen();
+    if (tab === 'login') {
+      // Switch to log-in tab
+      const emailForm = document.getElementById('al-email-form');
+      if (emailForm && emailForm.style.maxHeight === '') {
+        toggleEmailAuth(); // open the email form
+      }
+      authShowTab && authShowTab('login');
+    }
+  });
+}
+function loadDemoFromLanding() {
+  hideLanding(() => loadDemoFromAuth());
+}
+
 async function authSubmit() {
   const email = document.getElementById('auth-email').value.trim();
   const pass  = document.getElementById('auth-password').value;
@@ -7961,8 +8256,12 @@ window.addEventListener('DOMContentLoaded', () => {
   // Firebase auth state drives the whole startup flow
   auth.onAuthStateChanged(async (user) => {
     if (!user) {
-      // Not signed in — show auth screen, reset UI to defaults
-      showAuthScreen();
+      // Not signed in — show landing (or auth directly for special flows)
+      if (_shouldShowLanding()) {
+        showLanding();
+      } else {
+        showAuthScreen();
+      }
       loadXPStreak(); updateDashTree(); syncTreeScreen();
       checkStreakRisk(); renderSessionLog();
       return;
@@ -7977,6 +8276,7 @@ window.addEventListener('DOMContentLoaded', () => {
     try { window.posthog?.identify(user.uid, { email: user.email, name: user.displayName }); } catch (_) {}
     track('user_signed_in', { method: user.providerData?.[0]?.providerId || 'unknown' });
     hideAuthScreen(); // don't wait for Firestore — show app right away
+    hideLanding();    // also hide landing if it's still showing
 
     // Load UI from localStorage instantly
     loadXPStreak(); updateDashTree(); syncTreeScreen();
