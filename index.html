@@ -580,6 +580,90 @@ body {
 }
 .weekly-recap-dismiss:hover { opacity:1; }
 
+/* ── Today's Plan card ──────────────────────────────────── */
+.today-plan-card {
+  position:relative; grid-column:1 / -1;
+  background:linear-gradient(135deg,rgba(76,161,48,0.13),rgba(46,96,32,0.08));
+  border:1.5px solid rgba(76,161,48,0.28);
+  border-radius:14px; padding:12px 16px 14px;
+  animation:fadeUp .4s ease;
+}
+[data-theme="light"] .today-plan-card {
+  background:linear-gradient(135deg,rgba(76,161,48,0.09),rgba(46,96,32,0.05));
+  border-color:rgba(76,161,48,0.25);
+}
+.today-plan-header {
+  display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;
+}
+.today-plan-title {
+  font-size:11px; font-weight:700; text-transform:uppercase;
+  letter-spacing:.6px; color:var(--g4);
+}
+.today-plan-edit {
+  background:none; border:none; font-size:11px; font-weight:700;
+  color:var(--g3); cursor:pointer; padding:2px 4px; opacity:.8;
+  font-family:'DM Sans',sans-serif; transition:opacity .15s;
+}
+.today-plan-edit:hover { opacity:1; }
+.today-plan-block {
+  display:flex; align-items:center; gap:10px; padding:8px 0;
+  border-bottom:1px solid rgba(76,161,48,0.1); cursor:pointer;
+  transition:opacity .15s;
+}
+.today-plan-block:last-child { border-bottom:none; }
+.today-plan-block.done { opacity:.45; }
+.today-plan-block.done .today-plan-task { text-decoration:line-through; }
+.today-plan-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.today-plan-info { flex:1; min-width:0; }
+.today-plan-task {
+  font-size:12px; font-weight:700; color:var(--text);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.today-plan-meta { font-size:10px; color:var(--light); margin-top:1px; }
+.today-plan-check {
+  width:20px; height:20px; border-radius:50%;
+  border:1.5px solid rgba(76,161,48,0.35);
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; font-size:10px; color:transparent; transition:all .15s;
+}
+.today-plan-block.done .today-plan-check {
+  background:var(--g3); border-color:var(--g3); color:#fff;
+}
+.today-plan-done-msg {
+  text-align:center; padding:6px 0; font-size:12px;
+  font-weight:700; color:var(--g4);
+}
+
+/* ── Schedule modal — light mode ────────────────────────── */
+[data-theme="light"] #sched-overlay { background:rgba(230,245,230,0.92); }
+[data-theme="light"] .sched-title { color:var(--g1); }
+[data-theme="light"] .sched-close { background:rgba(0,0,0,0.06); color:var(--mid); }
+[data-theme="light"] .sched-close:hover { background:rgba(0,0,0,0.1); }
+[data-theme="light"] .sched-avail-title,
+[data-theme="light"] .sched-day-lbl,
+[data-theme="light"] .sched-opt-label { color:var(--mid); }
+[data-theme="light"] .sched-hrs-input {
+  background:#fff; border-color:var(--border); color:var(--text);
+}
+[data-theme="light"] .sched-session-sel {
+  background:#fff; border-color:var(--border); color:var(--text);
+}
+[data-theme="light"] .sched-day-name { color:var(--g1); }
+[data-theme="light"] .sched-day-date { color:var(--mid); }
+[data-theme="light"] .sched-day-total { color:var(--light); }
+[data-theme="light"] .sched-block {
+  background:rgba(255,255,255,0.92); border-color:rgba(76,161,48,0.14);
+  box-shadow:0 1px 4px rgba(0,0,0,0.06);
+}
+[data-theme="light"] .sched-block:hover { background:#fff; }
+[data-theme="light"] .sched-block-course { color:var(--light); }
+[data-theme="light"] .sched-block-task { color:var(--g1); }
+[data-theme="light"] .sched-block-due { color:var(--light); }
+[data-theme="light"] .sched-check { border-color:rgba(76,161,48,0.3); color:transparent; }
+[data-theme="light"] .sched-block.done .sched-check { color:#fff; }
+[data-theme="light"] .sched-empty,
+[data-theme="light"] .sched-loading { color:var(--mid); }
+
 .nav-settings { background:none; border:none; font-size:18px; cursor:pointer; opacity:0.5; transition:opacity .2s; padding:8px; border-radius:8px; color:#fff; line-height:1; min-width:44px; min-height:44px; display:flex; align-items:center; justify-content:center; }
 .nav-settings:hover { opacity:1; }
 .nav-disconnect {
@@ -5419,6 +5503,16 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
       <div class="weekly-recap-stats" id="weekly-recap-stats"></div>
     </div>
 
+    <!-- TODAY'S PLAN — shown when a schedule has been generated and there are blocks today -->
+    <div id="today-plan-card" style="display:none" class="today-plan-card">
+      <div class="today-plan-header">
+        <div class="today-plan-title">📅 Today's Plan</div>
+        <button class="today-plan-edit" onclick="isPremium() ? openSchedule() : openPaywall('ai-schedule')">Edit →</button>
+      </div>
+      <div id="today-plan-blocks"></div>
+      <div id="today-plan-all-done" style="display:none" class="today-plan-done-msg">✅ All done for today!</div>
+    </div>
+
     <!-- FOCUS BANNER -->
     <div class="focus-banner hidden" id="focus-banner">
       <div class="focus-icon" id="focus-icon">🎯</div>
@@ -9156,6 +9250,7 @@ function loadXPStreak() {
   document.getElementById('hstat-done').textContent   = totalCompleted;
   _syncStreakRepairBtn();
   _checkWeeklyRecap();
+  _renderTodayPlanCard();
 }
 
 // ── WEEKLY RECAP CARD ────────────────────────────────────
@@ -14934,11 +15029,97 @@ async function removeFriend(friendUid) {
 // ── AI WEEKLY SCHEDULE ────────────────────────────────────
 let _schedDoneSet = new Set(JSON.parse(localStorage.getItem('sq_sched_done') || '[]'));
 
+// ── Schedule cache helpers ────────────────────────────────
+function _saveScheduleCache(schedule, summary) {
+  try {
+    localStorage.setItem('sq_schedule_cache', JSON.stringify({
+      schedule, summary, generated: _localDateStr()
+    }));
+  } catch (_) {}
+}
+
+function _getCachedSchedule() {
+  try {
+    const c = JSON.parse(localStorage.getItem('sq_schedule_cache') || 'null');
+    if (!c || !c.schedule || !c.generated) return null;
+    // Valid for 7 days
+    const days = (Date.now() - new Date(c.generated + 'T12:00:00').getTime()) / 86400000;
+    if (days > 7) return null;
+    return c;
+  } catch { return null; }
+}
+
+// ── Today's Plan card ─────────────────────────────────────
+function _renderTodayPlanCard() {
+  const card = document.getElementById('today-plan-card');
+  if (!card) return;
+  const cached = _getCachedSchedule();
+  if (!cached) { card.style.display = 'none'; return; }
+  const today = _localDateStr();
+  const todaySection = cached.schedule.find(d => d.date === today);
+  if (!todaySection || !todaySection.blocks.length) { card.style.display = 'none'; return; }
+
+  const blocks = todaySection.blocks;
+  const blocksEl = document.getElementById('today-plan-blocks');
+  const doneEl   = document.getElementById('today-plan-all-done');
+
+  blocksEl.innerHTML = blocks.map((b, i) => {
+    const bid   = `${today}-${i}`;
+    const isDone = _schedDoneSet.has(bid);
+    return `<div class="today-plan-block${isDone ? ' done' : ''}" id="tpb-${bid}">
+      <div class="today-plan-dot" style="background:${b.color}"></div>
+      <div class="today-plan-info">
+        <div class="today-plan-task">${esc(b.task)}</div>
+        <div class="today-plan-meta">${esc(b.course)} · ${b.hours}h · ${esc(b.due_label)}</div>
+      </div>
+      <div class="today-plan-check" onclick="toggleTodayBlock('${bid}')">${isDone ? '✓' : ''}</div>
+    </div>`;
+  }).join('');
+
+  const allDone = blocks.every((_, i) => _schedDoneSet.has(`${today}-${i}`));
+  blocksEl.style.display = allDone ? 'none' : '';
+  doneEl.style.display   = allDone ? ''     : 'none';
+  card.style.display = '';
+}
+
+function toggleTodayBlock(bid) {
+  const el    = document.getElementById('tpb-' + bid);
+  if (!el) return;
+  const done  = el.classList.toggle('done');
+  const check = el.querySelector('.today-plan-check');
+  if (done) { _schedDoneSet.add(bid);    check.textContent = '✓'; }
+  else      { _schedDoneSet.delete(bid); check.textContent = ''; }
+  localStorage.setItem('sq_sched_done', JSON.stringify([..._schedDoneSet]));
+
+  // Refresh all-done state
+  const cached = _getCachedSchedule();
+  const today  = _localDateStr();
+  if (cached) {
+    const s = cached.schedule.find(d => d.date === today);
+    if (s) {
+      const allDone = s.blocks.every((_, i) => _schedDoneSet.has(`${today}-${i}`));
+      document.getElementById('today-plan-blocks').style.display = allDone ? 'none' : '';
+      document.getElementById('today-plan-all-done').style.display = allDone ? '' : 'none';
+    }
+  }
+}
+
 function openSchedule() {
   lockScroll();
   document.getElementById('sched-overlay').classList.add('show');
   track('schedule_opened');
-  if (allAssignments.length) generateSchedule();
+
+  // Load from cache first — no blank state on re-open
+  const cached = _getCachedSchedule();
+  if (cached) {
+    const summary = document.getElementById('sched-summary');
+    summary.textContent     = cached.summary;
+    summary.style.display   = 'block';
+    _renderSchedule(cached.schedule);
+    document.getElementById('sched-gen-btn').textContent = '✦ Regenerate';
+  } else if (allAssignments.length) {
+    generateSchedule();
+  }
 }
 
 function closeSchedule() {
@@ -14972,7 +15153,7 @@ async function generateSchedule() {
   const assignments = allAssignments.filter(a => !completedIds.has(a.id));
 
   if (!assignments.length) {
-    results.innerHTML = '<div class="sched-empty">Connect Canvas to generate a personalised schedule 🌱</div>';
+    results.innerHTML = '<div class="sched-empty">No pending assignments found — connect Canvas or add assignments manually to generate a schedule 🌱</div>';
     btn.disabled = false; btn.textContent = '✦ Generate';
     return;
   }
@@ -14993,6 +15174,8 @@ async function generateSchedule() {
     summary.textContent = data.summary;
     summary.style.display = 'block';
     _renderSchedule(data.schedule);
+    _saveScheduleCache(data.schedule, data.summary);
+    _renderTodayPlanCard();
     track('schedule_generated', { blocks: (data.summary.match(/^\d+/) || ['0'])[0] });
   } catch(e) {
     results.innerHTML = `<div class="sched-error">Couldn't generate schedule — make sure your Canvas connection is active.</div>`;
