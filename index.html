@@ -11178,11 +11178,13 @@ function syncTreeScreen() {
   renderDecorations();
   updateHeroDecorations();
 
-  // End-of-semester reminder (shows in May and December if user has any XP)
+  // End-of-semester reminder — show in April/May (spring finals) and Nov/Dec (fall finals)
+  // Showing a month early gives users time to actually use the feature before they graduate
   const _semRem = document.getElementById('wu-sem-reminder');
   if (_semRem) {
     const _mo = new Date().getMonth() + 1; // 1-12
-    _semRem.style.display = (xp > 0 && (_mo === 5 || _mo === 12)) ? '' : 'none';
+    const _nearFinalsMonth = [4, 5, 11, 12].includes(_mo);
+    _semRem.style.display = (xp > 0 && _nearFinalsMonth) ? '' : 'none';
   }
 
   // Stage cards: active / done / locked
@@ -13399,8 +13401,8 @@ function syncWrapUp() {
 
   // Pre-release stats row
   document.getElementById('wu-xp').textContent     = xp.toLocaleString();
-  document.getElementById('wu-hours').textContent  = hours > 0 ? hours + 'h ' + mins + 'm' : mins + 'm';
-  document.getElementById('wu-done').textContent   = done;
+  document.getElementById('wu-hours').textContent  = hours > 0 ? hours + 'h ' + (mins > 0 ? mins + 'm' : '') : (mins > 0 ? mins + 'm' : '—');
+  document.getElementById('wu-done').textContent   = done || '—';
   document.getElementById('wu-streak').textContent = streak;
 
   // Semester label
@@ -13423,10 +13425,14 @@ function syncWrapUp() {
   // ── Stats card fields ──
   document.getElementById('stats-sem').textContent        = sem;
   document.getElementById('stat-xp').textContent          = xp.toLocaleString();
-  document.getElementById('stat-hours').textContent       = hours > 0 ? hours + 'h ' + mins + 'm' : mins + 'm';
-  document.getElementById('stat-done').textContent        = done;
+  document.getElementById('stat-hours').textContent       = hours > 0 ? hours + 'h ' + (mins > 0 ? mins + 'm' : '') : (mins > 0 ? mins + 'm' : '—');
   document.getElementById('stat-streak').textContent      = streak + 'd';
-  document.getElementById('stat-sessions').textContent    = sessions;
+  document.getElementById('stat-sessions').textContent    = sessions || '—';
+  // Hide the Completed tile when there's no Canvas data — a bare "0" looks broken
+  const _doneBox = document.getElementById('stat-done');
+  const _doneParent = _doneBox && _doneBox.closest('.sbox');
+  if (_doneParent) _doneParent.style.display = done > 0 ? '' : 'none';
+  if (_doneBox) _doneBox.textContent = done;
   document.getElementById('stat-badge-stage-val').textContent = st.name;
 
   // Name banner — personalised + aurora for premium; generic tagline for free
