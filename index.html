@@ -4659,6 +4659,14 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 [data-theme="light"] .cal-upcoming-row:hover { background:var(--g-pale); }
 [data-theme="light"] .cal-up-month      { color:var(--mid); }
 
+/* Calendar — dark mode card */
+[data-theme="dark"] .cal-card          { background:#0E1F0E; border:1px solid rgba(76,161,48,0.1); }
+[data-theme="dark"] .cal-c0            { background:rgba(76,161,48,0.08); }
+[data-theme="dark"] .cal-date-num      { color:rgba(255,255,255,0.55); }
+[data-theme="dark"] .cal-c3 .cal-date-num,
+[data-theme="dark"] .cal-c4 .cal-date-num,
+[data-theme="dark"] .cal-c5 .cal-date-num { color:rgba(255,255,255,0.85); }
+
 /* Study screen labels */
 [data-theme="light"] .qpick-label       { color:var(--mid); }
 [data-theme="light"] .pomo-meta         { color:var(--mid); }
@@ -4703,6 +4711,11 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 /* GPA panel */
 [data-theme="light"] .gpa-panel         { border-top-color:var(--border); }
 [data-theme="light"] .gpa-row label     { color:var(--mid); }
+[data-theme="light"] .gpa-row-name      { color:var(--text); }
+[data-theme="light"] .gpa-row-pct       { color:var(--text); }
+[data-theme="light"] .gpa-credits-label { color:var(--mid); }
+[data-theme="light"] .gpa-credits-input { background:rgba(30,61,30,0.06); border-color:rgba(30,61,30,0.18); color:var(--text); }
+[data-theme="light"] .gpa-row           { border-bottom-color:rgba(30,61,30,0.08); }
 [data-theme="light"] .gpa-toggle-label  { color:var(--text); }
 [data-theme="light"] .gpa-toggle-arrow  { color:var(--mid); }
 /* What-if slider */
@@ -4824,6 +4837,12 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 [data-theme="dark"] .settings-input::placeholder { color:rgba(255,255,255,0.3); }
 [data-theme="dark"] .settings-divider  { border-top-color:rgba(76,161,48,0.1); }
 [data-theme="dark"] .settings-saved-msg { color:var(--g4); }
+.notif-pref-row { display:flex; align-items:center; gap:10px; cursor:pointer; font-size:13px; font-weight:normal; }
+.notif-pref-title { font-weight:700; color:var(--text); }
+.notif-pref-sub   { color:var(--light); font-size:11px; display:block; margin-top:1px; }
+[data-theme="dark"] .notif-pref-row  { color:rgba(255,255,255,0.85); }
+[data-theme="dark"] .notif-pref-title { color:rgba(255,255,255,0.85); }
+[data-theme="dark"] .notif-pref-sub   { color:rgba(255,255,255,0.4); }
 
 /* Streak break modal — dark mode: use deep forest background so white text is readable */
 [data-theme="dark"] #streak-break-sheet {
@@ -10358,6 +10377,8 @@ function renderDecorations() {
     } else if (!unlocked) {
       cellClass += ' deco-locked';
       badgeHTML = `<span class="deco-cell-badge dbadge-level">Lv ${d.unlockLevel}</span>`;
+      clickAttr = `onclick="showToast('🔒 Reach Level ${d.unlockLevel} to unlock ${d.name}', 3000)"`;
+
     } else if (isOn) {
       cellClass += ' deco-equipped';
       badgeHTML = `<span class="deco-cell-badge dbadge-on">ON</span>`;
@@ -15212,9 +15233,14 @@ function _renderSchedule(schedule) {
     }).join('');
     const dateObj = new Date(day.date + 'T12:00:00');
     const dateStr = dateObj.toLocaleDateString('en-US', { month:'short', day:'numeric' });
+    const todayStr = _localDateStr();
+    const tomorrowStr = (() => { const d = new Date(); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10); })();
+    const dayLabel = day.date === todayStr ? 'Today'
+                   : day.date === tomorrowStr ? 'Tomorrow'
+                   : dateObj.toLocaleDateString('en-US', { weekday:'long' });
     return `<div class="sched-day-section">
       <div class="sched-day-header">
-        <span class="sched-day-name">${esc(day.day)}</span>
+        <span class="sched-day-name">${esc(dayLabel)}</span>
         <span class="sched-day-date">${dateStr}</span>
         <span class="sched-day-total">${dayHrs.toFixed(1)} hrs</span>
       </div>
@@ -15823,18 +15849,18 @@ function _showPwaInstallBanner() {
     <div class="settings-field">
       <label>Push Notification Reminders</label>
       <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
-        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;font-weight:normal;color:var(--text)">
+        <label class="notif-pref-row">
           <input type="checkbox" id="set-notif-morning" style="accent-color:var(--g2);width:16px;height:16px;flex-shrink:0" onchange="saveNotifPrefs()">
           <span>
-            <span style="font-weight:700">Morning reminders</span>
-            <span style="color:var(--light);font-size:11px;display:block;margin-top:1px">Daily nudge to stay on track with assignments</span>
+            <span class="notif-pref-title">Morning reminders</span>
+            <span class="notif-pref-sub">Daily nudge to stay on track with assignments</span>
           </span>
         </label>
-        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;font-weight:normal;color:var(--text)">
+        <label class="notif-pref-row">
           <input type="checkbox" id="set-notif-evening" style="accent-color:var(--g2);width:16px;height:16px;flex-shrink:0" onchange="saveNotifPrefs()">
           <span>
-            <span style="font-weight:700">Evening streak reminders</span>
-            <span style="color:var(--light);font-size:11px;display:block;margin-top:1px">Alert when your streak is at risk at end of day</span>
+            <span class="notif-pref-title">Evening streak reminders</span>
+            <span class="notif-pref-sub">Alert when your streak is at risk at end of day</span>
           </span>
         </label>
       </div>
