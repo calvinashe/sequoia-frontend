@@ -7661,13 +7661,13 @@ function obRevealEnter() {
   }
   loadXPStreak(); updateDashTree(); syncTreeScreen();
   setTimeout(tourShow, 1200);
-  // First-time push notification nudge — after tour has had time to finish
+  // First-time push notification nudge — after 4 min so user has had time to explore first
   if (!localStorage.getItem('sq_notif_nudge_shown')) {
-    setTimeout(_nudgePushPermission, 55000);
+    setTimeout(_nudgePushPermission, 240000);
   }
-  // iOS install prompt — show after 2 minutes of real usage
+  // iOS install prompt — show after 5 minutes of real usage (first visit)
   if (_shouldShowIOSPrompt()) {
-    setTimeout(_showIOSInstallPrompt, 120000);
+    setTimeout(_showIOSInstallPrompt, 300000);
   }
   track('onboard_reveal_entered');
 }
@@ -8374,9 +8374,9 @@ window.addEventListener('DOMContentLoaded', () => {
     // Sync public leaderboard profile (fire-and-forget)
     setTimeout(() => _upsertPublicProfile(), 2000);
     initPushBtn(); // badge count is now fetched inside loadUserData (parallel query)
-    // iOS install prompt — show for returning users after 90s of usage
+    // iOS install prompt — show for returning users after 3 min of usage
     if (_shouldShowIOSPrompt()) {
-      setTimeout(_showIOSInstallPrompt, 90000);
+      setTimeout(_showIOSInstallPrompt, 180000);
     }
   });
 
@@ -16086,9 +16086,9 @@ let _pwaInstallEvent = null;
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   _pwaInstallEvent = e;
-  // Show install banner only after user has been in the app for 90s, once per install
+  // Show install banner after 5 min of usage — user should have had a full session first
   if (!localStorage.getItem('sq_pwa_install_shown') && !localStorage.getItem('sq_pwa_installed')) {
-    setTimeout(_showPwaInstallBanner, 90000);
+    setTimeout(_showPwaInstallBanner, 300000);
   }
 });
 window.addEventListener('appinstalled', () => {
