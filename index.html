@@ -7761,15 +7761,244 @@ function obRevealEnter() {
   }
   loadXPStreak(); updateDashTree(); syncTreeScreen();
   setTimeout(tourShow, 1200);
-  // First-time push notification nudge — after 4 min so user has had time to explore first
-  if (!localStorage.getItem('sq_notif_nudge_shown')) {
-    setTimeout(_nudgePushPermission, 240000);
-  }
-  // iOS install prompt — show after 5 minutes of real usage (first visit)
-  if (_shouldShowIOSPrompt()) {
-    setTimeout(_showIOSInstallPrompt, 300000);
-  }
+  // Notification prompt — show 25s after Canvas connects (user has seen their assignments)
+  setTimeout(_showConnectNotifPrompt, 25000);
   track('onboard_reveal_entered');
+}
+
+// ── Smart post-connect notification prompt ────────────────────────────────────
+// Shown 25s after Canvas first connects — user has seen their assignments & understands value.
+// Adapts to platform: direct enable on Android/desktop, Home Screen guide on iOS.
+function _showConnectNotifPrompt() {
+  // Don't show if already set up push or email, or if shown before
+  if (localStorage.getItem('sq_notif_prompt_shown')) return;
+  if (Notification?.permission === 'granted') return;
+  if (localStorage.getItem('sq_email_reminders_set')) return;
+  localStorage.setItem('sq_notif_prompt_shown', '1');
+
+  const isIOS = _isIOS();
+  const isStandalone = _isIOSStandalone();
+  const supportsPush = 'PushManager' in window;
+
+  // Build the right content for this platform
+  let iconHTML, titleText, bodyHTML, primaryBtn, secondaryBtn;
+
+  if (isIOS && !isStandalone) {
+    // iOS Safari in browser — must add to home screen first
+    iconHTML = '📲';
+    titleText = 'Get assignment reminders on iPhone';
+    bodyHTML = `
+      <div style="font-size:12px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:14px">
+        iPhone requires Sequoia on your home screen for notifications.
+        Takes <strong style="color:rgba(255,255,255,0.8)">5 seconds</strong> to set up.
+      </div>
+      <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);border-radius:12px;padding:12px 14px;margin-bottom:14px">
+        <div style="font-size:12px;color:rgba(255,255,255,0.75);line-height:2.1">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="background:rgba(76,161,48,0.25);color:var(--g3);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">1</span>
+            <span>Tap the <strong style="color:#fff">Share</strong> button
+            <svg style="vertical-align:middle;display:inline-block;margin-left:2px" width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M10 2v10M6 6l4-4 4 4" stroke="#4CA130" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><rect x="3" y="10" width="14" height="8" rx="2" stroke="#4CA130" stroke-width="1.5"/></svg>
+            at the bottom of Safari</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="background:rgba(76,161,48,0.25);color:var(--g3);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">2</span>
+            <span>Scroll down → tap <strong style="color:#fff">Add to Home Screen ＋</strong></span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="background:rgba(76,161,48,0.25);color:var(--g3);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">3</span>
+            <span>Open Sequoia from your home screen → allow notifications</span>
+          </div>
+        </div>
+      </div>`;
+    primaryBtn = `<button onclick="_connectNotifPromptPrimary()" style="flex:2;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,#2E6020,#4CA130);color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Got it — I'll do it now</button>`;
+    secondaryBtn = `<button onclick="_connectNotifEmailFallback()" style="flex:1;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:rgba(255,255,255,0.5);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Email me instead</button>`;
+
+  } else if (isIOS && isStandalone && !supportsPush) {
+    // Standalone but iOS < 16.4
+    iconHTML = '📲';
+    titleText = 'Notifications need iOS 16.4+';
+    bodyHTML = `<div style="font-size:12px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:14px">Your iPhone needs iOS 16.4 or later for web notifications. Get email reminders in the meantime — we'll tell you when to enable them.</div>`;
+    primaryBtn = `<button onclick="_connectNotifEmailFallback()" style="flex:2;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,#2E6020,#4CA130);color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Set up email reminders</button>`;
+    secondaryBtn = `<button onclick="_connectNotifDismiss()" style="flex:1;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:rgba(255,255,255,0.5);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Skip</button>`;
+
+  } else {
+    // Android / Desktop — direct push
+    iconHTML = '🔔';
+    titleText = 'Never miss a priority assignment';
+    bodyHTML = `<div style="font-size:12px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:14px">We'll send you a morning reminder with your <strong style="color:rgba(255,255,255,0.8)">highest-priority assignment</strong> every day — ranked by grade weight, not just due date.</div>`;
+    primaryBtn = `<button onclick="_connectNotifPromptPrimary()" style="flex:2;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,#2E6020,#4CA130);color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">🔔 Turn on notifications</button>`;
+    secondaryBtn = `<button onclick="_connectNotifEmailFallback()" style="flex:1;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:rgba(255,255,255,0.5);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Email instead</button>`;
+  }
+
+  const sheet = document.createElement('div');
+  sheet.id = 'connect-notif-sheet';
+  sheet.style.cssText = [
+    'position:fixed','bottom:0','left:0','right:0','z-index:9400',
+    'background:#0F2010','border-top:1px solid rgba(76,161,48,0.3)',
+    'border-radius:20px 20px 0 0',
+    'padding:20px 20px calc(28px + env(safe-area-inset-bottom,0px))',
+    'box-shadow:0 -8px 40px rgba(0,0,0,0.6)',
+    'animation:settingsSlideUp .35s cubic-bezier(0.34,1.4,0.64,1)',
+    'font-family:\'DM Sans\',sans-serif',
+  ].join(';');
+  sheet.innerHTML = `
+    <div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 16px"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <span style="font-size:28px;flex-shrink:0">${iconHTML}</span>
+      <div style="font-size:15px;font-weight:800;color:#FFFEF8;line-height:1.3;font-family:'Playfair Display',serif">${titleText}</div>
+    </div>
+    ${bodyHTML}
+    <div style="display:flex;gap:8px">${secondaryBtn}${primaryBtn}</div>
+    <button onclick="_connectNotifDismiss()" style="display:block;width:100%;margin-top:10px;background:none;border:none;color:rgba(255,255,255,0.25);font-family:inherit;font-size:11px;cursor:pointer;padding:4px">Skip for now</button>`;
+  document.body.appendChild(sheet);
+  track('connect_notif_prompt_shown', { platform: isIOS ? (isStandalone ? 'ios_standalone' : 'ios_browser') : 'other' });
+}
+
+function _connectNotifPromptPrimary() {
+  const sheet = document.getElementById('connect-notif-sheet');
+  if (sheet) sheet.remove();
+  const isIOS = _isIOS();
+  const isStandalone = _isIOSStandalone();
+  if (isIOS && !isStandalone) {
+    // iOS browser: remind them with a persistent toast and re-show install sheet
+    showToast('🌲 Tap Share → Add to Home Screen at the bottom of Safari', 6000);
+    track('connect_notif_ios_install_accepted');
+  } else {
+    enablePushNotifs();
+    track('connect_notif_push_accepted');
+  }
+}
+
+function _connectNotifDismiss() {
+  const sheet = document.getElementById('connect-notif-sheet');
+  if (sheet) {
+    sheet.style.transition = 'transform .3s ease, opacity .3s';
+    sheet.style.transform = 'translateY(100%)';
+    sheet.style.opacity = '0';
+    setTimeout(() => sheet.remove(), 320);
+  }
+  track('connect_notif_dismissed');
+}
+
+function _connectNotifEmailFallback() {
+  const sheet = document.getElementById('connect-notif-sheet');
+  if (sheet) sheet.remove();
+  _showEmailReminderSetup();
+}
+
+// ── Email reminder setup ──────────────────────────────────────────────────────
+function _showEmailReminderSetup() {
+  if (document.getElementById('email-reminder-sheet')) return;
+  const userEmail = currentUser?.email || '';
+
+  const sheet = document.createElement('div');
+  sheet.id = 'email-reminder-sheet';
+  sheet.style.cssText = [
+    'position:fixed','bottom:0','left:0','right:0','z-index:9400',
+    'background:#0F2010','border-top:1px solid rgba(76,161,48,0.3)',
+    'border-radius:20px 20px 0 0',
+    'padding:20px 20px calc(28px + env(safe-area-inset-bottom,0px))',
+    'box-shadow:0 -8px 40px rgba(0,0,0,0.6)',
+    'animation:settingsSlideUp .35s cubic-bezier(0.34,1.4,0.64,1)',
+    'font-family:\'DM Sans\',sans-serif',
+  ].join(';');
+  sheet.innerHTML = `
+    <div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 16px"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <span style="font-size:28px">📧</span>
+      <div style="font-size:15px;font-weight:800;color:#FFFEF8;font-family:'Playfair Display',serif">Daily email reminders</div>
+    </div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:16px">
+      Each morning we'll email you your <strong style="color:rgba(255,255,255,0.8)">top 3 priority assignments</strong> — ranked by grade weight so you always know what to work on first.
+    </div>
+
+    <div style="margin-bottom:12px">
+      <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px">Send reminders to</label>
+      <input id="email-reminder-addr" type="email" value="${userEmail}"
+        placeholder="your@email.com"
+        style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:11px 13px;color:#FFFEF8;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;-webkit-appearance:none">
+    </div>
+
+    <div style="margin-bottom:18px">
+      <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px">Send at</label>
+      <div style="display:flex;gap:8px">
+        ${['7 AM','8 AM','9 AM','10 AM'].map((t,i) =>
+          `<button class="email-time-opt${i===1?' selected':''}" data-time="${t}" onclick="_selectEmailTime(this)"
+            style="flex:1;padding:9px 4px;border-radius:10px;border:1px solid rgba(255,255,255,${i===1?'0.3':'0.1'});
+            background:rgba(76,161,48,${i===1?'0.15':'0.05'});color:${i===1?'var(--g3)':'rgba(255,255,255,0.45)'};
+            font-family:inherit;font-size:12px;font-weight:${i===1?'700':'500'};cursor:pointer">${t}</button>`
+        ).join('')}
+      </div>
+    </div>
+
+    <button onclick="_saveEmailReminders()" id="email-reminder-save-btn"
+      style="width:100%;padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,#2E6020,#4CA130);color:#fff;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px">
+      📧 Set up email reminders
+    </button>
+    <button onclick="_dismissEmailReminderSheet()"
+      style="display:block;width:100%;background:none;border:none;color:rgba(255,255,255,0.25);font-family:inherit;font-size:11px;cursor:pointer;padding:4px">
+      Skip for now
+    </button>`;
+  document.body.appendChild(sheet);
+  track('email_reminder_setup_shown');
+}
+
+function _selectEmailTime(btn) {
+  btn.closest('div').querySelectorAll('.email-time-opt').forEach(b => {
+    b.style.borderColor = 'rgba(255,255,255,0.1)';
+    b.style.background  = 'rgba(76,161,48,0.05)';
+    b.style.color       = 'rgba(255,255,255,0.45)';
+    b.style.fontWeight  = '500';
+  });
+  btn.style.borderColor = 'rgba(255,255,255,0.3)';
+  btn.style.background  = 'rgba(76,161,48,0.15)';
+  btn.style.color       = 'var(--g3)';
+  btn.style.fontWeight  = '700';
+}
+
+async function _saveEmailReminders() {
+  const btn = document.getElementById('email-reminder-save-btn');
+  const emailInput = document.getElementById('email-reminder-addr');
+  const timeBtn = document.querySelector('.email-time-opt[style*="0.3)"]') ||
+                  document.querySelector('.email-time-opt.selected');
+  const email = emailInput?.value?.trim();
+  const time  = timeBtn?.dataset?.time || '8 AM';
+
+  if (!email || !/\S+@\S+\.\S+/.test(email)) {
+    emailInput.style.borderColor = 'rgba(239,68,68,0.5)';
+    emailInput.focus();
+    return;
+  }
+  if (btn) { btn.textContent = 'Saving…'; btn.disabled = true; }
+
+  try {
+    // Save preference to Firestore on user doc
+    if (currentUser) {
+      await db.collection('users').doc(currentUser.uid).set(
+        { email_reminders: { enabled: true, email, time, set_at: new Date().toISOString() } },
+        { merge: true }
+      );
+    }
+    localStorage.setItem('sq_email_reminders_set', '1');
+    localStorage.setItem('sq_email_reminder_time', time);
+    _dismissEmailReminderSheet();
+    showToast(`✅ Daily reminders set — we'll email you at ${time}`);
+    addNotification('system', 'Email reminders set 📧', `We'll send your daily priority list at ${time} to ${email}.`);
+    track('email_reminders_saved', { time });
+  } catch(e) {
+    if (btn) { btn.textContent = '📧 Set up email reminders'; btn.disabled = false; }
+    showToast('Could not save — try again');
+  }
+}
+
+function _dismissEmailReminderSheet() {
+  const el = document.getElementById('email-reminder-sheet');
+  if (el) {
+    el.style.transition = 'transform .3s ease, opacity .3s';
+    el.style.transform = 'translateY(100%)';
+    el.style.opacity = '0';
+    setTimeout(() => el.remove(), 320);
+  }
 }
 
 function _nudgePushPermission() {
@@ -7805,8 +8034,7 @@ function _nudgePushPermission() {
 }
 function _nudgeAccept() {
   const el = document.getElementById('push-nudge'); if (el) el.remove();
-  // Redirect to the notifications panel where the user can enable properly
-  toggleNotifPanel();
+  enablePushNotifs();
 }
 function _nudgeDismiss() {
   const el = document.getElementById('push-nudge'); if (el) {
