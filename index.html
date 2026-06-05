@@ -5205,7 +5205,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
     <h2 style="font-size:clamp(26px,4vw,36px);font-weight:900;color:#FFFEF8;margin-bottom:8px;font-family:'Playfair Display',serif">Simple, student-friendly pricing</h2>
     <p style="font-size:15px;color:rgba(255,255,255,0.5);margin-bottom:40px">Start free. Upgrade when you're ready.</p>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:640px;margin:0 auto">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;max-width:640px;margin:0 auto">
 
       <!-- Free tier -->
       <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:28px 24px;text-align:left">
@@ -7109,6 +7109,23 @@ function track(event, props) {
 }
 // Fire on every app open
 track('app_opened', { referrer: document.referrer || 'direct' });
+
+// ── GLOBAL ERROR TRACKING ─────────────────────────────────
+// Catch uncaught JS errors and report to PostHog so we can see
+// what breaks during launch without needing users to report it.
+window.addEventListener('error', function(e) {
+  track('js_error', {
+    message: e.message,
+    filename: e.filename?.replace(location.origin, ''),
+    lineno: e.lineno,
+    colno: e.colno,
+  });
+});
+window.addEventListener('unhandledrejection', function(e) {
+  track('js_unhandled_rejection', {
+    reason: String(e.reason?.message || e.reason || 'unknown'),
+  });
+});
 
 // ── BACKEND WARMUP PING ───────────────────────────────────
 // Silently wake the Render dyno before the user needs it.
@@ -16658,7 +16675,7 @@ function _showPwaInstallBanner() {
       width:100%;padding:13px;border-radius:14px;border:1px solid rgba(255,255,255,0.12);
       background:transparent;color:rgba(255,255,255,0.45);font-family:'DM Sans',sans-serif;
       font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;margin-bottom:10px;">
-      Manage Subscription ↗
+      View Purchase & Receipts ↗
     </button>
 
     <hr class="settings-divider">
