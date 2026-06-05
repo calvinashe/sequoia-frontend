@@ -5126,7 +5126,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
       <button class="ld-btn-primary" onclick="showAuthFromLanding('signup')">Start Growing Free →</button>
       <button class="ld-btn-demo"    onclick="loadDemoFromLanding()">🌱 Try Demo First</button>
     </div>
-    <p class="ld-price-note">Free to start &nbsp;·&nbsp; Premium from $6.99/mo &nbsp;·&nbsp; Cancel anytime</p>
+    <p class="ld-price-note">Free to start &nbsp;·&nbsp; Premium $9.99/semester &nbsp;·&nbsp; One-time, no subscription</p>
   </section>
 
   <!-- Tree stage preview -->
@@ -5197,6 +5197,53 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
       <div class="ld-wrap-title">End of semester, your tree joins the forest</div>
       <div class="ld-wrap-sub">Get a shareable stats card — XP, study hours, streak, assignments. Start a new seedling for next semester.</div>
     </div>
+  </section>
+
+  <!-- Pricing section -->
+  <section style="padding:64px 24px 48px;max-width:860px;margin:0 auto;text-align:center">
+    <div style="font-size:13px;font-weight:700;color:var(--g3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Pricing</div>
+    <h2 style="font-size:clamp(26px,4vw,36px);font-weight:900;color:#FFFEF8;margin-bottom:8px;font-family:'Playfair Display',serif">Simple, student-friendly pricing</h2>
+    <p style="font-size:15px;color:rgba(255,255,255,0.5);margin-bottom:40px">Start free. Upgrade when you're ready.</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:640px;margin:0 auto">
+
+      <!-- Free tier -->
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:28px 24px;text-align:left">
+        <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px">Free</div>
+        <div style="font-size:40px;font-weight:900;color:#FFFEF8;font-family:'Playfair Display',serif;line-height:1;margin-bottom:4px">$0</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:24px">forever free</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.7)"><span style="color:var(--g3);flex-shrink:0">✓</span>Priority-sorted assignments</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.7)"><span style="color:var(--g3);flex-shrink:0">✓</span>XP &amp; tree growth</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.7)"><span style="color:var(--g3);flex-shrink:0">✓</span>Study timer (Pomodoro)</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.7)"><span style="color:var(--g3);flex-shrink:0">✓</span>3 tree decorations</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.7)"><span style="color:var(--g3);flex-shrink:0">✓</span>Canvas sync</div>
+        </div>
+        <button onclick="showAuthFromLanding('signup')" style="margin-top:24px;width:100%;padding:11px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:rgba(255,255,255,0.6);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Get started free</button>
+      </div>
+
+      <!-- Premium tier -->
+      <div style="background:rgba(76,161,48,0.08);border:2px solid rgba(76,161,48,0.4);border-radius:20px;padding:28px 24px;text-align:left;position:relative">
+        <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--g2);color:#fff;font-size:11px;font-weight:800;padding:4px 14px;border-radius:20px;white-space:nowrap;letter-spacing:.04em">✦ PREMIUM</div>
+        <div style="font-size:12px;font-weight:700;color:var(--g3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px">One Semester</div>
+        <div style="display:flex;align-items:flex-start;gap:2px">
+          <span style="font-size:18px;font-weight:800;color:rgba(255,255,255,0.6);margin-top:6px">$</span>
+          <span style="font-size:40px;font-weight:900;color:#FFFEF8;font-family:'Playfair Display',serif;line-height:1">9.99</span>
+        </div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:24px">one-time · no subscription</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--g3);flex-shrink:0">✓</span>Everything in Free</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--g3);flex-shrink:0">✓</span>GPA impact calculator</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--g3);flex-shrink:0">✓</span>AI study schedule</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--g3);flex-shrink:0">✓</span>All decorations &amp; cosmetics</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--g3);flex-shrink:0">✓</span>Extended XP cap (450/day)</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--g3);flex-shrink:0">✓</span>Streak Freeze</div>
+        </div>
+        <button onclick="showAuthFromLanding('signup')" style="margin-top:24px;width:100%;padding:11px;border-radius:12px;border:none;background:linear-gradient(135deg,#2E6020,#4CA130);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(76,161,48,0.35)">Start free, upgrade later</button>
+      </div>
+
+    </div>
+    <p style="margin-top:20px;font-size:12px;color:rgba(255,255,255,0.3)">🔒 Powered by Stripe · No hidden fees · Works at any Canvas school</p>
   </section>
 
   <!-- Final CTA -->
@@ -5288,7 +5335,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
     <button class="al-demo-link" onclick="loadDemoFromAuth()">🌱 Try Demo Mode — no account needed</button>
 
     <!-- Pricing (below demo so free value is shown before the price) -->
-    <p class="al-price">Free to start &nbsp;·&nbsp; <strong>Premium from $6.99/mo</strong> &nbsp;·&nbsp; Cancel anytime</p>
+    <p class="al-price">Free to start &nbsp;·&nbsp; <strong>Premium $9.99/semester</strong> &nbsp;·&nbsp; One-time, no subscription</p>
 
     <!-- Benefit chips -->
     <div class="al-benefits">
@@ -15273,22 +15320,11 @@ let _paywallContext = null;   // what triggered the paywall (for analytics later
 let _pwPlan = 'semester';     // selected plan: 'monthly' | 'semester' | 'annual'
 
 function selectPwPlan(plan) {
-  _pwPlan = plan;
-  ['monthly','semester','annual'].forEach(p => {
-    document.getElementById('pwp-' + p)?.classList.toggle('active', p === plan);
-  });
+  _pwPlan = 'semester'; // only one plan — always semester
   const btn  = document.getElementById('pw-cta-btn');
   const note = document.getElementById('pw-trial-note');
-  if (plan === 'monthly') {
-    if (btn)  btn.textContent  = 'Start Free Trial →';
-    if (note) note.textContent = '🎁 7-day free trial — no charge today';
-  } else if (plan === 'semester') {
-    if (btn)  btn.textContent  = 'Get Semester Access →';
-    if (note) note.textContent = '✅ One-time payment · charged today · no subscription, no renewal';
-  } else {
-    if (btn)  btn.textContent  = 'Get Annual Access →';
-    if (note) note.textContent = '✅ One-time payment · save $9 vs month-by-month';
-  }
+  if (btn)  btn.textContent  = 'Get Semester Access →';
+  if (note) note.textContent = '✅ One-time payment · no subscription · no renewal · charged today';
 }
 
 function setUserTier(tier) {
@@ -16016,7 +16052,7 @@ function openPaywall(context) { lockScroll();
       sub.textContent   = "Less than $10 to protect your GPA all semester.";
     } else {
       heading.innerHTML = "Unlock your full<br>grove potential.";
-      sub.textContent   = "Every decoration, every feature. Cancel anytime.";
+      sub.textContent   = "Every feature. Every decoration. One semester, one payment.";
     }
   }
   document.getElementById('paywall-overlay').classList.add('show');
@@ -16593,7 +16629,7 @@ function _showPwaInstallBanner() {
       background:linear-gradient(135deg,rgba(76,161,48,0.1),rgba(76,161,48,0.05));
       color:var(--g3);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;
       cursor:pointer;transition:all .2s;margin-bottom:10px;">
-      ✦ Upgrade to Premium — from $6.99/mo
+      ✦ Upgrade to Premium — $9.99/semester
     </button>
     <button id="settings-manage-btn" onclick="openCustomerPortal()" style="display:none;
       width:100%;padding:13px;border-radius:14px;border:1px solid rgba(255,255,255,0.12);
@@ -16984,32 +17020,18 @@ function _showPwaInstallBanner() {
   <div id="paywall-card">
     <div class="pw-pill">✦ Premium</div>
     <div class="pw-heading" id="pw-heading">Unlock your full<br>grove potential.</div>
-    <div class="pw-sub" id="pw-sub">Every feature. Every decoration. Cancel anytime.</div>
+    <div class="pw-sub" id="pw-sub">Every feature. Every decoration. One semester, one payment.</div>
 
-    <!-- Plan picker -->
-    <div class="pw-plans">
-      <div class="pw-plan" id="pwp-monthly" onclick="selectPwPlan('monthly')">
-        <div class="pw-plan-name">Monthly</div>
-        <div class="pw-plan-price">$6.99</div>
-        <div class="pw-plan-period">/month</div>
-        <div class="pw-plan-save"></div>
+    <!-- Single price display -->
+    <div style="text-align:center;padding:18px 0 14px">
+      <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">One Semester</div>
+      <div style="display:flex;align-items:flex-start;justify-content:center;gap:4px">
+        <span style="font-size:22px;font-weight:800;color:rgba(255,255,255,0.6);margin-top:8px">$</span>
+        <span style="font-size:56px;font-weight:900;color:#FFFEF8;line-height:1;letter-spacing:-2px;font-family:'Playfair Display',serif">9.99</span>
       </div>
-      <div class="pw-plan active" id="pwp-semester" onclick="selectPwPlan('semester')">
-        <div class="pw-plan-badge">Most Popular</div>
-        <div class="pw-plan-name">Semester</div>
-        <div class="pw-plan-price">$14.99</div>
-        <div class="pw-plan-period">/semester</div>
-        <div class="pw-plan-save">$2.50/mo</div>
-      </div>
-      <div class="pw-plan" id="pwp-annual" onclick="selectPwPlan('annual')">
-        <div class="pw-plan-badge badge-val">Best Value</div>
-        <div class="pw-plan-name">Annual</div>
-        <div class="pw-plan-price">$24.99</div>
-        <div class="pw-plan-period">/year</div>
-        <div class="pw-plan-save">Save $9</div>
-      </div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-top:4px">per semester</div>
     </div>
-    <div class="pw-trial-note" id="pw-trial-note">✅ One-time payment · charged today · no subscription, no renewal</div>
+    <div class="pw-trial-note" id="pw-trial-note">✅ One-time payment · no subscription · no renewal · charged today</div>
 
     <div class="pw-features">
       <div class="pw-feat"><div class="pw-feat-icon">📊</div><div class="pw-feat-text"><strong>GPA impact calculator</strong> — see exactly how each assignment moves your final grade</div></div>
@@ -17018,9 +17040,9 @@ function _showPwaInstallBanner() {
       <div class="pw-feat"><div class="pw-feat-icon">🎨</div><div class="pw-feat-text"><strong>All decorations &amp; cosmetics</strong> — seasonal drops, foxes, owls, crystals &amp; more</div></div>
       <div class="pw-feat"><div class="pw-feat-icon">📈</div><div class="pw-feat-text"><strong>Extended XP cap</strong> — 450 XP/day vs 300 on free, plus full study analytics</div></div>
     </div>
-    <button class="pw-cta" id="pw-cta-btn" onclick="startCheckout()">Start Free Trial →</button>
+    <button class="pw-cta" id="pw-cta-btn" onclick="startCheckout()">Get Semester Access →</button>
     <button class="pw-dismiss" onclick="closePaywall()">Maybe later</button>
-    <div class="pw-secure">🔒 Powered by Stripe · Cancel anytime · No hidden fees</div>
+    <div class="pw-secure">🔒 Powered by Stripe · One-time charge · No hidden fees</div>
   </div>
 </div>
 
