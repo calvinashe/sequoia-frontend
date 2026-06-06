@@ -5371,7 +5371,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
   <div id="auth-card" style="display:none"></div>
 </div>
 
-<div id="onboard">
+<div id="onboard" class="gone">
 
   <!-- Step 1: Hero -->
   <div class="ob-step active" id="obs0">
@@ -7165,6 +7165,10 @@ async function loadUserData(uid) {
     if (d.done_ids)                       localStorage.setItem('sq_done',           JSON.stringify(d.done_ids));
     if (d.canvas_token)                   localStorage.setItem('sq_token',          d.canvas_token);
     if (d.canvas_url)                     localStorage.setItem('sq_url',            d.canvas_url);
+    // Restore non-Canvas connection flags so new-device logins don't get
+    // sent through onboarding again for iCal or extension users.
+    if (d.ical_connected)                 localStorage.setItem('sq_ical_connected', '1');
+    if (d.ext_connected)                  localStorage.setItem('sq_ext_last_sync',  String(d.ext_connected));
     if (d.name)                           localStorage.setItem('sq_name',           d.name);
     if (d.pomo_sessions    !== undefined) localStorage.setItem('sq_pomo_sessions',  String(d.pomo_sessions));
     if (d.manual_assignments)             localStorage.setItem('sq_manual',         JSON.stringify(d.manual_assignments));
@@ -8314,6 +8318,8 @@ async function obConnectIcal() {
       const data = await res.json();
       if (data.ok) {
         localStorage.setItem('sq_ical_connected', '1');
+        // Persist flag to main Firestore doc so new-device logins skip onboarding
+        saveUserData({ ical_connected: true });
       }
     } else {
       // Not signed in — mark as connected locally and stash the URL so we can
@@ -8443,6 +8449,8 @@ async function _obExtPoll() {
       // Extension has synced — complete onboarding and load assignments.
       _obExtStopPoll();
       localStorage.setItem('sq_ext_last_sync', Date.now());
+      // Persist flag to main Firestore doc so new-device logins skip onboarding
+      saveUserData({ ext_connected: Date.now() });
       _checkExtPendingNudge && _checkExtPendingNudge();
       closeOnboard();
       showToast('🌲 Extension connected! Loading your assignments…', 3500);
@@ -8701,35 +8709,37 @@ window.addEventListener('DOMContentLoaded', () => {
     updateNavAccount(user, localStorage.getItem('sq_tier') || 'free');
 
     const token = localStorage.getItem('sq_token'); // may be null post-migration
-    const url   = localStorage.getItem('sq_url');   // persists as Canvas-connected indicator
+    const url   = localStorage.getItem('sq_url');   // Canvas API connection indicator
+    // iCal and extension connections don't set sq_url — check those too.
+    const _icalConn = localStorage.getItem('sq_ical_connected') === '1';
+    const _extConn  = !!localStorage.getItem('sq_ext_last_sync');
+    const isConnected = !!(url || _icalConn || _extConn);
 
-    // Use url (not token) as the indicator that Canvas is connected.
-    // After the secure migration, sq_token is removed but sq_url stays in localStorage.
-    // _canvasHeaders() uses Firebase auth when signed in, so token param can be empty.
-    if (url) {
-      closeOnboard();
+    // If any connection type is already cached locally, load the app immediately.
+    if (isConnected) {
       setGreeting(localStorage.getItem('sq_name') || user.displayName || '');
-      loadAssignments(token || '', url);
-      loadCourses(token || '', url);
+      if (url) { loadAssignments(token || '', url); loadCourses(token || '', url); }
+      // iCal and extension assignments are loaded by the deferred calls below (lines ~+70)
     }
-    // If no url in localStorage, DON'T show onboarding yet —
-    // wait for Firestore to load first so returning users on a new
-    // device / cleared storage don't get sent through onboarding again.
+    // Never show onboarding yet — wait for Firestore first so returning users
+    // on a new device / cleared storage don't get sent through setup again.
 
     // Sync Firestore data in background — updates UI when ready
     loadUserData(user.uid).then(userData => {
       if (userData) {
         updateNavAccount(user, userData.tier || 'free');
         loadXPStreak(); updateDashTree(); syncTreeScreen();
-        const u = localStorage.getItem('sq_url');
+        const u        = localStorage.getItem('sq_url');
+        const ical2    = localStorage.getItem('sq_ical_connected') === '1';
+        const ext2     = !!localStorage.getItem('sq_ext_last_sync');
+        const nowConn  = !!(u || ical2 || ext2);
         if (u && !url) {
-          // Returning user whose Canvas URL was restored from Firestore — skip onboarding
-          closeOnboard();
+          // Canvas URL restored from Firestore (new device / cleared cache)
           setGreeting(localStorage.getItem('sq_name') || user.displayName || '');
           loadAssignments('', u);
           loadCourses('', u);
-        } else if (!u && !url) {
-          // Genuinely new user — no Canvas URL anywhere, show onboarding
+        } else if (!nowConn && !isConnected) {
+          // Confirmed: no connection type found anywhere — show onboarding
           showOnboard(1);
           const _fname = user.displayName ? user.displayName.split(' ')[0] : '';
           if (_fname) {
