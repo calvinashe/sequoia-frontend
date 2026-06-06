@@ -13702,13 +13702,17 @@ function setAmbienceVol(val) {
 // crossOrigin is intentionally NOT set: lo-fi streams don't send CORS
 // headers, so adding it causes every request to fail a preflight check.
 
+// All streams are from SomaFM (somafm.com) — a non-profit, listener-supported
+// internet radio station that has been running since 2000. Zero ads, ever.
+// ice1/ice2 are mirrored servers; the fallback chain tries both before moving
+// to the next channel so a single server hiccup doesn't interrupt playback.
 const LOFI_STREAMS = [
-  'https://stream.zeno.fm/0r0xa792kwzuv',            // Lofi Hip Hop Radio
-  'https://stream.zeno.fm/f3wvbbqmdg8uv',            // Chill Beats
-  'https://stream.zeno.fm/yn65f92wbyzuv',            // Lofi Study
-  'https://streams.ilovemusic.de/iloveradio17.mp3',  // Chillhop (EU)
-  'https://stream.zeno.fm/6sp2ypetwzuv',             // Chill Vibes
-  'https://streams.ilovemusic.de/iloveradio6.mp3',   // Lo-fi Chillout (EU)
+  'https://ice2.somafm.com/groovesalad-256-mp3',  // Groove Salad — downtempo/ambient
+  'https://ice1.somafm.com/groovesalad-256-mp3',  // Groove Salad mirror
+  'https://ice2.somafm.com/lush-128-mp3',         // Lush — chilled indie/electronic
+  'https://ice1.somafm.com/lush-128-mp3',         // Lush mirror
+  'https://ice2.somafm.com/beatblender-128-mp3',  // Beat Blender — hip-hop/beats
+  'https://ice1.somafm.com/beatblender-128-mp3',  // Beat Blender mirror
 ];
 
 let _lofiStreamIdx  = 0;
