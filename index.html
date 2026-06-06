@@ -1783,7 +1783,7 @@ input.g-slider::-moz-range-thumb {
 /* ── AMBIENCE ─────────────────────────────────────────────── */
 .ambience-section { margin-top:28px; border-top:1px solid rgba(255,255,255,0.07); padding-top:22px; }
 .ambience-title { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:rgba(255,255,255,0.60); text-align:center; margin-bottom:14px; }
-.ambience-row { display:grid; grid-template-columns:repeat(5,1fr); gap:7px; }
+.ambience-row { display:grid; grid-template-columns:repeat(6,1fr); gap:7px; }
 .amb-btn {
   display:flex; flex-direction:column; align-items:center; gap:5px;
   padding:10px 4px; border-radius:14px;
@@ -6328,6 +6328,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
               <button class="amb-btn" id="amb-white" onclick="setAmbience('white')"><span class="amb-icon">☁️</span>Focus</button>
               <button class="amb-btn" id="amb-rain" onclick="setAmbience('rain')"><span class="amb-icon">🌧️</span>Rain</button>
               <button class="amb-btn" id="amb-forest" onclick="setAmbience('forest')"><span class="amb-icon">🌲</span>Forest</button>
+              <button class="amb-btn" id="amb-fire" onclick="setAmbience('fire')"><span class="amb-icon">🔥</span>Fire</button>
               <button class="amb-btn" id="amb-lofi" onclick="setAmbience('lofi')"><span class="amb-icon">🎵</span>Lo-fi</button>
             </div>
             <div class="amb-vol-row">
@@ -13651,12 +13652,45 @@ function _setAmbPlaying(type) {
   if (btn) { btn.classList.add('active', 'amb-playing'); }
 }
 
+// ── Shared audio element pool for file-based ambient sounds ──────────────────
+const _ambAudio = {}; // { rain: HTMLAudioElement, forest: HTMLAudioElement, ... }
+
+function _getAmbAudio(type, src) {
+  if (!_ambAudio[type]) {
+    const el = new Audio();
+    el.loop   = true;
+    el.src    = src;
+    el.preload = 'auto';
+    _ambAudio[type] = el;
+  }
+  return _ambAudio[type];
+}
+
+function _playAmbFile(type, src) {
+  const vol = (parseInt(document.getElementById('amb-vol')?.value || 40)) / 100;
+  const el  = _getAmbAudio(type, src);
+  el.volume = vol;
+  el.currentTime = 0;
+  el.play().then(() => _setAmbPlaying(type)).catch(() => {
+    // Autoplay blocked — retry on next click
+    document.addEventListener('click', function retry() {
+      el.play().then(() => _setAmbPlaying(type)).catch(() => {});
+      document.removeEventListener('click', retry);
+    }, { once: true });
+  });
+}
+
+function stopAmbFiles() {
+  Object.values(_ambAudio).forEach(el => { try { el.pause(); el.currentTime = 0; } catch(_){} });
+}
+
 function setAmbience(type) {
   // Toggle off if already active
   if (ambActive === type) { stopAmbience(); return; }
 
   stopAmbNodes();
-  stopLofi(); // Stop lo-fi stream if switching away
+  stopAmbFiles();
+  stopLofi();
 
   if (type === 'none') { stopAmbience(); return; }
   document.querySelectorAll('.amb-btn').forEach(b => b.classList.remove('active', 'amb-playing'));
@@ -13664,18 +13698,27 @@ function setAmbience(type) {
   document.getElementById('amb-' + type)?.classList.add('active');
   track('ambience_selected', { type });
 
-  // Lo-fi: HTML audio element with manual stream cycling
-  if (type === 'lofi') {
-    startLofi();
+  // ── Lo-fi: streaming radio ────────────────────────────────────────────────
+  if (type === 'lofi') { startLofi(); return; }
+
+  // ── Rain 🌧️ — real recording ─────────────────────────────────────────────
+  if (type === 'rain') {
+    _playAmbFile('rain', 'audio/rain.mp3');
     return;
   }
 
+  // ── Forest 🌲 — real recording ────────────────────────────────────────────
+  if (type === 'forest') {
+    _playAmbFile('forest', 'audio/forest.mp3');
+    return;
+  }
+
+  // ── Web Audio for synthesised sounds ─────────────────────────────────────
   const ctx = getAmbCtx();
   if (ctx.state === 'suspended') ctx.resume();
 
   if (type === 'white') {
-    // ☁️ FOCUS: warm brown noise → gentle lowpass
-    // Brown noise is naturally soft and non-distracting — ideal for deep work.
+    // ☁️ FOCUS: warm brown noise — steady, non-distracting masking sound
     const src  = createBrownNode(ctx);
     const lp   = ctx.createBiquadFilter();
     lp.type = 'lowpass'; lp.frequency.value = 3500; lp.Q.value = 0.7;
@@ -13683,66 +13726,52 @@ function setAmbience(type) {
     src.connect(lp); lp.connect(gain); gain.connect(ambMaster);
     ambSource = src;
 
-  } else if (type === 'rain') {
-    // 🌧️ RAIN: white noise → high-shelf hiss + low-shelf rumble + volume LFO (drops)
-    const src  = createWhiteNode(ctx);
+  } else if (type === 'fire') {
+    // 🔥 FIRE: layered synthesis — low rumble base + random crackle pops
+    // Layer 1: continuous low-frequency flame roar
+    const base  = createBrownNode(ctx);
+    const lp1   = ctx.createBiquadFilter();
+    lp1.type = 'lowpass'; lp1.frequency.value = 300; lp1.Q.value = 0.8;
+    const lp2   = ctx.createBiquadFilter();
+    lp2.type = 'lowpass'; lp2.frequency.value = 180;
+    const baseG = ctx.createGain(); baseG.gain.value = 1.1;
+    // Slow "breathing" LFO on the flame base
+    const flameLfo  = ctx.createOscillator();
+    const flameLfoG = ctx.createGain();
+    flameLfo.type = 'sine'; flameLfo.frequency.value = 0.18;
+    flameLfoG.gain.value = 0.3;
+    const flameBase = ctx.createGain(); flameBase.gain.value = 0.75;
+    flameLfo.connect(flameLfoG); flameLfoG.connect(flameBase.gain);
+    flameLfo.start(); ambLfo = flameLfo;
+    base.connect(lp1); lp1.connect(lp2); lp2.connect(baseG); baseG.connect(flameBase); flameBase.connect(ambMaster);
+    ambSource = base;
 
-    // High sizzle — rain on a surface
-    const hiShelf = ctx.createBiquadFilter();
-    hiShelf.type = 'highshelf'; hiShelf.frequency.value = 5000; hiShelf.gain.value = 6;
-    const hiGain  = ctx.createGain(); hiGain.gain.value = 0.35;
-
-    // Low rumble — distant thunder / pavement
-    const lp       = ctx.createBiquadFilter();
-    lp.type = 'lowpass'; lp.frequency.value = 350; lp.Q.value = 0.5;
-    const lowGain  = ctx.createGain(); lowGain.gain.value = 0.55;
-
-    // Slow amplitude LFO — mimics gusts and lulls in rain intensity
-    const lfo  = ctx.createOscillator();
-    const lfoG = ctx.createGain();
-    lfo.type = 'sine'; lfo.frequency.value = 0.12;  // ~8 s cycle
-    lfoG.gain.value = 0.15;
-    const lfoBase = ctx.createGain(); lfoBase.gain.value = 0.85;
-    lfo.connect(lfoG); lfoG.connect(lfoBase.gain);
-    lfo.start(); ambLfo = lfo;
-
-    src.connect(hiShelf); hiShelf.connect(hiGain); hiGain.connect(lfoBase); lfoBase.connect(ambMaster);
-    src.connect(lp);      lp.connect(lowGain);     lowGain.connect(ambMaster);
-    ambSource = src;
-    // Occasional thunder rumbles — first one comes 20–40 s in so it's a surprise
-    const firstThunder = 20000 + Math.random() * 20000;
-    const tt = setTimeout(() => { if (ambActive === 'rain') _scheduleThunder(ctx, ambMaster); }, firstThunder);
-    _ambTimers.push(tt);
-
-  } else if (type === 'forest') {
-    // 🌲 FOREST: white noise → mid bandpass with fast-enough LFO for audible wind gusts
-    const src = createWhiteNode(ctx);
-
-    // Mid-range wind body
-    const bp  = ctx.createBiquadFilter();
-    bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = 0.5;
-    const lp  = ctx.createBiquadFilter();
-    lp.type = 'lowpass'; lp.frequency.value = 3000;
-    const masterGain = ctx.createGain(); masterGain.gain.value = 0.75;
-
-    // LFO for wind gusts — fast enough to hear within first few seconds
-    const lfo  = ctx.createOscillator();
-    const lfoG = ctx.createGain();
-    lfo.type = 'sine'; lfo.frequency.value = 0.25;  // ~4 s gust cycle (was 12 s)
-    lfoG.gain.value = 350;                           // sweeps bp ±350 Hz
-    lfo.connect(lfoG); lfoG.connect(bp.frequency);
-    lfo.start(); ambLfo = lfo;
-
-    // Second layer: subtle high rustling (leaves)
-    const rustleHP  = ctx.createBiquadFilter();
-    rustleHP.type = 'highpass'; rustleHP.frequency.value = 4000;
-    const rustleGain = ctx.createGain(); rustleGain.gain.value = 0.18;
-
-    src.connect(bp); bp.connect(lp); lp.connect(masterGain); masterGain.connect(ambMaster);
-    src.connect(rustleHP); rustleHP.connect(rustleGain); rustleGain.connect(ambMaster);
-    ambSource = src;
-    // Bird chirps — start after a short settling pause so the wind is heard first
-    setTimeout(() => { if (ambActive === 'forest') _scheduleBirdChirp(ctx, ambMaster); }, 2000);
+    // Layer 2: random crackle/pop events
+    function _scheduleCrackle() {
+      if (ambActive !== 'fire') return;
+      const delay = 80 + Math.random() * 600; // very frequent — fire is busy
+      const t = setTimeout(() => {
+        if (ambActive !== 'fire') return;
+        const bufSize = Math.floor(ctx.sampleRate * (0.01 + Math.random() * 0.06));
+        const buf  = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < bufSize; i++) {
+          const env = Math.pow(1 - i / bufSize, 3); // sharp attack, fast decay
+          data[i] = (Math.random() * 2 - 1) * env;
+        }
+        const src2  = ctx.createBufferSource();
+        const bp    = ctx.createBiquadFilter();
+        const envG  = ctx.createGain();
+        src2.buffer = buf;
+        bp.type = 'bandpass'; bp.frequency.value = 1200 + Math.random() * 2400; bp.Q.value = 0.5;
+        envG.gain.value = 0.25 + Math.random() * 0.45;
+        src2.connect(bp); bp.connect(envG); envG.connect(ambMaster);
+        src2.start();
+        _scheduleCrackle();
+      }, delay);
+      _ambTimers.push(t);
+    }
+    setTimeout(_scheduleCrackle, 200);
   }
 
   // Web Audio started synchronously — mark playing immediately
@@ -13751,13 +13780,15 @@ function setAmbience(type) {
 
 function setAmbienceVol(val) {
   const v = val / 100;
-  // Web Audio nodes
+  // Web Audio nodes (Focus, Fire)
   if (ambMaster) {
     const ctx = getAmbCtx();
     if (ctx.state === 'suspended') ctx.resume();
     ambMaster.gain.setTargetAtTime(v, ctx.currentTime, 0.05);
   }
-  // Lo-fi audio element
+  // File-based audio elements (Rain, Forest)
+  Object.values(_ambAudio).forEach(el => { try { el.volume = v; } catch(_){} });
+  // Lo-fi stream
   const lofiEl = _lofiEl || document.getElementById('lofi-audio');
   if (lofiEl) lofiEl.volume = v;
 }
