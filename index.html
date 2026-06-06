@@ -1784,6 +1784,7 @@ input.g-slider::-moz-range-thumb {
 .ambience-section { margin-top:28px; border-top:1px solid rgba(255,255,255,0.07); padding-top:22px; }
 .ambience-title { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:rgba(255,255,255,0.60); text-align:center; margin-bottom:14px; }
 .ambience-row { display:grid; grid-template-columns:repeat(6,1fr); gap:7px; }
+@media (max-width:480px) { .ambience-row { grid-template-columns:repeat(3,1fr); } }
 .amb-btn {
   display:flex; flex-direction:column; align-items:center; gap:5px;
   padding:10px 4px; border-radius:14px;
@@ -6147,6 +6148,11 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         </button>
       </div>
 
+      <!-- 0-weight banner: shown when professor hasn't configured grade weights -->
+      <div id="zero-weight-banner" style="display:none;margin:0 0 10px;padding:12px 14px;border-radius:14px;background:rgba(255,193,7,0.12);border:1px solid rgba(255,193,7,0.3);font-size:13px;color:rgba(255,255,255,0.85);">
+        ⚖️ <strong>No grade weights detected.</strong> Your professor may not have set them up in Canvas yet — so everything shows equal priority. You can <button onclick="openWeightClassifier()" style="background:none;border:none;color:var(--g3);font-weight:700;cursor:pointer;padding:0;font-size:13px;text-decoration:underline">set weights manually</button> to unlock smarter sorting.
+      </div>
+
       <div class="assign-list" id="assign-list">
         <div class="loading-state"><span class="spin">🌿</span> Loading your Canvas assignments…</div>
       </div>
@@ -8825,6 +8831,29 @@ window.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('streak-break-overlay')?.style.display !== 'none') { closeStreakBreakModal(); return; }
     if (document.getElementById('paywall-overlay')?.classList.contains('show'))    { closePaywall(); return; }
   });
+
+  // ── Back button: keep PWA alive, close topmost modal instead of exiting ───
+  // Push an initial history entry so pressing back never immediately exits the app.
+  history.replaceState({ sq: true }, '');
+  window.addEventListener('popstate', () => {
+    // Re-push so there's always a state to go back to (trap the user in the app)
+    history.pushState({ sq: true }, '');
+    // Close the topmost open overlay if any
+    if (document.getElementById('paywall-overlay')?.classList.contains('show'))      { closePaywall(); return; }
+    if (document.getElementById('sched-overlay')?.classList.contains('show'))        { closeSchedule(); return; }
+    if (document.getElementById('levelup-overlay')?.classList.contains('show'))      { closeLevelUp(); return; }
+    if (document.getElementById('session-complete')?.classList.contains('show'))     { closeSessionComplete(); return; }
+    if (document.getElementById('add-assign-overlay')?.classList.contains('show'))   { closeAddAssign(); return; }
+    if (document.getElementById('assign-detail')?.classList.contains('show'))        { closeAssignDetail(); return; }
+    if (document.getElementById('settings-overlay')?.classList.contains('show'))     { closeSettings(); return; }
+    if (document.getElementById('deco-shop-modal')?.classList.contains('show'))      { closeDecoShopModal(); return; }
+    if (document.getElementById('syllabus-overlay')?.classList.contains('show'))     { closeSyllabusImport(); return; }
+    if (document.getElementById('wc-overlay')?.classList.contains('show'))           { closeWeightClassifier(); return; }
+    if (document.getElementById('courses-overlay')?.classList.contains('show'))      { closeCoursesModal(); return; }
+    if (document.getElementById('aipick-overlay')?.classList.contains('show'))       { closeAIPick(); return; }
+    if (document.getElementById('streak-break-overlay')?.style.display !== 'none')  { closeStreakBreakModal(); return; }
+    if (document.getElementById('notif-panel')?.classList.contains('open'))          { closeNotifPanel(); return; }
+  });
 });
 
 // Capitalise the first letter of every word (handles "calvin ashe" → "Calvin Ashe")
@@ -9077,6 +9106,17 @@ function _applyAssignments(raw) {
   renderAssignments(allAssignments);
   scheduleNotifications(allAssignments);
   buildQPick();
+  // 0-weight banner: if every Canvas assignment has 0% weight, the professor
+  // hasn't configured grade weights. Show a one-time tip.
+  _checkZeroWeightBanner(allAssignments);
+}
+
+function _checkZeroWeightBanner(assignments) {
+  const canvasAssigns = assignments.filter(a => !a._manual);
+  if (!canvasAssigns.length) return;
+  const allZero = canvasAssigns.every(a => !a.weight_pct || a.weight_pct < 1);
+  const banner = document.getElementById('zero-weight-banner');
+  if (banner) banner.style.display = allZero ? '' : 'none';
 }
 
 // ── CANVAS TOKEN SECURITY ────────────────────────────────────
@@ -13636,6 +13676,7 @@ function stopAmbNodes() {
 
 function stopAmbience() {
   stopAmbNodes();
+  stopAmbFiles();
   stopLofi();
   document.querySelectorAll('.amb-btn').forEach(b => b.classList.remove('active', 'amb-playing', 'amb-loading', 'amb-error'));
   // Reset lo-fi icon in case it was in loading/error state
@@ -14536,6 +14577,7 @@ function syncWrapUp() {
 }
 
 function startRegrow() {
+  if (isDemo) { showToast('🌱 Connect Canvas to unlock your real tree & regrow flow!', 3500); return; }
   if (treeFaded) return; treeFaded = true;
   const btn = document.getElementById('wu-release-btn');
   btn.disabled = true;
@@ -16171,7 +16213,12 @@ function toggleSchedBlock(el, id) {
   localStorage.setItem('sq_sched_done', JSON.stringify([..._schedDoneSet]));
 }
 
-function openPaywall(context) { lockScroll();
+function openPaywall(context) {
+  // Already premium — don't show paywall, just acknowledge
+  if ((localStorage.getItem('sq_tier') || 'free') === 'premium') {
+    showToast('✦ You\'re already on Premium!', 2500); return;
+  }
+  lockScroll();
   _paywallContext = context || 'generic';
   track('paywall_opened', { context: _paywallContext });
   // Reset to semester plan on every open

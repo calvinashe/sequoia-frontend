@@ -1,5 +1,5 @@
 // Sequoia Service Worker
-const CACHE = 'sequoia-v59';
+const CACHE = 'sequoia-v60';
 const BASE  = '';
 const SHELL = [
   '/',
@@ -8,6 +8,8 @@ const SHELL = [
   '/icon-192.png',
   '/icon-512.png',
   '/icon-maskable.png',
+  '/audio/rain.mp3',
+  '/audio/forest.mp3',
 ];
 
 // ── Install: cache app shell (fail-safe) ─────────────────
