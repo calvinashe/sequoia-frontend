@@ -160,7 +160,18 @@ body {
   padding:15px 24px; border-radius:14px; cursor:pointer; transition:all .15s; display:block;
 }
 .ld-btn-demo:hover { background:rgba(255,255,255,0.1); }
-.ld-price-note { font-size:12px; color:rgba(255,255,255,0.35); margin:0; }
+.ld-price-note { font-size:12px; color:rgba(255,255,255,0.35); margin:0 0 28px; }
+
+/* Trust bar */
+.ld-trust-bar {
+  display:flex; flex-wrap:wrap; justify-content:center; gap:10px 20px;
+  max-width:640px; margin:0 auto 0; padding:0 24px;
+}
+.ld-trust-item {
+  display:flex; align-items:center; gap:6px;
+  font-size:12.5px; color:rgba(255,255,255,0.45); font-weight:500;
+}
+.ld-trust-item span { font-size:14px; }
 
 /* Tree stages */
 .ld-stages {
@@ -182,7 +193,7 @@ body {
 
 /* Features grid */
 .ld-features {
-  display:grid; grid-template-columns:repeat(3,1fr); gap:16px;
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px;
   max-width:900px; margin:0 auto; padding:0 24px 64px;
 }
 .ld-feat {
@@ -224,6 +235,7 @@ body {
   .ld-stages   { gap:6px; }
   .ld-stage    { min-width:72px; padding:12px; }
   .ld-stage-tree { font-size:28px; }
+  .ld-trust-bar { gap:8px 16px; }
 }
 @media (max-width:440px) {
   .ld-features { grid-template-columns:1fr; }
@@ -5132,6 +5144,15 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
     <p class="ld-price-note">Free to start &nbsp;·&nbsp; Premium $9.99/semester &nbsp;·&nbsp; One-time, no subscription</p>
   </section>
 
+  <!-- Trust bar -->
+  <div class="ld-trust-bar">
+    <div class="ld-trust-item"><span>🏫</span> Works at any Canvas school</div>
+    <div class="ld-trust-item"><span>🔒</span> No institutional approval needed</div>
+    <div class="ld-trust-item"><span>⚡</span> Connect in 60 seconds</div>
+    <div class="ld-trust-item"><span>🌱</span> No credit card to start</div>
+    <div class="ld-trust-item"><span>🔌</span> Chrome extension available</div>
+  </div>
+
   <!-- Tree stage preview -->
   <div class="ld-stages">
     <div class="ld-stage">
@@ -5185,6 +5206,11 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
       <div class="ld-feat-icon">🔥</div>
       <div class="ld-feat-title">Streaks & XP rewards</div>
       <div class="ld-feat-body">Study daily, build your streak, unlock decorations. Purely positive — no punishment for off days, just momentum for on ones.</div>
+    </div>
+    <div class="ld-feat">
+      <div class="ld-feat-icon">🔌</div>
+      <div class="ld-feat-title">Chrome extension</div>
+      <div class="ld-feat-body">Install once and forget it. The extension syncs grade weights, submission status, and assignments automatically — no tokens, no steps.</div>
     </div>
     <div class="ld-feat">
       <div class="ld-feat-icon">👥</div>
@@ -5956,7 +5982,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
     <div id="today-plan-card" style="display:none" class="today-plan-card">
       <div class="today-plan-header">
         <div class="today-plan-title">📅 Today's Plan</div>
-        <button class="today-plan-edit" onclick="isPremium() ? openSchedule() : openPaywall('ai-schedule')">Edit →</button>
+        <button class="today-plan-edit" onclick="openSchedule()">Edit →</button>
       </div>
       <div id="today-plan-blocks"></div>
       <div id="today-plan-all-done" style="display:none" class="today-plan-done-msg">✅ All done for today!</div>
@@ -6345,7 +6371,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         </div>
         <!-- AI Schedule CTA -->
         <div style="padding:4px 0 16px">
-          <button onclick="isPremium() ? openSchedule() : openPaywall('ai-schedule')"
+          <button onclick="openSchedule()"
             style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
               background:linear-gradient(135deg,rgba(76,161,48,0.18),rgba(46,96,32,0.12));
               border:1px solid rgba(76,161,48,0.25);border-radius:14px;padding:14px 16px;
@@ -16077,9 +16103,18 @@ function toggleTodayBlock(bid) {
 }
 
 function openSchedule() {
+  // Free trial: 1 use; premium: unlimited
+  const tries = parseInt(localStorage.getItem('sq_sched_tries') || '0');
+  if (!isPremium() && tries >= 1) { openPaywall('ai-schedule'); return; }
+
   lockScroll();
   document.getElementById('sched-overlay').classList.add('show');
   track('schedule_opened');
+
+  // Show trial banner for free users on their first (and only free) use
+  const trialBanner = document.getElementById('sched-trial-banner');
+  if (trialBanner) trialBanner.style.display = isPremium() ? 'none' : '';
+  if (!isPremium()) localStorage.setItem('sq_sched_tries', '1');
 
   // Load from cache first — no blank state on re-open
   const cached = _getCachedSchedule();
@@ -17171,6 +17206,17 @@ function _showPwaInstallBanner() {
     <div class="sched-header">
       <span class="sched-title">📅 Weekly Schedule</span>
       <button class="sched-close" onclick="closeSchedule()">✕</button>
+    </div>
+
+    <!-- Free trial banner (shown to free users on their 1 trial) -->
+    <div id="sched-trial-banner" style="display:none;margin-bottom:14px;padding:10px 14px;
+      background:rgba(76,161,48,0.08);border:1px solid rgba(76,161,48,0.25);border-radius:12px;
+      font-size:12.5px;color:rgba(255,255,255,0.65);line-height:1.55;text-align:center">
+      ✦ <strong style="color:var(--g4)">1 free AI schedule trial.</strong>
+      Upgrade to Premium to regenerate anytime.
+      <button onclick="closeSchedule();openPaywall('ai-schedule-trial')"
+        style="margin-left:8px;background:none;border:none;color:var(--g3);font-size:12px;
+        font-weight:700;cursor:pointer;padding:0;font-family:inherit">Upgrade →</button>
     </div>
 
     <!-- Availability inputs -->
