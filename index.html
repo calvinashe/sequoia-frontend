@@ -173,6 +173,22 @@ body {
 }
 .ld-trust-item span { font-size:14px; }
 
+/* Origin / founder quote */
+.ld-origin {
+  max-width:620px; margin:40px auto 56px; padding:0 24px;
+}
+.ld-origin-inner {
+  border-left:3px solid rgba(76,161,48,0.4); padding:4px 0 4px 24px;
+}
+.ld-origin-quote {
+  font-size:clamp(15px,2vw,17px); color:rgba(255,255,254,0.75);
+  line-height:1.65; font-style:italic; margin-bottom:10px;
+}
+.ld-origin-attr {
+  font-size:12px; font-weight:700; color:rgba(76,161,48,0.7);
+  letter-spacing:.04em;
+}
+
 /* Tree stages */
 .ld-stages {
   display:flex; align-items:center; justify-content:center; gap:8px;
@@ -5134,12 +5150,12 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
 
   <!-- Hero -->
   <section class="ld-hero">
-    <div class="ld-eyebrow">For Canvas LMS students 🎓</div>
-    <h1 class="ld-headline">The study app<br>that grows as you do.</h1>
-    <p class="ld-sub">Connect Canvas. Get your assignments ranked by <em>grade weight × urgency</em> — not just due date. Earn XP and grow a real Sequoia tree every semester.</p>
+    <div class="ld-eyebrow">For Canvas students who don't know what to study next</div>
+    <h1 class="ld-headline">You're probably studying<br>the wrong things.</h1>
+    <p class="ld-sub">Canvas shows you due dates. It doesn't tell you that the quiz due tomorrow is worth <em>3%</em> while the paper due Friday is worth <em>35%</em>. Sequoia connects to Canvas and ranks everything by grade weight × urgency — so you always know what actually needs your attention.</p>
     <div class="ld-ctas">
-      <button class="ld-btn-primary" onclick="showAuthFromLanding('signup')">Start Growing Free →</button>
-      <button class="ld-btn-demo"    onclick="loadDemoFromLanding()">🌱 Try Demo First</button>
+      <button class="ld-btn-primary" onclick="loadDemoFromLanding()">🌱 See it in action (30 sec)</button>
+      <button class="ld-btn-demo"    onclick="showAuthFromLanding('signup')">Create free account →</button>
     </div>
     <p class="ld-price-note">Free to start &nbsp;·&nbsp; Premium $9.99/semester &nbsp;·&nbsp; One-time, no subscription</p>
   </section>
@@ -5151,6 +5167,14 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
     <div class="ld-trust-item"><span>⚡</span> Connect in 60 seconds</div>
     <div class="ld-trust-item"><span>🌱</span> No credit card to start</div>
     <div class="ld-trust-item"><span>🔌</span> Chrome extension available</div>
+  </div>
+
+  <!-- Origin story / social proof -->
+  <div class="ld-origin">
+    <div class="ld-origin-inner">
+      <div class="ld-origin-quote">"I failed a midterm my sophomore year because I spent the whole week on a quiz worth 3% of my grade. I built Sequoia so that never happens again."</div>
+      <div class="ld-origin-attr">— Calvin, founder &amp; CS student</div>
+    </div>
   </div>
 
   <!-- Tree stage preview -->
@@ -5184,38 +5208,38 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
   <section class="ld-features">
     <div class="ld-feat">
       <div class="ld-feat-icon">⚡</div>
-      <div class="ld-feat-title">Priority-ranked assignments</div>
-      <div class="ld-feat-body">Grade weight × urgency = what actually matters today. A 35% midterm due tomorrow beats a 5% quiz due Friday every time.</div>
+      <div class="ld-feat-title">Stop guessing what to do first</div>
+      <div class="ld-feat-body">Sequoia ranks every Canvas assignment by grade weight × urgency. A 35% midterm due in 3 days always beats a 5% quiz due tomorrow.</div>
     </div>
     <div class="ld-feat">
       <div class="ld-feat-icon">🌲</div>
-      <div class="ld-feat-title">Your tree grows with you</div>
-      <div class="ld-feat-body">Every study session and assignment earns XP. Your Sequoia grows visually all semester, then joins the ancient forest at wrap-up.</div>
+      <div class="ld-feat-title">Something to show for a whole semester</div>
+      <div class="ld-feat-body">Every session and submission earns XP. Your Sequoia tree grows all semester — then at wrap-up you get a shareable stats card and plant a new seedling.</div>
     </div>
     <div class="ld-feat">
       <div class="ld-feat-icon">🤖</div>
-      <div class="ld-feat-title">AI weekly schedule</div>
-      <div class="ld-feat-body">Tell it your free hours. It builds a personalized study plan ranked by grade impact — not alphabetical, not random.</div>
+      <div class="ld-feat-title">A plan that actually makes sense</div>
+      <div class="ld-feat-body">Tell it your free hours. The AI builds a weekly schedule sorted by grade impact — not alphabetical, not random, not by vibes.</div>
     </div>
     <div class="ld-feat">
       <div class="ld-feat-icon">📊</div>
-      <div class="ld-feat-title">Live grade forecasting</div>
-      <div class="ld-feat-body">"What if I score 85% on this exam?" See exactly how each upcoming assignment moves your final grade.</div>
+      <div class="ld-feat-title">"What do I need to pass this class?"</div>
+      <div class="ld-feat-body">Run the numbers before the exam. See exactly how each upcoming assignment moves your final grade if you score 70%, 85%, or 100%.</div>
     </div>
     <div class="ld-feat">
       <div class="ld-feat-icon">🔥</div>
-      <div class="ld-feat-title">Streaks & XP rewards</div>
-      <div class="ld-feat-body">Study daily, build your streak, unlock decorations. Purely positive — no punishment for off days, just momentum for on ones.</div>
+      <div class="ld-feat-title">Momentum without the guilt</div>
+      <div class="ld-feat-body">Streaks, XP, and decorations keep you coming back. Purely positive — no punishment for off days, just rewards for on ones.</div>
     </div>
     <div class="ld-feat">
       <div class="ld-feat-icon">🔌</div>
-      <div class="ld-feat-title">Chrome extension</div>
-      <div class="ld-feat-body">Install once and forget it. The extension syncs grade weights, submission status, and assignments automatically — no tokens, no steps.</div>
+      <div class="ld-feat-title">Connect once, forget about it</div>
+      <div class="ld-feat-body">The Chrome extension syncs your Canvas automatically in the background — grade weights, submission status, everything. No tokens, no setup steps.</div>
     </div>
     <div class="ld-feat">
       <div class="ld-feat-icon">👥</div>
-      <div class="ld-feat-title">Friend leaderboard</div>
-      <div class="ld-feat-body">Add classmates and compete on weekly XP. A friendly race to see who put in the most hours this week.</div>
+      <div class="ld-feat-title">More fun with friends</div>
+      <div class="ld-feat-body">Add classmates and race on the weekly XP leaderboard. Turns out competing with your roommate is surprisingly motivating.</div>
     </div>
   </section>
 
@@ -5277,10 +5301,10 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
 
   <!-- Final CTA -->
   <section class="ld-bottom">
-    <h2 class="ld-bottom-headline">Ready to start growing?</h2>
-    <p class="ld-bottom-sub">Free to start. Connect Canvas in under 60 seconds.</p>
-    <button class="ld-btn-primary ld-btn-lg" onclick="showAuthFromLanding('signup')">Create Free Account →</button>
-    <button class="ld-btn-demo" onclick="loadDemoFromLanding()" style="margin-top:12px">or try demo first</button>
+    <h2 class="ld-bottom-headline">See it before you commit.</h2>
+    <p class="ld-bottom-sub">Takes 30 seconds. No account, no Canvas token, no anything.</p>
+    <button class="ld-btn-primary ld-btn-lg" onclick="loadDemoFromLanding()">🌱 Try the Demo →</button>
+    <button class="ld-btn-demo" onclick="showAuthFromLanding('signup')" style="margin-top:12px">or create a free account</button>
     <p class="ld-bottom-legal">
       By signing up you agree to our
       <a href="terms.html" target="_blank">Terms</a> and
