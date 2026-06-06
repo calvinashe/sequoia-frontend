@@ -6203,6 +6203,21 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         ⚖️ <strong>No grade weights detected.</strong> Your professor may not have set them up in Canvas yet — so everything shows equal priority. You can <button onclick="openWeightClassifier()" style="background:none;border:none;color:var(--g3);font-weight:700;cursor:pointer;padding:0;font-size:13px;text-decoration:underline">set weights manually</button> to unlock smarter sorting.
       </div>
 
+      <!-- Demo insight callout — shown only in demo mode, explains the core differentiator -->
+      <div id="demo-insight" style="display:none;margin:0 0 10px;padding:13px 16px;
+        border-radius:14px;background:rgba(76,161,48,0.09);border:1px solid rgba(76,161,48,0.28);
+        font-size:13px;line-height:1.55;color:rgba(255,255,255,0.8)">
+        <div style="font-weight:800;color:var(--g4);margin-bottom:4px;font-size:13px">
+          👆 Notice what's ranked #1
+        </div>
+        The <strong style="color:#fff">Organic Chemistry Midterm</strong> is due in 2 days — but it beats your Bio lab due <em>today</em>.
+        That's because it's worth <strong style="color:var(--g4)">35%</strong> of your grade vs 18%.
+        Grade weight × urgency, not just due date.
+        <button onclick="document.getElementById('demo-insight').style.display='none'"
+          style="float:right;background:none;border:none;color:rgba(255,255,255,0.3);
+          font-size:15px;cursor:pointer;padding:0;margin-top:-2px;line-height:1">✕</button>
+      </div>
+
       <div class="assign-list" id="assign-list">
         <div class="loading-state"><span class="spin">🌿</span> Loading your Canvas assignments…</div>
       </div>
@@ -8303,6 +8318,8 @@ async function connectCanvas() {
       restore('sq_last_study', s.last);
       const demoBanner = document.getElementById('demo-banner');
       if (demoBanner) demoBanner.style.display = 'none';
+      const demoInsightEl = document.getElementById('demo-insight');
+      if (demoInsightEl) demoInsightEl.style.display = 'none';
       completedIds = new Set(JSON.parse(localStorage.getItem('sq_done') || '[]'));
       loadXPStreak(); updateDashTree(); syncTreeScreen();
     }
@@ -8642,8 +8659,11 @@ function loadDemo() {
   // show demo banner
   const demoBanner = document.getElementById('demo-banner');
   if (demoBanner) demoBanner.style.display = 'flex';
-  // show game loop tour for first-timers
-  setTimeout(tourShow, 1200);
+  // show demo insight callout — points visitor at the core differentiator
+  const demoInsight = document.getElementById('demo-insight');
+  if (demoInsight) demoInsight.style.display = '';
+  // show game loop tour after visitor has had time to read the insight callout
+  setTimeout(tourShow, 6000);
 }
 
 // ── INIT ────────────────────────────────────────────────
