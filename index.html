@@ -5567,7 +5567,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
       <div class="ob-method-grid" id="ob-method-grid">
 
         <!-- #1 Extension — best, recommended -->
-        <button class="ob-method-card ob-method-recommended" id="ob-mc-ext" onclick="obGo(4)">
+        <button class="ob-method-card ob-method-recommended" id="ob-mc-ext" onclick="track('onboard_method_chosen',{method:'extension'});obGo(4)">
           <div class="ob-method-left">
             <div class="ob-method-rank">#1</div>
             <div class="ob-method-icon">🔌</div>
@@ -5589,7 +5589,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         </button>
 
         <!-- #2 Token — full features, any browser -->
-        <button class="ob-method-card ob-method-alt" id="ob-mc-token" onclick="obGo(2)">
+        <button class="ob-method-card ob-method-alt" id="ob-mc-token" onclick="track('onboard_method_chosen',{method:'token'});obGo(2)">
           <div class="ob-method-left">
             <div class="ob-method-rank">#2</div>
             <div class="ob-method-icon">🔑</div>
@@ -5611,7 +5611,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         </button>
 
         <!-- #3 iCal — limited but universal -->
-        <button class="ob-method-card" onclick="obGo(3)">
+        <button class="ob-method-card" onclick="track('onboard_method_chosen',{method:'ical'});obGo(3)">
           <div class="ob-method-left">
             <div class="ob-method-rank">#3</div>
             <div class="ob-method-icon">🗓</div>
@@ -5633,7 +5633,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         </button>
 
         <!-- #4 Manual — no Canvas needed -->
-        <button class="ob-method-card" onclick="obGoManual()">
+        <button class="ob-method-card" onclick="track('onboard_method_chosen',{method:'manual'});obGoManual()">
           <div class="ob-method-left">
             <div class="ob-method-rank">#4</div>
             <div class="ob-method-icon">✏️</div>
@@ -7190,8 +7190,55 @@ const API = 'https://sequoia-backend-szss.onrender.com';
 function track(event, props) {
   try { window.posthog?.capture(event, props || {}); } catch (_) {}
 }
+
+// ── SEMESTER DETECTION ────────────────────────────────────
+// Returns the current semester phase based on approximate US academic calendar.
+// Used to surface the right XP cap, motivational messaging, and dashboard badge.
+function getSemesterPhase() {
+  const now   = new Date();
+  const m     = now.getMonth() + 1; // 1–12
+  const d     = now.getDate();
+
+  // Summer break (May 16 – Aug 24)
+  if ((m === 5 && d >= 16) || m === 6 || m === 7 || (m === 8 && d <= 24)) return 'summer';
+
+  // Winter break (Dec 17 – Jan 14)
+  if ((m === 12 && d >= 17) || (m === 1 && d <= 14)) return 'break';
+
+  // Fall semester phases (Aug 25 – Dec 16)
+  if ((m === 8 && d >= 25) || m === 9 || m === 10 || m === 11 || (m === 12 && d <= 16)) {
+    if ((m === 10 && d >= 1) && (m === 10 && d <= 25))  return 'fall-midterms';
+    if ((m === 11 && d >= 20) || (m === 12 && d <= 16)) return 'fall-finals';
+    return 'fall';
+  }
+
+  // Spring semester phases (Jan 15 – May 15)
+  if ((m === 1 && d >= 15) || m === 2 || m === 3 || m === 4 || (m === 5 && d <= 15)) {
+    if ((m === 2 && d >= 20) || (m === 3 && d <= 15))   return 'spring-midterms';
+    if ((m === 4 && d >= 25) || (m === 5 && d <= 15))   return 'spring-finals';
+    return 'spring';
+  }
+
+  return 'fall'; // safe default
+}
+
+const SEMESTER_PHASE = getSemesterPhase();
+
+// XP cap per phase (mirrors backend logic — displayed client-side for transparency)
+const PHASE_XP_CAP = {
+  'fall':           300, 'spring':           300, 'summer': 250, 'break': 200,
+  'fall-midterms':  450, 'spring-midterms':  450,
+  'fall-finals':    600, 'spring-finals':    600,
+};
+const PHASE_LABEL = {
+  'fall':           '🍂 Fall Semester',   'spring':           '🌸 Spring Semester',
+  'summer':         '☀️ Summer',           'break':            '❄️ Winter Break',
+  'fall-midterms':  '⚡ Fall Midterms',   'spring-midterms':  '⚡ Spring Midterms',
+  'fall-finals':    '🔥 Fall Finals',     'spring-finals':    '🔥 Spring Finals',
+};
+
 // Fire on every app open
-track('app_opened', { referrer: document.referrer || 'direct' });
+track('app_opened', { referrer: document.referrer || 'direct', semester_phase: SEMESTER_PHASE });
 
 // ── GLOBAL ERROR TRACKING ─────────────────────────────────
 // Catch uncaught JS errors and report to PostHog so we can see
@@ -7747,6 +7794,9 @@ function obGo(to) {
     if (scan) scan.style.display = '';
     if (card) card.classList.remove('show');
   }
+  // Track every step view for funnel analysis
+  const _stepNames = ['welcome','method_picker','token','ical','extension','reveal'];
+  track('onboard_step_viewed', { step: to, step_name: _stepNames[to] || String(to), from_step: prev });
 }
 function closeOnboard() {
   const ob = document.getElementById('onboard');
@@ -7754,6 +7804,8 @@ function closeOnboard() {
   ob.style.opacity = '0';
   ob.style.transform = 'translateY(16px)';
   setTimeout(() => { ob.classList.add('gone'); ob.style.cssText = ''; }, 460);
+  // Track completion — only fires when onboarding closes after a real connection (not demo)
+  if (!isDemo) track('onboard_completed', { step_reached: obCur, semester_phase: SEMESTER_PHASE });
 }
 function toggleTokenHelp(btn) {
   const steps = document.getElementById('ob-token-steps');
@@ -8946,6 +8998,22 @@ function setGreeting(name) {
   const g = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
   const firstName = name ? _toTitleCase(name.split(' ')[0]) : '';
   document.getElementById('dash-greeting-title').textContent = firstName ? `${g}, ${firstName} 👋` : `${g} 👋`;
+
+  // Semester phase sub-label
+  const subEl = document.getElementById('dash-greeting-sub');
+  if (subEl) {
+    const label = PHASE_LABEL[SEMESTER_PHASE] || '';
+    const isMidterms = SEMESTER_PHASE.includes('midterms');
+    const isFinals   = SEMESTER_PHASE.includes('finals');
+    const isSummer   = SEMESTER_PHASE === 'summer';
+    const isBreak    = SEMESTER_PHASE === 'break';
+    let sub = 'Here\'s what needs your attention today.';
+    if (isFinals)   sub = '🔥 Finals mode — XP cap raised to 600. Go.';
+    else if (isMidterms) sub = '⚡ Midterms week — XP cap raised to 450. Push through.';
+    else if (isSummer)   sub = 'Summer session — keep the streak alive.';
+    else if (isBreak)    sub = 'Winter break — rest up, seedling is waiting.';
+    subEl.textContent = label ? `${label}  ·  ${sub}` : sub;
+  }
 }
 
 // ── SCREEN NAV ──────────────────────────────────────────
