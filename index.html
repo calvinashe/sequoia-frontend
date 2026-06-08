@@ -5195,7 +5195,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
       <button class="ld-btn-primary" onclick="loadDemoFromLanding()">🌱 See it in action (30 sec)</button>
       <button class="ld-btn-demo"    onclick="showAuthFromLanding('signup')">Create free account →</button>
     </div>
-    <p class="ld-price-note">Free to start &nbsp;·&nbsp; Premium $9.99 for 6 months &nbsp;·&nbsp; One-time, no subscription</p>
+    <p class="ld-price-note">Free to start &nbsp;·&nbsp; Premium $9.99 / 6 months &nbsp;·&nbsp; Auto-renews, cancel anytime</p>
   </section>
 
   <!-- Trust bar -->
@@ -5349,7 +5349,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
           <span style="font-size:18px;font-weight:800;color:rgba(255,255,255,0.6);margin-top:6px">$</span>
           <span style="font-size:40px;font-weight:900;color:#FFFEF8;font-family:'Playfair Display',serif;line-height:1">9.99</span>
         </div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:24px">6 months · one-time · no subscription</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:24px">every 6 months · cancel anytime</div>
         <div style="display:flex;flex-direction:column;gap:10px">
           <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--g3);flex-shrink:0">✓</span>Everything in Free</div>
           <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--g3);flex-shrink:0">✓</span>GPA impact calculator</div>
@@ -5454,7 +5454,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
     <button class="al-demo-link" onclick="loadDemoFromAuth()">🌱 Try Demo Mode — no account needed</button>
 
     <!-- Pricing (below demo so free value is shown before the price) -->
-    <p class="al-price">Free to start &nbsp;·&nbsp; <strong>Premium $9.99 for 6 months</strong> &nbsp;·&nbsp; One-time, no subscription</p>
+    <p class="al-price">Free to start &nbsp;·&nbsp; <strong>Premium $9.99 / 6 months</strong> &nbsp;·&nbsp; Auto-renews, cancel anytime</p>
 
     <!-- Benefit chips -->
     <div class="al-benefits">
@@ -15762,7 +15762,7 @@ function selectPwPlan(plan) {
   const btn  = document.getElementById('pw-cta-btn');
   const note = document.getElementById('pw-trial-note');
   if (btn)  btn.textContent  = 'Get Semester Access →';
-  if (note) note.textContent = '✅ One-time payment · no subscription · no renewal · charged today';
+  if (note) note.textContent = '✅ $9.99 every 6 months · cancel anytime · charged today';
 }
 
 function setUserTier(tier) {
@@ -17492,9 +17492,9 @@ function _showPwaInstallBanner() {
         <span style="font-size:22px;font-weight:800;color:rgba(255,255,255,0.6);margin-top:8px">$</span>
         <span style="font-size:56px;font-weight:900;color:#FFFEF8;line-height:1;letter-spacing:-2px;font-family:'Playfair Display',serif">9.99</span>
       </div>
-      <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-top:4px">6 months · one-time</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-top:4px">every 6 months · cancel anytime</div>
     </div>
-    <div class="pw-trial-note" id="pw-trial-note">✅ One-time payment · no subscription · no renewal · charged today</div>
+    <div class="pw-trial-note" id="pw-trial-note">✅ $9.99 every 6 months · cancel anytime · charged today</div>
 
     <div class="pw-features">
       <div class="pw-feat"><div class="pw-feat-icon">📊</div><div class="pw-feat-text"><strong>GPA impact calculator</strong> — see exactly how each assignment moves your final grade</div></div>
@@ -17505,7 +17505,7 @@ function _showPwaInstallBanner() {
     </div>
     <button class="pw-cta" id="pw-cta-btn" onclick="startCheckout()">Get Semester Access →</button>
     <button class="pw-dismiss" onclick="closePaywall()">Maybe later</button>
-    <div class="pw-secure">🔒 Powered by Stripe · One-time charge · No hidden fees</div>
+    <div class="pw-secure">🔒 Powered by Stripe · Cancel anytime · No hidden fees</div>
   </div>
 </div>
 
