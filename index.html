@@ -1472,6 +1472,12 @@ body {
 .g-top { display:flex; align-items:center; gap:9px; margin-bottom:7px; }
 .g-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; margin-top:1px; }
 .g-name { font-size:13px; font-weight:700; color:rgba(255,255,255,0.82); flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.g-hide-btn {
+  flex-shrink:0; background:none; border:none; cursor:pointer;
+  color:rgba(255,255,255,0.2); font-size:14px; line-height:1;
+  padding:2px 4px; border-radius:4px; transition:color .15s;
+}
+.g-hide-btn:hover { color:rgba(255,100,80,0.7); }
 .g-letter { font-size:13px; font-weight:800; padding:3px 9px; border-radius:7px; flex-shrink:0; }
 .g-letter.la { background:rgba(76,161,48,0.2);  color:#7ED458; border:1px solid rgba(76,161,48,0.3); }
 .g-letter.lb { background:rgba(41,128,185,0.2); color:#7AB8E8; border:1px solid rgba(41,128,185,0.3); }
@@ -9625,14 +9631,43 @@ function updateGradeSlider(idx, val) {
   if (changeEl) { changeEl.textContent = diffStr; changeEl.style.color = diff >= 0 ? 'rgba(130,204,85,0.7)' : 'rgba(255,152,120,0.7)'; }
 }
 
+// ── HIDDEN COURSES ───────────────────────────────────────
+function _hiddenCourses() {
+  try { return new Set(JSON.parse(localStorage.getItem('sq_hidden_courses') || '[]')); }
+  catch(_) { return new Set(); }
+}
+function hideCourse(name) {
+  const hidden = _hiddenCourses();
+  hidden.add(name);
+  localStorage.setItem('sq_hidden_courses', JSON.stringify([...hidden]));
+  // Re-render grade panel with course removed
+  const filtered = (window._lastGrades || []).filter(c => !hidden.has(esc(c.name)));
+  renderGrades(filtered);
+  // Re-render assignment list so those courses' assignments disappear too
+  if (allAssignments.length) renderAssignments(allAssignments);
+  // Undo toast
+  showToast(`"${name}" hidden — <button onclick="unhideCourse(${JSON.stringify(name)})" style="background:none;border:none;color:var(--g3);font-weight:700;cursor:pointer;font-size:13px;padding:0;text-decoration:underline">Undo</button>`, 6000);
+}
+function unhideCourse(name) {
+  const hidden = _hiddenCourses();
+  hidden.delete(name);
+  localStorage.setItem('sq_hidden_courses', JSON.stringify([...hidden]));
+  renderGrades(window._lastGrades || []);
+  if (allAssignments.length) renderAssignments(allAssignments);
+  showToast(`"${name}" restored.`);
+}
+
 function renderGrades(grades) {
   window._lastGrades = grades;
   const el     = document.getElementById('grades-list');
   const footer = document.getElementById('grades-footer');
   const target = parseInt(document.getElementById('grades-target').value, 10);
-  if (!grades.length) { el.innerHTML = '<div class="loading-state" style="text-align:center;padding:24px 16px"><div style="font-size:28px;margin-bottom:8px">📚</div><div style="font-size:13px;color:var(--light)">No courses found.<br>Connect Canvas to see your grades.</div></div>'; return; }
+  // Filter out courses the student has hidden
+  const hidden  = _hiddenCourses();
+  const visible = grades.filter(c => !hidden.has(esc(c.name)));
+  if (!visible.length) { el.innerHTML = '<div class="loading-state" style="text-align:center;padding:24px 16px"><div style="font-size:28px;margin-bottom:8px">📚</div><div style="font-size:13px;color:var(--light)">No courses found.<br>Connect Canvas to see your grades.</div></div>'; return; }
   const weakSpots = getWeakSpots();
-  el.innerHTML = grades.slice(0, 7).map((c, idx) => {
+  el.innerHTML = visible.slice(0, 7).map((c, idx) => {
     const hasPct  = c.current !== null && c.current !== undefined;
     const pct     = hasPct ? Math.round(c.current) : null;
     const [letter, cls] = hasPct ? letterGrade(pct) : ['—', 'lc'];
@@ -9684,6 +9719,7 @@ function renderGrades(grades) {
         <span class="g-name">${esc(c.name)}</span>
         <span class="g-letter ${cls}">${letter}</span>
         ${hasPct ? `<span class="g-pct">${pct}%</span>` : ''}
+        <button class="g-hide-btn" onclick="hideCourse(${JSON.stringify(esc(c.name))})" title="Hide this course">✕</button>
       </div>
       ${hasPct ? `<div class="g-bar-track"><div class="g-bar-fill" style="width:0%;background:${barClr}" data-pct="${barPct}"></div></div>` : ''}
       ${forecastHtml}
@@ -9691,7 +9727,8 @@ function renderGrades(grades) {
       ${sliderHtml}
     </div>`;
   }).join('');
-  footer.textContent = `Target: ${target}%+ · ${grades.length} course${grades.length !== 1 ? 's' : ''}`;
+  const hiddenCount = grades.length - visible.length;
+  footer.textContent = `Target: ${target}%+ · ${visible.length} course${visible.length !== 1 ? 's' : ''}${hiddenCount ? ` · ${hiddenCount} hidden` : ''}`;
   // Animate grade bars after render
   requestAnimationFrame(() => requestAnimationFrame(() => {
     el.querySelectorAll('.g-bar-fill[data-pct]').forEach(bar => {
@@ -10038,10 +10075,13 @@ function filterAssign(f, btn) {
 function filteredList() {
   // Never show assignments more than 14 days past due — they can't be submitted anyway
   const notAncient = a => a.days_until === null || a.days_until > -14;
-  if (activeFilter === 'done')   return allAssignments.filter(a => completedIds.has(a.id));
-  if (activeFilter === 'today')  return allAssignments.filter(a => !completedIds.has(a.id) && notAncient(a) && a.days_until !== null && a.days_until <= 3);
-  if (activeFilter === 'high')   return allAssignments.filter(a => !completedIds.has(a.id) && notAncient(a) && a.weight_pct >= 20);
-  return allAssignments.filter(a => !completedIds.has(a.id) && notAncient(a));
+  // Never show assignments from courses the student has hidden
+  const hidden = _hiddenCourses();
+  const notHidden = a => !hidden.size || !hidden.has(esc(a.course || ''));
+  if (activeFilter === 'done')   return allAssignments.filter(a => completedIds.has(a.id) && notHidden(a));
+  if (activeFilter === 'today')  return allAssignments.filter(a => !completedIds.has(a.id) && notAncient(a) && notHidden(a) && a.days_until !== null && a.days_until <= 3);
+  if (activeFilter === 'high')   return allAssignments.filter(a => !completedIds.has(a.id) && notAncient(a) && notHidden(a) && a.weight_pct >= 20);
+  return allAssignments.filter(a => !completedIds.has(a.id) && notAncient(a) && notHidden(a));
 }
 
 // SVG icons matching the Sequoia icon pack style
