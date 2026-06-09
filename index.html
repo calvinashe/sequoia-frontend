@@ -3218,11 +3218,12 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 }
 .wu-stump-wrap.show { opacity:1; animation:stumpGlowPulse 3.2s ease-in-out infinite 2.5s; }
 .wu-seedling-wrap {
-  position:absolute; bottom:40px; left:50%; transform:translateX(-50%) scale(0);
+  position:absolute; bottom:78px; left:50%; transform:translateX(-50%) scale(0);
   z-index:3; opacity:0;
   transition:opacity 1.4s ease, transform 1.8s cubic-bezier(.15,.85,.2,1);
 }
 .wu-seedling-wrap.show { opacity:1; transform:translateX(-50%) scale(1); }
+.wu-seedling-wrap svg { display:block; filter:drop-shadow(0 0 10px rgba(100,220,60,0.55)); }
 .wu-orb {
   width:10px; height:10px; border-radius:50%;
   background:radial-gradient(circle, #A0F060 0%, #52A830 60%, transparent 100%);
@@ -7091,13 +7092,19 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         <ellipse cx="450" cy="420" rx="500" ry="34" fill="#204A14"/>
         <!-- Earth anchor under hero tree -->
         <ellipse cx="450" cy="415" rx="32" ry="8" fill="#0A0602" opacity="0.65"/>
-        <!-- Ghost stumps (previous semesters) -->
-        <rect x="260" y="398" width="22" height="18" rx="3" fill="#0E0A02" opacity="0.35"/>
-        <ellipse cx="271" cy="398" rx="9" ry="2.5" fill="#1A0E04" opacity="0.3"/>
-        <rect x="590" y="400" width="18" height="14" rx="3" fill="#0E0A02" opacity="0.3"/>
-        <ellipse cx="599" cy="400" rx="7" ry="2" fill="#1A0E04" opacity="0.25"/>
-        <rect x="350" y="404" width="14" height="10" rx="2" fill="#0E0A02" opacity="0.22"/>
-        <ellipse cx="357" cy="404" rx="5.5" ry="1.8" fill="#1A0E04" opacity="0.2"/>
+        <!-- Ghost stumps (previous semesters) — hidden by default; JS shows based on archive count -->
+        <g id="wu-ghost-1" display="none">
+          <rect x="260" y="398" width="22" height="18" rx="3" fill="#0E0A02" opacity="0.35"/>
+          <ellipse cx="271" cy="398" rx="9" ry="2.5" fill="#1A0E04" opacity="0.3"/>
+        </g>
+        <g id="wu-ghost-2" display="none">
+          <rect x="590" y="400" width="18" height="14" rx="3" fill="#0E0A02" opacity="0.3"/>
+          <ellipse cx="599" cy="400" rx="7" ry="2" fill="#1A0E04" opacity="0.25"/>
+        </g>
+        <g id="wu-ghost-3" display="none">
+          <rect x="350" y="404" width="14" height="10" rx="2" fill="#0E0A02" opacity="0.22"/>
+          <ellipse cx="357" cy="404" rx="5.5" ry="1.8" fill="#1A0E04" opacity="0.2"/>
+        </g>
       </svg>
       <!-- Effects layers -->
       <div class="wu-rays"     id="wu-rays"></div>
@@ -14804,6 +14811,13 @@ function syncWrapUp() {
   const _semName = _m <= 4 ? 'Spring' : _m <= 7 ? 'Summer' : 'Fall';
   const sem = _semName + ' ' + now.getFullYear();
 
+  // Ghost stumps — show based on how many semesters have been archived
+  const semCount = parseInt(localStorage.getItem('sq_semester_count') || '0');
+  for (let i = 1; i <= 3; i++) {
+    const g = document.getElementById('wu-ghost-' + i);
+    if (g) g.setAttribute('display', i <= semCount ? '' : 'none');
+  }
+
   // Inject scene tree
   const wrap   = document.getElementById('wu-tree');
   const srcSvg = document.querySelector('#stage-card-' + idx + ' svg');
@@ -15002,9 +15016,18 @@ function startRegrow() {
     setTimeout(() => { pre.style.display = 'none'; }, 1500);
   }, 5500);
 
-  // ── Phase 3 (6.2s): Green orb pulses where tree stood ──
+  // ── Phase 3 (6.2s): Real seedling sprouts from stump ──
   setTimeout(() => {
-    document.getElementById('wu-seedling').classList.add('show');
+    const seedWrap = document.getElementById('wu-seedling');
+    const seedSrc  = document.querySelector('#stage-card-0 .stage-tree-area svg');
+    if (seedWrap && seedSrc) {
+      const clone = seedSrc.cloneNode(true);
+      clone.setAttribute('width',  '58');
+      clone.setAttribute('height', '72');
+      seedWrap.innerHTML = '';   // replace orb with real tree art
+      seedWrap.appendChild(clone);
+    }
+    seedWrap.classList.add('show');
   }, 6200);
 
   // ── Phase 3 (6.8s): Done message (now outside wu-pre, so it's always visible) ──
@@ -15183,6 +15206,10 @@ function _resetSemesterState() {
   sessionEntries = []; renderSessionLog();
   completedIds = new Set(); totalCompleted = 0; treeFaded = false;
   saveUserData({ xp: 0, streak: 0, pomo_sessions: 0, done_ids: [], last_study: '', leaves: 0 });
+  // Increment semester archive counter so ghost stumps appear next time
+  const prevCount = parseInt(localStorage.getItem('sq_semester_count') || '0');
+  localStorage.setItem('sq_semester_count', Math.min(prevCount + 1, 3));
+
   loadXPStreak(); updateDashTree(); syncTreeScreen();
   document.getElementById('wu-tree').innerHTML = '';
   document.getElementById('wu-stump').classList.remove('show');
@@ -15205,10 +15232,54 @@ function _resetSemesterState() {
   pre.style.display = ''; pre.style.opacity = '1'; pre.style.pointerEvents = '';
   syncWrapUp();
   showScreen(0);
+  _showSeedlingWelcome();
 }
 
 // Keep old name as alias (used by other potential call sites)
 function newSemester() { openNewSemesterModal(); }
+
+// ── Brief full-screen welcome when a new semester begins ─────────────────
+function _showSeedlingWelcome() {
+  const el = document.createElement('div');
+  el.style.cssText = [
+    'position:fixed','inset:0','z-index:9998',
+    'background:rgba(4,9,10,0.95)',
+    'display:flex','flex-direction:column','align-items:center','justify-content:center','gap:20px',
+    'opacity:0','transition:opacity 0.55s ease','pointer-events:none',
+  ].join(';');
+
+  // Seedling illustration — clone from stage-card
+  const srcSVG = document.querySelector('#stage-card-0 .stage-tree-area svg');
+  if (srcSVG) {
+    const clone = srcSVG.cloneNode(true);
+    clone.setAttribute('width',  '100');
+    clone.setAttribute('height', '125');
+    clone.style.cssText = 'display:block;filter:drop-shadow(0 0 22px rgba(100,220,60,0.5));animation:treeSway 4s ease-in-out infinite;transform-origin:50% 96%';
+    el.appendChild(clone);
+  }
+
+  const title = document.createElement('div');
+  title.textContent = 'Your new seedling is planted.';
+  title.style.cssText = "font-family:'Playfair Display',serif;font-size:26px;font-weight:800;color:#fff;letter-spacing:-0.5px;text-align:center;text-shadow:0 2px 30px rgba(76,161,48,0.4)";
+
+  const sub = document.createElement('div');
+  sub.textContent = 'Grow it well. 🌲';
+  sub.style.cssText = 'font-size:14px;color:rgba(255,255,255,0.5);text-align:center;margin-top:-8px';
+
+  el.appendChild(title);
+  el.appendChild(sub);
+  document.body.appendChild(el);
+
+  // Fade in
+  requestAnimationFrame(() => requestAnimationFrame(() => el.style.opacity = '1'));
+
+  // Fade out after 2.6s
+  setTimeout(() => {
+    el.style.transition = 'opacity 1s ease';
+    el.style.opacity = '0';
+    setTimeout(() => el.remove(), 1100);
+  }, 2600);
+}
 
 // ── Generic info toast (reusable) ────────────────────────
 function _showInfoToast(msg, durationMs = 3200) {
