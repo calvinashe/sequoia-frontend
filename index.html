@@ -8974,7 +8974,8 @@ window.addEventListener('DOMContentLoaded', () => {
     // If any connection type is already cached locally, load the app immediately.
     if (isConnected) {
       setGreeting(localStorage.getItem('sq_name') || user.displayName || '');
-      if (url) { loadAssignments(token || '', url); loadCourses(token || '', url); }
+      if (url) loadAssignments(token || '', url);
+      loadCourses(token || '', url || ''); // always try — Firebase auth handles extension-only users gracefully
       // iCal and extension assignments are loaded by the deferred calls below (lines ~+70)
     }
     // Never show onboarding yet — wait for Firestore first so returning users
@@ -9550,7 +9551,13 @@ async function loadCourses(token, url) {
     const hdrs   = await _canvasHeaders(token, url);
     const res    = await fetch(`${API}/my-courses`, { headers: hdrs });
     const data   = await res.json();
-    if (!data.ok || data.error) { gradesList.innerHTML = `<div class="loading-state" style="font-size:12px;color:var(--red)">${esc(data.error || 'Could not load grades')}</div>`; return; }
+    if (!data.ok || data.error) {
+      const noCanvas = (data.error || '').toLowerCase().includes('canvas not connected');
+      gradesList.innerHTML = noCanvas
+        ? `<div class="loading-state" style="font-size:12px;opacity:0.75">Grade Intelligence needs a Canvas token — the extension syncs assignments but can't read grade weights.<br><br><button onclick="showOnboard(1)" style="background:none;border:none;color:var(--g3);font-weight:700;cursor:pointer;font-size:12px;padding:0;text-decoration:underline">Add Canvas token →</button></div>`
+        : `<div class="loading-state" style="font-size:12px;color:var(--red)">${esc(data.error || 'Could not load grades')}</div>`;
+      return;
+    }
     const newCourses = (data.courses || []).map(c => ({
       name:       c.name || 'Course',
       color:      c.color || '#4A9C28',
@@ -11074,10 +11081,11 @@ function updateStreak() {
 }
 
 function prevDay() {
-  // Use the same timezone-offset logic as _localDateStr() so streak comparisons are consistent
-  const offset = parseInt(localStorage.getItem('sq_tz_offset') || '0');
-  const d = new Date(Date.now() + offset * 60000 - 86400000);
-  return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0');
+  // Use the device's native local time — same as _localDateStr() — so streak
+  // comparisons are always consistent. setDate handles month rollovers and DST correctly.
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return _fmtDate(d);
 }
 
 function checkStreakRisk() {
