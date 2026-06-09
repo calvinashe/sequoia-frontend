@@ -15810,7 +15810,7 @@ function timeAgo(date) {
 
 // ── GAME LOOP TOUR ──────────────────────────────────────
 // ── PAYWALL ──────────────────────────────────────────────
-let _userTier = 'free';       // updated from Firestore on login
+let _userTier = localStorage.getItem('sq_tier') || 'free'; // seeded from cache, confirmed by Firestore on login
 let _paywallContext = null;   // what triggered the paywall (for analytics later)
 let _pwPlan = 'semester';     // selected plan: 'monthly' | 'semester' | 'annual'
 
@@ -15825,6 +15825,8 @@ function selectPwPlan(plan) {
 function setUserTier(tier) {
   const prev = _userTier;
   _userTier = tier || 'free';
+  // Keep localStorage in sync — openPaywall and first-render both read from here
+  localStorage.setItem('sq_tier', _userTier);
   if (prev !== 'premium' && _userTier === 'premium') {
     track('premium_activated');
   }
@@ -16553,7 +16555,7 @@ function toggleSchedBlock(el, id) {
 
 function openPaywall(context) {
   // Already premium — don't show paywall, just acknowledge
-  if ((localStorage.getItem('sq_tier') || 'free') === 'premium') {
+  if (isPremium()) {
     showToast('✦ You\'re already on Premium!', 2500); return;
   }
   lockScroll();
