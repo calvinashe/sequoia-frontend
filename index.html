@@ -1198,6 +1198,8 @@ body {
 .a-row:last-child { border-bottom:none; }
 .a-row:hover { background:rgba(76,161,48,0.10); }
 @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+/* Suppress row entrance animation on completion re-render so existing rows don't flash */
+.assign-list.no-row-anim .a-row { animation:none !important; }
 
 /* ── FREE TIER ASSIGNMENT GATE ───────────────────────────── */
 .assign-gate {
@@ -10340,7 +10342,12 @@ function toggleDone(id, el, title, weight) {
   }
   _checkCompletionMilestone(totalCompleted);
 
-  setTimeout(() => { renderAssignments(allAssignments); updateDashTree(); buildQPick(); }, 320);
+  setTimeout(() => {
+    const _list = document.getElementById('assign-list');
+    if (_list) _list.classList.add('no-row-anim');
+    renderAssignments(allAssignments); updateDashTree(); buildQPick();
+    requestAnimationFrame(() => requestAnimationFrame(() => _list && _list.classList.remove('no-row-anim')));
+  }, 320);
 }
 
 // ── XP & STREAK ─────────────────────────────────────────
