@@ -9171,6 +9171,7 @@ function showScreen(i) {
   _navTabBtns.forEach(b => b.classList.toggle('active', parseInt(b.dataset.screen) === i));
   _navBtabs.forEach(b   => b.classList.toggle('active', parseInt(b.dataset.screen) === i));
   window.scrollTo(0, 0);
+  if (i !== 5) _tearDownFrListeners(); // unsubscribe friend snapshots when leaving friends screen
   if (i === 1) renderCalendar(allAssignments);
   if (i === 2) _updateSchedBtnBadge();
   if (i === 3) { syncTreeScreen(); _sc2ForestEnter(); }
@@ -10278,10 +10279,11 @@ function toggleDone(id, el, title, weight) {
 
   if (xp > 0) showXPBurst(xp, el);
   grantXP(xp, {
-    source:        'assignment',
-    assignment_id: String(id),
-    grade_weight:  gradeW,
-    days_early:    daysEarly,
+    source:          'assignment',
+    assignment_id:   String(id),
+    grade_weight:    gradeW,
+    days_early:      daysEarly,
+    assignment_type: a?.group_name || '',
   });
   updateStreak(); totalCompleted++;
   _trackDaysEarly(daysEarly);
@@ -10824,6 +10826,7 @@ async function grantXP(amount, opts = {}) {
       body: JSON.stringify({
         source,
         assignment_id:    opts.assignment_id    || null,
+        assignment_type:  opts.assignment_type  || '',
         grade_weight:     opts.grade_weight     ?? 0.10,
         days_early:       opts.days_early       ?? 0,
         streak:           opts.streak           ?? getStreak(),
@@ -16105,7 +16108,42 @@ function _renderLeaderboard(profiles, myUid) {
   if (toggleEl) toggleEl.style.display = profiles.length > 1 ? 'flex' : 'none';
 }
 
-let _frLoaded = false;
+let _frLoaded      = false;
+let _frListeners   = [];   // onSnapshot unsubscribe functions
+let _frProfilesMap = {};   // uid → live profile data
+let _frMyUid       = null; // current user uid while friends screen is open
+
+function _tearDownFrListeners() {
+  _frListeners.forEach(u => { try { u(); } catch(_) {} });
+  _frListeners   = [];
+  _frProfilesMap = {};
+  _frLoaded      = false;
+}
+
+function _renderFrLive() {
+  const uid      = _frMyUid;
+  if (!uid) return;
+  const profiles = Object.values(_frProfilesMap);
+  if (!profiles.length) return;
+  _lbProfiles = profiles;
+
+  const podEl     = document.getElementById('fr-podium');
+  const titleEl   = document.getElementById('fr-lb-title');
+  const hdrEl     = document.getElementById('fr-lb-header');
+  const refreshBtn = document.getElementById('fr-refresh-btn');
+
+  if (profiles.length <= 1) {
+    if (podEl)   podEl.style.display  = 'none';
+    if (titleEl) titleEl.style.display = 'none';
+    if (refreshBtn) refreshBtn.style.display = 'none';
+    return;
+  }
+  if (podEl)      podEl.style.display   = 'flex';
+  if (titleEl)    titleEl.style.display = 'block';
+  if (hdrEl)      hdrEl.style.display   = 'flex';
+  if (refreshBtn) refreshBtn.style.display = 'block';
+  _renderLeaderboard(profiles, uid);
+}
 async function loadFriendsScreen() {
   if (!currentUser) {
     // Demo mode — populate with friendly placeholder state instead of leaving "Loading…"
@@ -16120,8 +16158,10 @@ async function loadFriendsScreen() {
       '🌲 Sign in to add friends<br>and compare your progress</div>';
     return;
   }
-  if (_frLoaded) return; // already loaded this session — avoid re-fetching on every nav
-  _frLoaded = true; // optimistically set; reset to false on network failure so user can retry
+  // Tear down any previous listeners before setting up fresh ones
+  _tearDownFrListeners();
+  _frLoaded  = true;
+  _frMyUid   = uid;
   const uid  = currentUser.uid;
   const code = _friendCode(uid);
 
@@ -16155,62 +16195,47 @@ async function loadFriendsScreen() {
   const titleEl  = document.getElementById('fr-lb-title');
   listEl.innerHTML = '<div class="fr-loading">Loading leaderboard…</div>';
 
-  let friends = [], profiles = [];
   try {
     const userDoc = await db.collection('users').doc(uid).get({ source: 'server' });
-    friends = (userDoc.exists ? userDoc.data().friends : null) || [];
+    const friends = (userDoc.exists ? userDoc.data().friends : null) || [];
 
-    // Build leaderboard: me + friends
+    _trackFriendCount(friends.filter(f => f !== uid).length);
+    checkBadges();
+
+    if (friends.filter(f => f !== uid).length === 0) {
+      // No friends yet — show empty state immediately, still listen for own profile
+      listEl.innerHTML = `<div class="fr-empty" style="padding:28px 16px 20px">
+        <div style="font-size:32px;margin-bottom:10px">🌲</div>
+        <div style="font-weight:800;font-size:14px;color:var(--text);margin-bottom:6px">No friends yet</div>
+        <div style="font-size:12px;line-height:1.5;margin-bottom:12px;color:var(--mid)">Your friend code is <strong style="color:var(--g4);letter-spacing:1px;font-family:'DM Mono',monospace">${code}</strong></div>
+        <button onclick="shareInviteLink()" class="fr-invite-btn" style="margin-top:0">🔗 Share Invite Link</button>
+        <button onclick="copyFriendCode()" style="background:none;border:none;color:var(--light);font-size:12px;cursor:pointer;margin-top:8px;padding:4px 0">or copy code</button>
+      </div>`;
+      podEl.style.display = 'none';
+      if (titleEl) titleEl.style.display = 'none';
+    }
+
+    // Set up real-time listeners for me + every friend
     const uids = [uid, ...friends.filter(f => f !== uid)];
-    await Promise.all(uids.map(async id => {
-      try {
-        const d = await db.collection('public_profiles').doc(id).get();
-        if (d.exists) profiles.push({ uid: id, ...d.data() });
-      } catch(e) {}
-    }));
+    uids.forEach(id => {
+      const unsub = db.collection('public_profiles').doc(id).onSnapshot(snap => {
+        if (snap.exists) {
+          _frProfilesMap[id] = { uid: id, ...snap.data() };
+        } else {
+          delete _frProfilesMap[id];
+        }
+        // Only re-render while the friends screen is actually visible
+        if (document.getElementById('sc-friends')?.classList.contains('active')) {
+          _renderFrLive();
+        }
+      }, err => console.warn('[Friends] snapshot error:', err));
+      _frListeners.push(unsub);
+    });
+
   } catch(e) {
-    _frLoaded = false; // allow retry on next nav
+    _tearDownFrListeners();
     listEl.innerHTML = `<div class="fr-empty">Couldn't load leaderboard — check your connection.</div>`;
-    return;
   }
-
-  // Track friend count for badge system
-  _trackFriendCount(friends.filter(f => f !== uid).length);
-  checkBadges();
-
-  // Sort by XP descending
-  profiles.sort((a, b) => (b.xp || 0) - (a.xp || 0));
-  const myRank = profiles.findIndex(p => p.uid === uid) + 1;
-  document.getElementById('fr-hero-rank').textContent =
-    profiles.length > 1 ? `#${myRank} of ${profiles.length} on leaderboard` : 'Add friends to see your rank';
-  // Show refresh button once leaderboard has data
-  const refreshBtn = document.getElementById('fr-refresh-btn');
-  if (refreshBtn) refreshBtn.style.display = profiles.length > 1 ? 'block' : 'none';
-
-  if (profiles.length <= 1) {
-    listEl.innerHTML = `<div class="fr-empty" style="padding:28px 16px 20px">
-      <div style="font-size:32px;margin-bottom:10px">🌲</div>
-      <div style="font-weight:800;font-size:14px;color:var(--text);margin-bottom:6px">No friends yet</div>
-      <div style="font-size:12px;line-height:1.5;margin-bottom:12px;color:var(--mid)">Your friend code is <strong style="color:var(--g4);letter-spacing:1px;font-family:'DM Mono',monospace">${code}</strong></div>
-      <button onclick="shareInviteLink()" class="fr-invite-btn" style="margin-top:0">🔗 Share Invite Link</button>
-      <button onclick="copyFriendCode()" style="background:none;border:none;color:var(--light);font-size:12px;cursor:pointer;margin-top:8px;padding:4px 0">or copy code</button>
-    </div>`;
-    podEl.style.display = 'none';
-    if (titleEl) titleEl.style.display = 'none';
-    return;
-  }
-
-  if (titleEl) titleEl.style.display = 'block';
-
-  // Cache profiles for tab-switching without refetch
-  _lbProfiles = profiles;
-  podEl.style.display = 'flex';
-
-  // Show the lb header row (toggle + refresh)
-  const hdrEl = document.getElementById('fr-lb-header');
-  if (hdrEl) hdrEl.style.display = 'flex';
-
-  _renderLeaderboard(profiles, uid);
 }
 
 async function addFriend() {
@@ -16252,7 +16277,7 @@ async function addFriend() {
     msg.textContent = `Added ${friendName}! 🌲`; msg.style.color = '#7ED458';
     input.value = '';
     track('friend_added');
-    setTimeout(() => { _frLoaded = false; loadFriendsScreen(); }, 800);
+    setTimeout(() => { _tearDownFrListeners(); loadFriendsScreen(); }, 800);
   } catch(e) {
     msg.textContent = 'Something went wrong. Try again.'; msg.style.color = '#FF9878';
   }
@@ -16260,7 +16285,7 @@ async function addFriend() {
 }
 
 function _refreshLeaderboard() {
-  _frLoaded = false;
+  _tearDownFrListeners();
   const listEl = document.getElementById('fr-list');
   if (listEl) listEl.innerHTML = '<div class="fr-loading">Refreshing leaderboard…</div>';
   loadFriendsScreen();
@@ -16308,7 +16333,7 @@ async function removeFriend(friendUid) {
       });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'Failed');
-      _frLoaded = false;
+      _tearDownFrListeners();
       showToast('Friend removed 🌿', 2000);
       loadFriendsScreen();
       track('friend_removed');
