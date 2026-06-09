@@ -15791,6 +15791,8 @@ function setUserTier(tier) {
   // Re-render anything tier-dependent
   renderDecorations();
   _syncPremiumUI();
+  // Re-render assignment list so the free-tier gate is removed for premium users
+  if (allAssignments.length) renderAssignments(allAssignments);
 }
 
 function isPremium() { return _userTier === 'premium'; }
