@@ -3218,12 +3218,13 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 }
 .wu-stump-wrap.show { opacity:1; animation:stumpGlowPulse 3.2s ease-in-out infinite 2.5s; }
 .wu-seedling-wrap {
-  position:absolute; bottom:78px; left:50%; transform:translateX(-50%) scale(0);
+  position:absolute; bottom:34px; left:50%; transform:translateX(-50%) scale(0);
   z-index:3; opacity:0;
-  transition:opacity 1.4s ease, transform 1.8s cubic-bezier(.15,.85,.2,1);
+  transition:opacity 1.2s ease, transform 1.6s cubic-bezier(.15,.85,.2,1);
+  transform-origin:50% 100%;
 }
 .wu-seedling-wrap.show { opacity:1; transform:translateX(-50%) scale(1); }
-.wu-seedling-wrap svg { display:block; filter:drop-shadow(0 0 10px rgba(100,220,60,0.55)); }
+.wu-seedling-wrap svg { display:block; filter:drop-shadow(0 0 10px rgba(100,220,60,0.45)); animation:wuTreeSway 5s ease-in-out infinite; transform-origin:50% 96%; }
 .wu-orb {
   width:10px; height:10px; border-radius:50%;
   background:radial-gradient(circle, #A0F060 0%, #52A830 60%, transparent 100%);
@@ -14902,149 +14903,64 @@ function syncWrapUp() {
 
 function startRegrow() {
   if (treeFaded) return; treeFaded = true;
-  const btn = document.getElementById('wu-release-btn');
+  const btn      = document.getElementById('wu-release-btn');
+  const treeWrap = document.getElementById('wu-tree');
   btn.disabled = true;
-
-  // Animate button text out gently
-  btn.style.transition = 'opacity 0.6s ease';
+  btn.style.transition = 'opacity 0.5s ease';
   btn.style.opacity = '0';
-  setTimeout(() => { btn.style.display = 'none'; }, 700);
+  setTimeout(() => { btn.style.display = 'none'; }, 550);
 
-  const particles = document.getElementById('wu-particles');
-  const rays      = document.getElementById('wu-rays');
-  const scene     = document.getElementById('wu-scene');
-  const treeWrap  = document.getElementById('wu-tree');
-
-  // ── Phase 1 (0.6s): Tree gets a last breath — soft glow pulses ──
+  // ── Phase 1 (0.4s): Gentle last glow ──
   setTimeout(() => {
-    treeWrap.style.transition = 'filter 0.8s ease';
-    treeWrap.style.filter = 'drop-shadow(0 0 18px rgba(100,200,60,0.75)) brightness(1.15)';
-  }, 600);
+    treeWrap.style.transition = 'filter 0.9s ease';
+    treeWrap.style.filter = 'drop-shadow(0 0 16px rgba(100,200,60,0.6)) brightness(1.1)';
+  }, 400);
 
-  // ── Phase 2 (1.4s): Cinematic light rays fan out ──
+  // ── Phase 2 (1.4s): Tree fades away ──
   setTimeout(() => {
-    const rayAngles = [-55,-40,-28,-18,-10,-3,3,10,18,28,40,55];
-    rayAngles.forEach((angle, i) => {
-      const ray = document.createElement('div');
-      ray.className = 'light-ray';
-      const w = 5 + Math.random() * 12;
-      const h = 160 + Math.random() * 180;
-      const warm = i % 3 === 1;
-      ray.style.cssText = [
-        `width:${w}px`, `height:${h}px`,
-        `transform:translateX(-50%) rotate(${angle}deg)`,
-        warm
-          ? 'background:linear-gradient(to top,rgba(200,240,110,.5),rgba(160,220,80,.18),transparent)'
-          : 'background:linear-gradient(to top,rgba(110,200,70,.45),rgba(80,170,50,.1),transparent)',
-        `animation:rayPulse ${3.8 + Math.random() * 1.2}s ease-out ${i * 0.08}s both`,
-      ].join(';');
-      rays.appendChild(ray);
-    });
+    treeWrap.style.transition = 'opacity 2.2s ease, filter 1.2s ease';
+    treeWrap.style.filter = 'brightness(1)';
+    requestAnimationFrame(() => requestAnimationFrame(() => treeWrap.classList.add('fading')));
   }, 1400);
 
-  // ── Phase 2 (1.8s): Forest horizon awakens ──
-  setTimeout(() => {
-    const glow = document.createElement('div');
-    glow.id = 'wu-forest-glow';
-    glow.style.cssText = [
-      'background:radial-gradient(ellipse 90% 120% at 50% 100%,rgba(82,168,48,0.26) 0%,rgba(46,96,32,0.14) 45%,transparent 70%)',
-      'opacity:0', 'transition:opacity 4s ease',
-    ].join(';');
-    scene.appendChild(glow);
-    requestAnimationFrame(() => requestAnimationFrame(() => glow.style.opacity = '1'));
-  }, 1800);
-
-  // ── Phase 2 (2s): Leaves storm upward — slow, beautiful ──
-  setTimeout(() => {
-    const leafPath  = 'M0,-9 C5,-7 7,0 0,9 C-7,0 -5,-7 0,-9Z';
-    const sparkPath = 'M0,-5 L1,-1 L5,0 L1,1 L0,5 L-1,1 L-5,0 L-1,-1Z';
-    const leafColors = ['#5AAF35','#4A9C28','#6BC23E','#3D8B1E','#82CC55','#72C044','#347028','#9AE060','#52A838'];
-    for (let i = 0; i < 65; i++) {
-      setTimeout(() => {
-        const isSpark = i % 6 === 0;
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        const sz = 8 + Math.random() * 12;
-        svg.setAttribute('width', sz); svg.setAttribute('height', sz);
-        svg.setAttribute('viewBox', '-8 -8 16 16');
-        svg.style.cssText = 'position:absolute;pointer-events:none;overflow:visible';
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', isSpark ? sparkPath : leafPath);
-        path.setAttribute('fill', isSpark ? '#CCFF80' : leafColors[i % leafColors.length]);
-        path.setAttribute('opacity', isSpark ? '0.95' : '0.88');
-        svg.appendChild(path);
-        const dx  = (Math.random() - 0.5) * 320;
-        const dy  = -(100 + Math.random() * 260);
-        const dr  = (Math.random() - 0.5) * 1200;
-        const dur = 4 + Math.random() * 3;
-        svg.className = 'leaf-p';
-        svg.style.left   = (12 + Math.random() * 76) + '%';
-        svg.style.bottom = (22 + Math.random() * 48) + '%';
-        svg.style.setProperty('--dx', dx + 'px');
-        svg.style.setProperty('--dy', dy + 'px');
-        svg.style.setProperty('--dr', dr + 'deg');
-        svg.style.animation = `leafDrift ${dur}s ease-out ${Math.random() * 2}s forwards`;
-        particles.appendChild(svg);
-      }, i * 42);
-    }
-  }, 2000);
-
-  // ── Phase 2 (2.4s): Tree brightens before fade ──
-  setTimeout(() => {
-    treeWrap.style.filter = 'drop-shadow(0 0 28px rgba(120,220,70,0.9)) brightness(1.3)';
-  }, 2400);
-
-  // ── Phase 2 (2.8s): Tree fades in place ──
-  setTimeout(() => {
-    treeWrap.style.filter = 'drop-shadow(0 0 4px rgba(100,200,60,0.2)) brightness(1)';
-    // Reset inline transition so the CSS opacity:4s kicks in (phase 1 had overridden it to filter-only)
-    treeWrap.style.transition = 'opacity 4s ease, filter 2s ease';
-    requestAnimationFrame(() => requestAnimationFrame(() => treeWrap.classList.add('fading')));
-  }, 2800);
-
-  // ── Phase 3 (5s): Stump materialises as tree fades ──
-  setTimeout(() => {
-    document.getElementById('wu-stump').classList.add('show');
-  }, 5000);
-
-  // ── Phase 3 (5.5s): Pre-section fades then collapses so stats card sits higher ──
+  // ── Phase 3 (2.4s): Pre-section fades out ──
   setTimeout(() => {
     const pre = document.getElementById('wu-pre');
-    pre.style.transition = 'opacity 1.4s ease';
+    pre.style.transition = 'opacity 1s ease';
     pre.style.opacity = '0';
     pre.style.pointerEvents = 'none';
-    setTimeout(() => { pre.style.display = 'none'; }, 1500);
-  }, 5500);
+    setTimeout(() => { pre.style.display = 'none'; }, 1050);
+  }, 2400);
 
-  // ── Phase 3 (6.2s): Real seedling sprouts from stump ──
+  // ── Phase 4 (3.6s): New seedling grows up from the ground ──
   setTimeout(() => {
     const seedWrap = document.getElementById('wu-seedling');
     const seedSrc  = document.querySelector('#stage-card-0 .stage-tree-area svg');
     if (seedWrap && seedSrc) {
       const clone = seedSrc.cloneNode(true);
-      clone.setAttribute('width',  '58');
-      clone.setAttribute('height', '72');
-      seedWrap.innerHTML = '';   // replace orb with real tree art
+      clone.setAttribute('width',  '62');
+      clone.setAttribute('height', '78');
+      seedWrap.innerHTML = '';
       seedWrap.appendChild(clone);
     }
     seedWrap.classList.add('show');
-  }, 6200);
+  }, 3600);
 
-  // ── Phase 3 (6.8s): Done message (now outside wu-pre, so it's always visible) ──
+  // ── Phase 4 (4.4s): Done message ──
   setTimeout(() => {
     document.getElementById('wu-done-msg').classList.add('show');
-  }, 6800);
+  }, 4400);
 
-  // ── Phase 4 (8s): Stats card slides up ──
+  // ── Phase 5 (5.8s): Stats card slides up ──
   setTimeout(() => {
     syncWrapUp();
     _initShareBtn();
-    // Reset referral nudge for a fresh run
     const nudge = document.getElementById('wu-referral-nudge');
     if (nudge) nudge.style.display = 'none';
     const post = document.getElementById('wu-post');
     post.style.display = 'block';
     requestAnimationFrame(() => requestAnimationFrame(() => post.classList.add('show')));
-  }, 8000);
+  }, 5800);
 }
 
 // ── SEMESTER ARCHIVE ─────────────────────────────────────
