@@ -8703,6 +8703,9 @@ async function _obExtPoll() {
       _checkExtPendingNudge && _checkExtPendingNudge();
       closeOnboard();
       showToast('🌲 Extension connected! Loading your assignments…', 3500);
+      // Trigger the post-connect notification prompt (normally fires from obRevealEntered,
+      // but extension users bypass that step via polling — fire it here instead).
+      setTimeout(_showConnectNotifPrompt, 25000);
       // Load the synced assignments into the app
       setTimeout(() => { loadExtensionAssignments && loadExtensionAssignments(); }, 600);
     }
@@ -9022,6 +9025,22 @@ window.addEventListener('DOMContentLoaded', () => {
           history.replaceState({}, '', window.location.pathname);
           showToast('✦ Premium unlocked! Loading your account…', 2000);
           setTimeout(() => location.reload(), 2000);
+        }
+      } else {
+        // userData is null — brand-new user whose Firestore doc hasn't been written yet
+        // (race condition: onAuthStateChanged fired before initNewUser completed).
+        // Show onboarding so they're not stranded on a blank dashboard.
+        if (!isConnected) {
+          showOnboard(1);
+          const _fname = user.displayName ? user.displayName.split(' ')[0] : '';
+          if (_fname) {
+            const _nEl  = document.getElementById('ob-name');
+            const _eEl  = document.getElementById('ob-ext-name');
+            const _iEl  = document.getElementById('ob-ical-name');
+            if (_nEl  && !_nEl.value)  _nEl.value  = _fname;
+            if (_eEl  && !_eEl.value)  _eEl.value  = _fname;
+            if (_iEl  && !_iEl.value)  _iEl.value  = _fname;
+          }
         }
       }
     });
@@ -10188,7 +10207,7 @@ function renderAssignments(list, _skipCal) {
     }
     return;
   }
-  const FREE_ASSIGN_LIMIT = 5;
+  const FREE_ASSIGN_LIMIT = 10;
   const visibleList = (!isPremium() && fl.length > FREE_ASSIGN_LIMIT)
     ? fl.slice(0, FREE_ASSIGN_LIMIT) : fl;
   const lockedList  = (!isPremium() && fl.length > FREE_ASSIGN_LIMIT)
