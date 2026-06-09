@@ -14901,7 +14901,6 @@ function syncWrapUp() {
 }
 
 function startRegrow() {
-  if (isDemo) { showToast('🌱 Connect Canvas to unlock your real tree & regrow flow!', 3500); return; }
   if (treeFaded) return; treeFaded = true;
   const btn = document.getElementById('wu-release-btn');
   btn.disabled = true;
