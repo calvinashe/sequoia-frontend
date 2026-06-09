@@ -949,7 +949,7 @@ body {
   color:#FFFEF8; margin-bottom:6px; letter-spacing:-0.3px;
   text-shadow:0 2px 24px rgba(0,0,0,0.7);
 }
-.hero-text p { font-size:13px; color:rgba(255,255,255,0.70); line-height:1.5; }
+.hero-text p { font-size:13px; color:rgba(255,255,255,0.80); line-height:1.5; }
 .hero-landscape { position:absolute; bottom:0; left:0; right:0; }
 #dash-hero-tree {
   position:absolute; bottom:2px; left:50%;
@@ -981,7 +981,7 @@ body {
   width:8px; height:8px; border-radius:50%; background:var(--g3);
   box-shadow:0 0 8px rgba(76,161,48,0.8);
 }
-.xp-amount { font-size:12px; font-weight:600; color:rgba(255,255,255,0.62); }
+.xp-amount { font-size:12px; font-weight:600; color:rgba(255,255,255,0.72); }
 .xp-bar-track {
   height:8px; background:rgba(255,255,255,0.07); border-radius:5px; overflow:hidden;
 }
@@ -992,7 +992,7 @@ body {
   border-radius:4px; transition:width 1.2s cubic-bezier(0.34,1.35,0.64,1);
 }
 .xp-sub {
-  font-size:11px; color:rgba(255,255,255,0.58); margin-top:5px;
+  font-size:11px; color:rgba(255,255,255,0.68); margin-top:5px;
   display:flex; justify-content:space-between;
 }
 
@@ -1051,8 +1051,8 @@ body {
 
 .hero-stats { display:flex; gap:8px; }
 .hero-stat {
-  flex:1; background:rgba(0,0,0,0.28);
-  border:1px solid rgba(76,161,48,0.1);
+  flex:1; background:rgba(0,0,0,0.32);
+  border:1px solid rgba(76,161,48,0.14);
   border-radius:14px;
   padding:12px 8px; text-align:center;
 }
@@ -1060,10 +1060,10 @@ body {
   font-family:'Playfair Display',serif;
   font-size:28px; font-weight:800;
   color:#FFFEF8;
-  text-shadow:0 0 18px rgba(76,161,48,0.28);
+  text-shadow:0 0 18px rgba(76,161,48,0.35);
   letter-spacing:-0.5px; line-height:1.1; margin-bottom:3px;
 }
-.hero-stat .sl { font-size:10px; color:rgba(255,255,255,0.62); text-transform:uppercase; letter-spacing:.6px; }
+.hero-stat .sl { font-size:10px; font-weight:600; color:rgba(255,255,255,0.72); text-transform:uppercase; letter-spacing:.6px; }
 
 /* CENTER: Assignments */
 .assign-card {
@@ -1075,7 +1075,7 @@ body {
 .assign-header {
   padding:18px 20px 0; display:flex; justify-content:space-between; align-items:center;
 }
-.assign-title { font-family:'Playfair Display',serif; font-size:22px; font-weight:800; color:#FFFEF8; letter-spacing:-0.3px; }
+.assign-title { font-family:'Playfair Display',serif; font-size:24px; font-weight:800; color:#FFFEF8; letter-spacing:-0.4px; }
 .add-btn {
   width:32px; height:32px; border-radius:9px; border:none;
   background:rgba(76,161,48,0.18); color:rgba(255,255,255,0.7); font-size:16px; cursor:pointer;
@@ -1175,27 +1175,28 @@ body {
 [data-theme="light"] .aipick-dismiss { color:var(--light); }
 
 /* Filter tabs */
-.filter-tabs { display:flex; gap:4px; padding:12px 20px; }
+.filter-tabs { display:flex; gap:4px; padding:12px 20px 10px; }
 .ftab {
   font-size:12px; font-weight:600; padding:5px 12px; border-radius:100px;
-  border:none; background:transparent; color:rgba(255,255,255,0.35); cursor:pointer;
+  border:none; background:transparent; color:rgba(255,255,255,0.48); cursor:pointer;
   transition:all .18s;
 }
-.ftab:hover  { background:rgba(76,161,48,0.12); color:rgba(255,255,255,0.7); }
-.ftab.active { background:rgba(76,161,48,0.22); color:#FFFEF8; border:1px solid rgba(76,161,48,0.3); }
+.ftab:hover  { background:rgba(76,161,48,0.12); color:rgba(255,255,255,0.78); }
+.ftab.active { background:rgba(76,161,48,0.25); color:#FFFEF8; border:1px solid rgba(76,161,48,0.35); font-weight:700; }
 
 /* Assignment rows */
 .assign-list { padding:0 12px 12px; }
 .a-row {
   display:flex; align-items:flex-start; gap:10px;
-  padding:12px 10px; border-radius:12px;
+  padding:13px 10px; border-radius:12px;
   cursor:default; transition:background .15s;
   animation:fadeUp .4s ease both;
   border-left:3px solid transparent; margin-left:-3px;
-  border-bottom:1px solid rgba(255,255,255,0.04);
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  background:rgba(255,255,255,0.018);
 }
 .a-row:last-child { border-bottom:none; }
-.a-row:hover { background:rgba(76,161,48,0.07); }
+.a-row:hover { background:rgba(76,161,48,0.10); }
 @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 
 /* ── FREE TIER ASSIGNMENT GATE ───────────────────────────── */
@@ -1242,6 +1243,7 @@ body {
 }
 .a-check:hover { border-color:var(--g3); color:var(--g3); }
 .a-check.checked { background:var(--g3); border-color:var(--g3); color:#fff; }
+.a-check.checked:hover { background:rgba(76,161,48,0.35); color:rgba(255,255,255,0.6); }
 .a-check.completing {
   animation:checkPop .35s cubic-bezier(0.34,1.6,0.64,1) both;
 }
@@ -1295,15 +1297,15 @@ body {
 [data-theme="light"] .bw-title { color:var(--g1); }
 [data-theme="light"] .bw-dismiss-btn { background:rgba(30,61,30,0.07); color:var(--mid); }
 .a-info { flex:1; min-width:0; }
-.a-name { font-size:14px; font-weight:700; color:rgba(255,255,255,0.88); margin-bottom:2px; display:flex; align-items:flex-start; gap:5px; }
+.a-name { font-size:14px; font-weight:700; color:#FFFEF8; margin-bottom:3px; display:flex; align-items:flex-start; gap:5px; }
 .a-name-text {
   flex:1; min-width:0;
   display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2;
   overflow:hidden; line-height:1.35;
 }
-.a-course { font-size:11px; color:rgba(255,255,255,0.60); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.a-course { font-size:11px; font-weight:600; color:rgba(255,255,255,0.68); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; letter-spacing:.01em; }
 .a-name.struck .a-name-text { text-decoration:line-through; color:rgba(255,255,255,0.25); }
-.a-due { font-size:12px; font-weight:700; color:rgba(255,255,255,0.70); margin-bottom:3px; }
+.a-due { font-size:12px; font-weight:700; color:rgba(255,255,255,0.82); margin-bottom:3px; }
 .a-tag {
   font-size:10px; font-weight:700; padding:3px 8px; border-radius:100px;
   display:inline-block; text-transform:uppercase; letter-spacing:.4px;
@@ -1313,9 +1315,15 @@ body {
 .tag-low  { background:rgba(76,161,48,0.15); color:var(--g4); border:1px solid rgba(76,161,48,0.25); }
 .a-weight-pill {
   font-size:11px; font-weight:800; padding:3px 9px; border-radius:100px;
-  background:rgba(76,161,48,0.2); color:var(--g4);
-  border:1px solid rgba(76,161,48,0.3);
+  background:rgba(76,161,48,0.22); color:#82D455;
+  border:1px solid rgba(76,161,48,0.35);
   flex-shrink:0; white-space:nowrap;
+  letter-spacing:.02em;
+}
+/* High-weight assignments (set via JS class) */
+.a-weight-pill.pill-high {
+  background:rgba(212,136,43,0.22); color:#FFBE6A;
+  border-color:rgba(212,136,43,0.4);
 }
 .a-icon {
   width:32px; height:32px; border-radius:9px;
@@ -2301,6 +2309,15 @@ input.g-slider::-moz-range-thumb {
 }
 .a-weight-pill.editable:hover {
   background:rgba(76,161,48,0.3) !important;
+}
+.a-weight-pill.editable::after {
+  content:' ✎';
+  font-size:9px;
+  opacity:0;
+  transition:opacity .15s;
+}
+.a-weight-pill.editable:hover::after {
+  opacity:0.7;
 }
 .weight-edit-pop {
   position:absolute; z-index:9900; background:var(--card);
@@ -6486,7 +6503,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
             onmouseout="this.style.background='linear-gradient(135deg,rgba(76,161,48,0.18),rgba(46,96,32,0.12))'">
             <span style="font-size:16px">📅</span>
             <span>Build My Weekly Schedule</span>
-            <span style="font-size:11px;background:rgba(76,161,48,0.2);color:var(--g3);border-radius:5px;padding:2px 6px;font-weight:700">AI</span>
+            <span id="sched-btn-badge" style="font-size:11px;background:rgba(76,161,48,0.2);color:var(--g3);border-radius:5px;padding:2px 6px;font-weight:700">AI</span>
           </button>
         </div>
 
@@ -6982,7 +6999,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         font-size:14px;font-weight:600;cursor:pointer;
         display:flex;align-items:center;justify-content:center;gap:8px;
         transition:all .2s;">
-        🧊 Streak Freeze <span style="font-size:10px;opacity:.6;margin-left:4px">— Premium</span>
+        🧊 Streak Freeze <span id="streak-freeze-badge" style="font-size:10px;opacity:.6;margin-left:4px">— protect a missed day · Premium</span>
       </button>
       <button id="streak-repair-btn"
         onclick="isPremium() ? _useStreakRepair() : openPaywall('streak-repair')"
@@ -7283,9 +7300,9 @@ const SEMESTER_PHASE = getSemesterPhase();
 
 // XP cap per phase (mirrors backend logic — displayed client-side for transparency)
 const PHASE_XP_CAP = {
-  'fall':           300, 'spring':           300, 'summer': 250, 'break': 200,
-  'fall-midterms':  450, 'spring-midterms':  450,
-  'fall-finals':    600, 'spring-finals':    600,
+  'fall':           400, 'spring':           400, 'summer': 300, 'break': 250,
+  'fall-midterms':  500, 'spring-midterms':  500,
+  'fall-finals':    650, 'spring-finals':    650,
 };
 const PHASE_LABEL = {
   'fall':           '🍂 Fall Semester',   'spring':           '🌸 Spring Semester',
@@ -9148,6 +9165,7 @@ function showScreen(i) {
   _navBtabs.forEach(b   => b.classList.toggle('active', parseInt(b.dataset.screen) === i));
   window.scrollTo(0, 0);
   if (i === 1) renderCalendar(allAssignments);
+  if (i === 2) _updateSchedBtnBadge();
   if (i === 3) { syncTreeScreen(); _sc2ForestEnter(); }
   else         { _sc2ForestLeave(); }
   if (i === 4) syncWrapUp();
@@ -10132,11 +10150,12 @@ function renderAssignments(list, _skipCal) {
       }
     }
     const iconBg = w >= 25 ? 'ai-green' : w >= 10 ? 'ai-yellow' : 'ai-blue';
+    const pillHigh = w >= 30 ? ' pill-high' : '';
     return `<div class="a-row" style="animation-delay:${Math.min(i * 0.06, 0.48)}s">
       <div class="a-check${done ? ' checked' : ''}" onclick="toggleDone('${esc(a.id)}', this, '${esc(a.title)}', ${Math.round(w)})">${done ? '✓' : ''}</div>
       <div class="a-icon ${iconBg}">${rowIcon(w, i)}</div>
       <div class="a-info" onclick="openAssignDetail('${esc(a.id)}')" style="cursor:pointer;flex:1;min-width:0">
-        <div class="a-name${done ? ' struck' : ''}"><span class="a-name-text">${esc(a.title)}</span><span class="a-weight-pill editable" onclick="event.stopPropagation();editAssignmentWeight('${esc(a.id)}',this)" title="Click to edit weight">${w > 0 ? Math.round(w*10)/10+'%' : a.source === 'extension' ? (a.submitted ? '✓' : '🔌') : a.source === 'ical' ? '🗓' : a.manual ? '＋' : '—'}</span></div>
+        <div class="a-name${done ? ' struck' : ''}"><span class="a-name-text">${esc(a.title)}</span><span class="a-weight-pill editable${pillHigh}" onclick="event.stopPropagation();editAssignmentWeight('${esc(a.id)}',this)" title="Click to edit weight">${w > 0 ? Math.round(w*10)/10+'%' : a.source === 'extension' ? (a.submitted ? '✓' : '🔌') : a.source === 'ical' ? '🗓' : a.manual ? '＋' : '—'}</span></div>
         <div class="a-course">${esc(a.course)}</div>
       </div>
       <div class="a-right" onclick="openAssignDetail('${esc(a.id)}')" style="cursor:pointer">
@@ -10175,17 +10194,15 @@ function toggleDone(id, el, title, weight) {
       // Within the undo window — full undo with XP rollback
       undoComplete();
     } else {
-      // Outside undo window — allow un-completing without XP rollback
-      // (XP already granted/settled; just remove from done list)
-      _showConfirm(`Mark "${title.slice(0, 40)}" as incomplete?`, () => {
-        completedIds.delete(id);
-        localStorage.setItem('sq_done', JSON.stringify([...completedIds]));
-        saveUserData({ done_ids: [...completedIds] });
-        totalCompleted = Math.max(0, totalCompleted - 1);
-        document.getElementById('hstat-done').textContent = totalCompleted;
-        setTimeout(() => renderAssignments(allAssignments), 200);
-        showToast('↩ Marked as incomplete — XP from this assignment is kept.');
-      });
+      // Outside undo window — user is in the Completed tab un-checking intentionally.
+      // No dialog needed: the intent is clear. XP already settled, just remove from done list.
+      completedIds.delete(id);
+      localStorage.setItem('sq_done', JSON.stringify([...completedIds]));
+      saveUserData({ done_ids: [...completedIds] });
+      totalCompleted = Math.max(0, totalCompleted - 1);
+      document.getElementById('hstat-done').textContent = totalCompleted;
+      setTimeout(() => renderAssignments(allAssignments), 200);
+      showToast('↩ Moved back to your priorities.');
     }
     return;
   }
@@ -14273,7 +14290,7 @@ function showUndoToast(id, title, xp, weight, daysEarly) {
   const toast  = document.getElementById('undo-toast');
   const text   = document.getElementById('ut-text');
   const xpSub  = document.getElementById('ut-xp-sub');
-  const short  = title.length > 30 ? title.slice(0, 29) + '…' : title;
+  const short  = title.length > 32 ? title.slice(0, title.lastIndexOf(' ', 32) || 32) + '…' : title;
   text.textContent = `✓ ${short}`;
   if (xpSub) {
     if (xp > 0) {
@@ -14313,7 +14330,7 @@ function _showBigWin(title, xp, weight, daysEarly, course) {
   document.getElementById('bw-emoji').textContent = emoji;
   document.getElementById('bw-label').textContent = label;
   const titleEl = document.getElementById('bw-title');
-  titleEl.textContent = title.length > 38 ? title.slice(0, 37) + '…' : title;
+  titleEl.textContent = title.length > 40 ? title.slice(0, title.lastIndexOf(' ', 40) || 40) + '…' : title;
 
   // Build pills
   const pillsEl = document.getElementById('bw-pills');
@@ -15851,11 +15868,20 @@ function _syncStreakRepairBtn() {
   const daysSinceBreak = breakDateMs ? (Date.now() - breakDateMs) / 86400000 : 999;
   // Show if: had a meaningful streak that broke recently, current streak is small, not used this month
   const shouldShow = oldStreak > 2 && currentStreak <= oldStreak && breakDate && !alreadyUsed && daysSinceBreak <= 30;
-  btn.style.display = shouldShow ? 'flex' : 'none';
 
   if (shouldShow) {
+    btn.style.display = 'flex';
     const sub = document.getElementById('streak-repair-sub');
-    if (sub) sub.textContent = `Restore your ${oldStreak}-day streak · 1 use per month`;
+    if (sub) sub.textContent = `Restore your ${oldStreak}-day streak · 1 use per month · Premium`;
+  } else if (!alreadyUsed && currentStreak === 0) {
+    // Show as a "you'll have this if you break your streak" hint — always visible for free users
+    btn.style.display = 'flex';
+    const sub = document.getElementById('streak-repair-sub');
+    if (sub) sub.textContent = `Break a streak? You can repair it once per month · Premium`;
+    btn.style.opacity = '0.55';
+  } else {
+    btn.style.display = 'none';
+    btn.style.opacity = '1';
   }
 }
 
@@ -16318,6 +16344,25 @@ function toggleTodayBlock(bid) {
   }
 }
 
+function _updateSchedBtnBadge() {
+  const badge = document.getElementById('sched-btn-badge');
+  if (!badge) return;
+  const tries = parseInt(localStorage.getItem('sq_sched_tries') || '0');
+  if (isPremium()) {
+    badge.textContent = 'AI';
+    badge.style.background = 'rgba(76,161,48,0.2)';
+    badge.style.color = 'var(--g3)';
+  } else if (tries >= 1) {
+    badge.textContent = '✦ Upgrade';
+    badge.style.background = 'rgba(245,200,66,0.15)';
+    badge.style.color = '#F5C842';
+  } else {
+    badge.textContent = '1 free try';
+    badge.style.background = 'rgba(76,161,48,0.2)';
+    badge.style.color = 'var(--g3)';
+  }
+}
+
 function openSchedule() {
   // Free trial: 1 use; premium: unlimited
   const tries = parseInt(localStorage.getItem('sq_sched_tries') || '0');
@@ -16330,7 +16375,7 @@ function openSchedule() {
   // Show trial banner for free users on their first (and only free) use
   const trialBanner = document.getElementById('sched-trial-banner');
   if (trialBanner) trialBanner.style.display = isPremium() ? 'none' : '';
-  if (!isPremium()) localStorage.setItem('sq_sched_tries', '1');
+  if (!isPremium()) { localStorage.setItem('sq_sched_tries', '1'); _updateSchedBtnBadge(); }
 
   // Load from cache first — no blank state on re-open
   const cached = _getCachedSchedule();
