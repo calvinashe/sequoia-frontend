@@ -1254,13 +1254,13 @@ body {
   100% { transform:scale(1); }
 }
 .a-row.completing-row {
-  animation:rowDone .55s ease forwards;
+  animation:rowDone .28s ease forwards;
   pointer-events:none;
 }
 @keyframes rowDone {
-  0%   { opacity:1; transform:translateX(0); max-height:80px; }
-  45%  { opacity:0.6; transform:translateX(12px); }
-  100% { opacity:0; transform:translateX(24px); max-height:0; padding-top:0; padding-bottom:0; margin:0; overflow:hidden; }
+  0%   { opacity:1; transform:translateX(0) scaleY(1); max-height:80px; }
+  60%  { opacity:0; transform:translateX(16px) scaleY(0.85); }
+  100% { opacity:0; transform:translateX(16px) scaleY(0); max-height:0; padding-top:0; padding-bottom:0; margin:0; overflow:hidden; }
 }
 
 /* ── BIG WIN CARD ─────────────────────────────────────────── */
@@ -10216,7 +10216,7 @@ function toggleDone(id, el, title, weight) {
     el.textContent = '✓';
     const row = el.closest('.a-row');
     if (row) {
-      setTimeout(() => row.classList.add('completing-row'), 120);
+      setTimeout(() => row.classList.add('completing-row'), 60);
     }
   }
 
@@ -10257,7 +10257,7 @@ function toggleDone(id, el, title, weight) {
   }
   _checkCompletionMilestone(totalCompleted);
 
-  setTimeout(() => { renderAssignments(allAssignments); updateDashTree(); buildQPick(); }, 600);
+  setTimeout(() => { renderAssignments(allAssignments); updateDashTree(); buildQPick(); }, 320);
 }
 
 // ── XP & STREAK ─────────────────────────────────────────
