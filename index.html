@@ -10121,7 +10121,22 @@ function renderAssignments(list, _skipCal) {
     if (activeFilter === 'all') {
       // No assignments at all — check if Canvas is connected
       const hasCanvas = !!(localStorage.getItem('sq_token') || localStorage.getItem('sq_url'));
+      const extChosen = localStorage.getItem('sq_ext_chosen') === '1';
+      const extSynced = !!localStorage.getItem('sq_ext_last_sync');
       if (!hasCanvas && !isDemo) {
+        // Extension user waiting for first sync — show a waiting state instead of manual setup
+        if (extChosen && !extSynced) {
+          el.innerHTML = `<div class="es-setup-card">
+            <div class="es-setup-tree">🔌</div>
+            <div class="es-setup-title">Waiting for extension…</div>
+            <div class="es-setup-sub">Visit your school's Canvas in Chrome — the extension will sync your assignments automatically and they'll appear here.</div>
+            <div class="es-setup-btns">
+              <a class="es-setup-primary" href="https://chromewebstore.google.com/detail/sequoia-for-canvas/hllbhhlbfiodgpkpjkconkhdaiklfnai" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">Install Extension ↗</a>
+              <button class="es-setup-secondary" onclick="showOnboard(1)">Change connection method</button>
+            </div>
+          </div>`;
+          return;
+        }
         // First-time manual user — guide them through setup
         const hasCourses = getCourses().length > 0;
         el.innerHTML = `<div class="es-setup-card">
