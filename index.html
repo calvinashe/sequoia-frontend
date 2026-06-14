@@ -1372,6 +1372,9 @@ body {
   font-weight:600; padding:10px 24px; cursor:pointer; transition:all .2s; min-width:200px;
 }
 .es-add-btn:hover { border-color:rgba(76,161,48,0.4); color:rgba(130,204,85,0.85); }
+/* Inside cream-bg modal sheets, override to dark green so text is visible */
+.syl-sheet .es-add-btn { border-color:rgba(76,161,48,0.35); color:var(--g2); }
+.syl-sheet .es-add-btn:hover { border-color:var(--g2); color:var(--g1); }
 .loading-state { padding:40px 20px; text-align:center; color:rgba(255,255,255,0.60); font-size:13px; }
 .spin { display:inline-block; animation:spin 1.2s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
@@ -2595,6 +2598,8 @@ input.g-slider::-moz-range-thumb {
 .ad-done-btn.already { background:var(--g-pale); color:var(--g2); cursor:default; }
 .ad-close-btn { position:absolute; top:20px; right:20px; background:var(--g-pale); border:none; border-radius:50%; width:30px; height:30px; font-size:14px; cursor:pointer; color:var(--mid); display:flex; align-items:center; justify-content:center; }
 .ad-sheet-wrap { position:relative; width:100%; max-width:520px; }
+[data-theme="light"] .ad-notes-hint { color:rgba(26,46,26,0.4) !important; }
+[data-theme="light"] .ad-notes { background:#fff; border-color:rgba(0,0,0,0.15); }
 
 /* ── SETTINGS MODAL ─────────────────────────────────────── */
 #settings-overlay {
@@ -4329,9 +4334,11 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 .dbadge-owned  { background:rgba(76,161,48,0.18); color:var(--g3); border:1px solid rgba(76,161,48,0.3); }
 .dbadge-new    { background:rgba(255,80,80,0.22); color:#FF8080; border:1px solid rgba(255,80,80,0.4); }
 .deco-cell-new-dot {
-  position:absolute; top:7px; left:7px;
-  width:7px; height:7px; border-radius:50%;
-  background:#FF5050; box-shadow:0 0 6px rgba(255,80,80,0.7);
+  position:absolute; top:6px; left:6px;
+  background:#FF5050; border-radius:4px;
+  font-size:8px; font-weight:800; color:#fff;
+  letter-spacing:.04em; padding:2px 4px; line-height:1;
+  font-family:'DM Sans',sans-serif;
 }
 
 /* ── DECO SHOP MODAL ───────────────────────────────────────── */
@@ -4708,6 +4715,9 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 [data-theme="light"] .nav-tab.active { background:var(--g1); color:#fff; }
 [data-theme="light"] .nav-avatar { border-color:rgba(30,61,30,0.15); }
 [data-theme="light"] .nav-tier-badge { background:var(--g-pale); color:var(--g2); }
+[data-theme="light"] .nav-streak { color:var(--g1); background:rgba(76,161,48,0.12); }
+/* Settings manage button uses hardcoded white text — override for light mode */
+[data-theme="light"] #settings-manage-btn { color:var(--g2) !important; border-color:rgba(76,161,48,0.35) !important; }
 /* Bottom nav (mobile) */
 [data-theme="light"] .bottom-nav {
   background:#FFFEF8;
@@ -4758,6 +4768,10 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
   box-shadow:var(--shadow);
   border:none;
 }
+/* demo-insight uses hardcoded white inline colors — override for light mode */
+[data-theme="light"] #demo-insight { color:rgba(26,46,26,0.85) !important; }
+[data-theme="light"] #demo-insight strong { color:var(--g1) !important; }
+[data-theme="light"] #demo-insight button { color:rgba(0,0,0,0.3) !important; }
 [data-theme="light"] .assign-title { color:var(--g1); }
 [data-theme="light"] .add-btn { background:var(--g1); color:#fff; border:none; }
 [data-theme="light"] .add-btn:hover { background:var(--g2); color:#fff; }
@@ -4766,7 +4780,7 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 [data-theme="light"] .ftab.active { background:var(--g1); color:#fff; border:none; }
 [data-theme="light"] .a-row      { border-bottom:none; }
 [data-theme="light"] .a-row:hover{ background:rgba(76,161,48,0.06); }
-[data-theme="light"] .a-check    { border:2px solid var(--border); background:#fff; }
+[data-theme="light"] .a-check    { border:2px solid rgba(0,0,0,0.2); background:#fff; }
 [data-theme="light"] .a-name     { color:var(--text); }
 [data-theme="light"] .a-course   { color:var(--light); }
 [data-theme="light"] .a-due      { color:var(--mid); }
@@ -10011,7 +10025,7 @@ function calShowTip(e, dateKey) {
     : '<div class="cal-tip-item" style="opacity:.5">No assignments</div>';
   // Clamp so tooltip never goes off-screen on small viewports
   tip.style.left = Math.min(e.clientX + 14, window.innerWidth  - 234) + 'px';
-  tip.style.top  = Math.min(e.clientY - 10, window.innerHeight - 100) + 'px';
+  tip.style.top  = Math.max(60, Math.min(e.clientY - 10, window.innerHeight - 100)) + 'px';
   tip.classList.add('visible');
 }
 function calHideTip() {
@@ -11518,7 +11532,7 @@ function renderDecorations() {
       clickAttr = `onclick="toggleDecoration('${d.id}')"`;
     }
 
-    const newDot = d.isNew ? '<div class="deco-cell-new-dot"></div>' : '';
+    const newDot = d.isNew ? '<div class="deco-cell-new-dot">NEW</div>' : '';
     return `<div class="${cellClass}" ${clickAttr}>
       ${newDot}
       ${badgeHTML}
@@ -17130,7 +17144,7 @@ function _showPwaInstallBanner() {
     </div>
 
     <div style="margin:10px 0 14px;padding:10px 14px;background:rgba(76,161,48,0.06);border:1px solid rgba(76,161,48,0.15);border-radius:12px">
-      <div style="font-size:11px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">🗓 Canvas Calendar Feed <span style="font-size:10px;background:rgba(76,161,48,0.15);color:var(--g3);border-radius:4px;padding:2px 6px;margin-left:4px">Works when tokens are blocked</span></div>
+      <div style="font-size:11px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">🗓 Canvas Calendar Feed <span style="font-size:10px;background:rgba(76,161,48,0.15);color:var(--g3);border-radius:4px;padding:2px 6px;margin-left:4px;white-space:nowrap">Works when tokens are blocked</span></div>
       <div style="font-size:11px;color:var(--mid);line-height:1.5;margin-bottom:10px">
         Can't generate a Canvas token? Use your <strong style="color:var(--text)">Calendar Feed URL</strong> instead — it syncs all your assignments from Canvas without needing IT approval.<br>
         <span style="opacity:0.7">In Canvas → Calendar → click the calendar icon at the bottom right → copy the URL.</span>
@@ -17507,7 +17521,7 @@ function _showPwaInstallBanner() {
       <hr class="ad-divider">
       <label class="ad-notes-label">Notes</label>
       <textarea class="ad-notes" id="ad-notes" rows="4" placeholder="Add study notes, reminders, or ideas…"></textarea>
-      <div style="font-size:10px;color:rgba(255,255,255,0.28);margin-top:4px;text-align:right">Notes are saved on this device only</div>
+      <div class="ad-notes-hint" style="font-size:10px;color:rgba(255,255,255,0.28);margin-top:4px;text-align:right">Notes are saved on this device only</div>
       <div class="ad-notes-save" id="ad-notes-save">✓ Notes saved</div>
       <button class="ad-done-btn" id="ad-done-btn" onclick="adToggleDone()">Mark Complete ✓</button>
     </div>
