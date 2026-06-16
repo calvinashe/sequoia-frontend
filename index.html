@@ -8564,7 +8564,7 @@ async function connectCanvas() {
       if (demoBanner) demoBanner.style.display = 'none';
       const demoInsightEl = document.getElementById('demo-insight');
       if (demoInsightEl) demoInsightEl.style.display = 'none';
-      completedIds = new Set(JSON.parse(localStorage.getItem('sq_done') || '[]'));
+      completedIds = new Set((JSON.parse(localStorage.getItem('sq_done') || '[]')).map(String));
       loadXPStreak(); updateDashTree(); syncTreeScreen();
     }
 
@@ -8916,7 +8916,7 @@ function loadDemo() {
 // ── INIT ────────────────────────────────────────────────
 let isDemo = false;
 let allAssignments = [];
-let completedIds   = new Set(JSON.parse(localStorage.getItem('sq_done') || '[]'));
+let completedIds   = new Set((JSON.parse(localStorage.getItem('sq_done') || '[]')).map(String));
 let totalCompleted = completedIds.size;
 function loadSessionHistory() {
   try { return JSON.parse(localStorage.getItem('sq_sessions') || '[]'); }
@@ -10033,7 +10033,7 @@ function renderUpcomingList(assignments) {
   const today = new Date(); today.setHours(0,0,0,0);
   const cutoff = new Date(today); cutoff.setDate(cutoff.getDate() + 14);
   const upcoming = assignments
-    .filter(a => a.due_at && !completedIds.has(a.id))
+    .filter(a => a.due_at && !completedIds.has(String(a.id)))
     .map(a => ({ ...a, _d: new Date(a.due_at) }))
     .filter(a => a._d >= today && a._d <= cutoff)
     .sort((a,b) => a._d - b._d);
@@ -10111,7 +10111,7 @@ function calClickDay(e, dateKey) {
 
 function renderFocusBanner() {
   const banner = document.getElementById('focus-banner');
-  const pending = allAssignments.filter(a => !completedIds.has(a.id));
+  const pending = allAssignments.filter(a => !completedIds.has(String(a.id)));
   if (!pending.length) { banner.classList.add('hidden'); return; }
 
   const grades = window._lastGrades || [];
@@ -10170,10 +10170,10 @@ function filteredList() {
   // Never show assignments from courses the student has hidden
   const hidden = _hiddenCourses();
   const notHidden = a => !hidden.size || !hidden.has(esc(a.course || ''));
-  if (activeFilter === 'done')   return allAssignments.filter(a => completedIds.has(a.id) && notHidden(a));
-  if (activeFilter === 'today')  return allAssignments.filter(a => !completedIds.has(a.id) && notAncient(a) && notHidden(a) && a.days_until !== null && a.days_until <= 3);
-  if (activeFilter === 'high')   return allAssignments.filter(a => !completedIds.has(a.id) && notAncient(a) && notHidden(a) && a.weight_pct >= 20);
-  return allAssignments.filter(a => !completedIds.has(a.id) && notAncient(a) && notHidden(a));
+  if (activeFilter === 'done')   return allAssignments.filter(a => completedIds.has(String(a.id)) && notHidden(a));
+  if (activeFilter === 'today')  return allAssignments.filter(a => !completedIds.has(String(a.id)) && notAncient(a) && notHidden(a) && a.days_until !== null && a.days_until <= 3);
+  if (activeFilter === 'high')   return allAssignments.filter(a => !completedIds.has(String(a.id)) && notAncient(a) && notHidden(a) && a.weight_pct >= 20);
+  return allAssignments.filter(a => !completedIds.has(String(a.id)) && notAncient(a) && notHidden(a));
 }
 
 // SVG icons matching the Sequoia icon pack style
@@ -10283,7 +10283,7 @@ function renderAssignments(list, _skipCal) {
     ? fl.slice(FREE_ASSIGN_LIMIT) : [];
 
   function buildRow(a, i) {
-    const done = completedIds.has(a.id);
+    const done = completedIds.has(String(a.id));
     const w    = a.weight_pct || 0;
     let dueStr = 'No due date', urgStr = '', urgCls = '';
     if (a.due_at) {
@@ -10336,6 +10336,7 @@ function emptyState(icon, title, sub) {
 }
 
 function toggleDone(id, el, title, weight) {
+  id = String(id);
   if (completedIds.has(id)) {
     if (_undoId === id) {
       // Within the undo window — full undo with XP rollback
@@ -10451,7 +10452,7 @@ function loadXPStreak() {
   // after a Firestore restore (loadUserData writes sq_done but doesn't
   // update the in-memory Set/counter).
   const _freshDone = JSON.parse(localStorage.getItem('sq_done') || '[]');
-  completedIds   = new Set(_freshDone);
+  completedIds   = new Set(_freshDone.map(String));
   totalCompleted = completedIds.size;
 
   const xp = getXP(), streak = getStreak();
@@ -14596,7 +14597,7 @@ async function undoComplete() {
 
 // ── QUICK PICK ──────────────────────────────────────────
 function buildQPick() {
-  const pending = allAssignments.filter(a => !completedIds.has(a.id)).slice(0, 4);
+  const pending = allAssignments.filter(a => !completedIds.has(String(a.id))).slice(0, 4);
   const section = document.getElementById('qpick-section');
   const row     = document.getElementById('qpick-row');
   if (!section || !row) return;
@@ -14619,7 +14620,7 @@ let _aiPickAssignment = null;
 
 function aiQuickPick() {
   if (!isPremium()) { openPaywall('ai-pick'); return; }
-  const pending = allAssignments.filter(a => !completedIds.has(a.id));
+  const pending = allAssignments.filter(a => !completedIds.has(String(a.id)));
   if (!pending.length) { showToast('🎉 No pending assignments — you\'re all caught up!'); return; }
 
   // Build grade lookup: course name → current grade %
@@ -15874,7 +15875,7 @@ function scheduleNotifications(assignments) {
   const notified = new Set(JSON.parse(localStorage.getItem(lsKey) || '[]'));
   const now = Date.now();
   assignments.forEach(a => {
-    if (completedIds.has(a.id) || notified.has(a.id) || !a.due_at) return;
+    if (completedIds.has(String(a.id)) || notified.has(a.id) || !a.due_at) return;
     const msUntil = new Date(a.due_at) - now;
     if (msUntil > 0 && msUntil < 25 * 60 * 60 * 1000) { // due within 25h
       notified.add(a.id);
@@ -16577,7 +16578,7 @@ async function generateSchedule() {
   const url   = localStorage.getItem('sq_url');
 
   // Use in-memory assignments (already loaded from Canvas or demo)
-  const assignments = allAssignments.filter(a => !completedIds.has(a.id));
+  const assignments = allAssignments.filter(a => !completedIds.has(String(a.id)));
 
   if (!assignments.length) {
     results.innerHTML = '<div class="sched-empty">No pending assignments found — connect Canvas or add assignments manually to generate a schedule 🌱</div>';
