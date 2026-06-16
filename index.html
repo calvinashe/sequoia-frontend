@@ -4642,6 +4642,8 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
   .assign-title  { flex:1 0 100%; font-size:20px; }
   .assign-header > div { gap:5px; }
   .ai-pick-btn   { padding:6px 10px; font-size:12px; }
+  /* Hide tour button on mobile — frees enough space for remaining buttons to fit */
+  .assign-header [title="App tour"] { display:none !important; }
 
   /* Filter tabs — nowrap, scroll */
   .filter-tabs { padding:10px 14px; gap:5px; flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; position:relative; }
@@ -9289,7 +9291,7 @@ function _sc2SpawnFireflies() {
       const el  = document.createElement('div');
       el.className = 'sc2-firefly';
       const left  = 8 + Math.random() * 84;  // 8–92% of viewport width
-      const bot   = 10 + Math.random() * 55; // 10–65% from bottom
+      const bot   = 48 + Math.random() * 40; // 48–88% from bottom = upper tree area only
       const dur   = 5 + Math.random() * 7;   // 5–12s rise
       const pdur  = 1.2 + Math.random() * 1.4;
       const ffx   = (Math.random() - 0.5) * 80 + 'px';
@@ -9316,7 +9318,7 @@ function _sc2SpawnOne() {
   const el = document.createElement('div');
   el.className = 'sc2-firefly';
   const left = 8 + Math.random() * 84;
-  const bot  = 10 + Math.random() * 55;
+  const bot  = 48 + Math.random() * 40; // keep in upper tree area
   const dur  = 5 + Math.random() * 7;
   const pdur = 1.2 + Math.random() * 1.4;
   el.style.cssText = `left:${left}%;bottom:${bot}%;` +
