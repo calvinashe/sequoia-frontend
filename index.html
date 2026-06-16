@@ -10346,7 +10346,7 @@ function toggleDone(id, el, title, weight) {
       // No dialog needed: the intent is clear. XP already settled, just remove from done list.
       completedIds.delete(id);
       localStorage.setItem('sq_done', JSON.stringify([...completedIds]));
-      saveUserData({ done_ids: [...completedIds] });
+      saveUserData({ done_ids: [...completedIds].map(String) });
       totalCompleted = Math.max(0, totalCompleted - 1);
       document.getElementById('hstat-done').textContent = totalCompleted;
       setTimeout(() => renderAssignments(allAssignments), 200);
@@ -10356,7 +10356,7 @@ function toggleDone(id, el, title, weight) {
   }
   completedIds.add(id);
   localStorage.setItem('sq_done', JSON.stringify([...completedIds]));
-  saveUserData({ done_ids: [...completedIds] });
+  saveUserData({ done_ids: [...completedIds].map(String) });
 
   // ── Row completion animation ────────────────────────────
   if (el) {
@@ -12730,11 +12730,12 @@ function startBreakFromComplete() {
 // ── ASSIGNMENT DETAIL SHEET ─────────────────────────────────
 let _adCurrentId = null;
 function openAssignDetail(id) {
-  const a = allAssignments.find(x => x.id === id);
+  const sid = String(id);
+  const a = allAssignments.find(x => String(x.id) === sid);
   if (!a) return;
-  _adCurrentId = id;
+  _adCurrentId = sid;
   const w    = a.weight_pct || 0;
-  const done = completedIds.has(id);
+  const done = completedIds.has(sid);
   const iconBg = w >= 25 ? 'ai-green' : w >= 10 ? 'ai-yellow' : 'ai-blue';
   const iconEl = document.getElementById('ad-icon');
   iconEl.className = 'ad-icon-big ' + iconBg;
@@ -12773,7 +12774,7 @@ function openAssignDetail(id) {
   // done button
   const btn = document.getElementById('ad-done-btn');
   if (done) {
-    btn.textContent = '✓ Completed'; btn.className = 'ad-done-btn already';
+    btn.textContent = '↩ Undo Complete'; btn.className = 'ad-done-btn already';
   } else {
     btn.textContent = 'Mark Complete ✓'; btn.className = 'ad-done-btn';
   }
@@ -13755,11 +13756,12 @@ function submitAddAssign() {
 }
 function adToggleDone() {
   if (!_adCurrentId) return;
-  const a = allAssignments.find(x => x.id === _adCurrentId);
-  if (!a || completedIds.has(_adCurrentId)) return;
+  const sid = String(_adCurrentId);
+  const a = allAssignments.find(x => String(x.id) === sid);
+  if (!a) return;
   // find the checkbox element to animate
-  const checkEl = document.querySelector(`.a-check[onclick*="${CSS.escape(_adCurrentId)}"]`);
-  toggleDone(_adCurrentId, checkEl, a.title, Math.round(a.weight_pct || 0));
+  const checkEl = document.querySelector(`.a-check[onclick*="${CSS.escape(sid)}"]`);
+  toggleDone(sid, checkEl, a.title, Math.round(a.weight_pct || 0));
   closeAssignDetail();
 }
 
@@ -14565,7 +14567,7 @@ async function undoComplete() {
   const newXP = Math.max(0, getXP() - totalXPToReverse);
   localStorage.setItem('sq_xp', newXP);
   if (totalXPToReverse > 0) spendLeaves(totalXPToReverse);
-  saveUserData({ xp: newXP, done_ids: [...completedIds] });
+  saveUserData({ xp: newXP, done_ids: [...completedIds].map(String) });
   document.getElementById('nav-xp').textContent      = newXP.toLocaleString() + ' XP';
   document.getElementById('dash-xp-amt').textContent = newXP.toLocaleString() + ' XP';
 
