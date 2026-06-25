@@ -11451,7 +11451,7 @@ function updateCapUI() {
       }
       if (capLabel) {
         const label = pct >= 100
-          ? `Cap reached · resets in ${resetIn}`
+          ? `Daily goal hit · bonus rate · resets in ${resetIn}`
           : `${used}/${limit} XP today · resets in ${resetIn}`;
         capLabel.textContent = label;
         capLabel.className = 'cap-row-label' + (pct >= 95 ? ' cap-full' : pct >= 60 ? ' cap-warn' : '');
@@ -11493,8 +11493,8 @@ function showCapHitToast(used, limit) {
   const upBtn   = document.getElementById('cht-upgrade-btn');
   if (!toast) return;
 
-  if (subEl)   subEl.textContent   = `You earned ${used} XP today — great work! 🌱`;
-  if (resetEl) resetEl.textContent = `Cap resets in ${_capResetIn()} — come back then to keep growing.`;
+  if (subEl)   subEl.textContent   = `${used} XP earned today — extra study still counts at a reduced rate. 🌱`;
+  if (resetEl) resetEl.textContent = `Full-rate XP resets in ${_capResetIn()}.`;
   if (upBtn)   upBtn.style.display = isPremium() ? 'none' : '';
 
   toast.classList.add('show');
@@ -17917,8 +17917,8 @@ function _showPwaInstallBanner() {
   <div class="cht-top">
     <span class="cht-icon">🌙</span>
     <div>
-      <div class="cht-title">Daily XP cap reached!</div>
-      <div class="cht-sub" id="cht-cap-sub">You earned 400 XP today — great work.</div>
+      <div class="cht-title">Daily XP goal reached! 🌙</div>
+      <div class="cht-sub" id="cht-cap-sub">Extra study still counts at a reduced rate.</div>
     </div>
     <button aria-label="Dismiss" onclick="_hideCapHit()" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:16px;cursor:pointer;flex-shrink:0;padding:8px 8px 8px 12px;margin:-8px -4px -8px 0;line-height:1">✕</button>
   </div>
