@@ -7479,6 +7479,7 @@ async function loadUserData(uid) {
     // sent through onboarding again for iCal or extension users.
     if (d.ical_connected)                 localStorage.setItem('sq_ical_connected', '1');
     if (d.ext_connected)                  localStorage.setItem('sq_ext_last_sync',  String(d.ext_connected));
+    if (d.manual_mode)                    localStorage.setItem('sq_manual_mode',    '1');
     if (d.name)                           localStorage.setItem('sq_name',           d.name);
     if (d.pomo_sessions    !== undefined) localStorage.setItem('sq_pomo_sessions',  String(d.pomo_sessions));
     if (d.manual_assignments)             localStorage.setItem('sq_manual',         JSON.stringify(d.manual_assignments));
@@ -8849,8 +8850,10 @@ function obGoManual() {
   setTimeout(() => {
     showToast('📚 Add a course → add assignments → start a focus session to earn XP!', 5000);
   }, 1200);
-  // Mark that they chose manual mode so we can show a persistent dashboard callout
+  // Mark that they chose manual mode — persist to Firestore too so a refresh or a
+  // new device doesn't send them back through the connection picker.
   localStorage.setItem('sq_manual_mode', '1');
+  if (!isDemo) saveUserData({ manual_mode: true });
 }
 
 function loadDemo() {
@@ -9104,7 +9107,8 @@ window.addEventListener('DOMContentLoaded', () => {
     // iCal and extension connections don't set sq_url — check those too.
     const _icalConn = localStorage.getItem('sq_ical_connected') === '1';
     const _extConn  = !!localStorage.getItem('sq_ext_last_sync');
-    const isConnected = !!(url || _icalConn || _extConn);
+    const _manual   = localStorage.getItem('sq_manual_mode') === '1';
+    const isConnected = !!(url || _icalConn || _extConn || _manual);
 
     // If any connection type is already cached locally, load the app immediately.
     if (isConnected) {
@@ -9124,7 +9128,8 @@ window.addEventListener('DOMContentLoaded', () => {
         const u        = localStorage.getItem('sq_url');
         const ical2    = localStorage.getItem('sq_ical_connected') === '1';
         const ext2     = !!localStorage.getItem('sq_ext_last_sync');
-        const nowConn  = !!(u || ical2 || ext2);
+        const manual2  = localStorage.getItem('sq_manual_mode') === '1';
+        const nowConn  = !!(u || ical2 || ext2 || manual2);
         if (u && !url) {
           // Canvas URL restored from Firestore (new device / cleared cache)
           setGreeting(localStorage.getItem('sq_name') || user.displayName || '');
