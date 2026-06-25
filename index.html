@@ -10142,7 +10142,7 @@ function calShowTip(e, dateKey) {
   document.getElementById('cal-tip-date').textContent =
     d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
   document.getElementById('cal-tip-items').innerHTML = items.length
-    ? items.map(a => `<div class="cal-tip-item">· ${esc(a.title)} <span style="opacity:.6">(${a.course})</span></div>`).join('')
+    ? items.map(a => `<div class="cal-tip-item">· ${esc(a.title)} <span style="opacity:.6">(${esc(a.course)})</span></div>`).join('')
     : '<div class="cal-tip-item" style="opacity:.5">No assignments</div>';
   // Clamp so tooltip never goes off-screen on small viewports
   tip.style.left = Math.min(e.clientX + 14, window.innerWidth  - 234) + 'px';
@@ -13429,8 +13429,8 @@ function _showReview(assignments, subtitle) {
     return `<div class="syl-review-item">
       <input class="sri-check" type="checkbox" id="sric-${i}" checked>
       <div class="sri-body">
-        <div class="sri-name">${emoji} ${a.name || 'Untitled'}</div>
-        <div class="sri-meta"><span class="sri-type">${a.type || 'other'}</span>${meta}</div>
+        <div class="sri-name">${emoji} ${esc(a.name || 'Untitled')}</div>
+        <div class="sri-meta"><span class="sri-type">${esc(a.type || 'other')}</span>${meta}</div>
       </div>
     </div>`;
   }).join('');
@@ -14781,17 +14781,17 @@ function aiQuickPick() {
   if (days !== null && days < 0) {
     reason = `This assignment is already <strong>${dueStr}</strong>. A late submission is always better than a missing one — tackle it first and turn in what you can.`;
   } else if (days !== null && days < 1) {
-    reason = `<strong>This is due today</strong> and worth <strong>${Math.round(a.weight_pct)}%</strong> of your ${a.course} grade. Everything else can wait — this is your only priority right now.`;
+    reason = `<strong>This is due today</strong> and worth <strong>${Math.round(a.weight_pct)}%</strong> of your ${esc(a.course)} grade. Everything else can wait — this is your only priority right now.`;
   } else if (days !== null && days < 2 && a.weight_pct >= 20) {
     reason = `Due <strong>tomorrow</strong> and worth <strong>${Math.round(a.weight_pct)}%</strong> of your grade — that combination makes this your highest-leverage use of time today. Start your first session on this now.`;
   } else if (grade !== null && grade < 75 && a.weight_pct >= 15) {
-    reason = `You're sitting at a <strong>${letterGrade} (${coursGrade})</strong> in ${a.course} and this assignment is worth <strong>${Math.round(a.weight_pct)}%</strong>. Doing well here is one of the biggest moves you can make on that grade before the semester ends.`;
+    reason = `You're sitting at a <strong>${letterGrade} (${coursGrade})</strong> in ${esc(a.course)} and this assignment is worth <strong>${Math.round(a.weight_pct)}%</strong>. Doing well here is one of the biggest moves you can make on that grade before the semester ends.`;
   } else if (a.weight_pct >= 25) {
-    reason = `At <strong>${Math.round(a.weight_pct)}% of your ${a.course} grade</strong>, this is one of the most impactful things left on your list — ${dueStr}. High-weight assignments are where your time pays off most.`;
+    reason = `At <strong>${Math.round(a.weight_pct)}% of your ${esc(a.course)} grade</strong>, this is one of the most impactful things left on your list — ${dueStr}. High-weight assignments are where your time pays off most.`;
   } else if (grade !== null && grade < 80) {
-    reason = `Your ${a.course} grade is at <strong>${coursGrade}</strong> — there's room to move it up. This assignment, worth <strong>${Math.round(a.weight_pct)}%</strong> and ${dueStr}, is your best lever to improve it.`;
+    reason = `Your ${esc(a.course)} grade is at <strong>${coursGrade}</strong> — there's room to move it up. This assignment, worth <strong>${Math.round(a.weight_pct)}%</strong> and ${dueStr}, is your best lever to improve it.`;
   } else {
-    reason = `Weighing urgency and grade impact across all your courses, <strong>${a.course} (${dueStr})</strong> is where your next session will do the most good. ${Math.round(a.weight_pct)}% of the grade is on the line.`;
+    reason = `Weighing urgency and grade impact across all your courses, <strong>${esc(a.course)} (${dueStr})</strong> is where your next session will do the most good. ${Math.round(a.weight_pct)}% of the grade is on the line.`;
   }
 
   // Populate sheet
@@ -14805,7 +14805,7 @@ function aiQuickPick() {
     : days < 2  ? `<span class="aipick-tag hot">⚡ Due Tomorrow</span>`
     : `<span class="aipick-tag">📅 ${dueStr.charAt(0).toUpperCase() + dueStr.slice(1)}</span>`;
   const wtTag   = `<span class="aipick-tag weight">⚖ ${Math.round(a.weight_pct)}% weight</span>`;
-  const crsTag  = `<span class="aipick-tag">📚 ${a.course}</span>`;
+  const crsTag  = `<span class="aipick-tag">📚 ${esc(a.course)}</span>`;
   const grTag   = coursGrade ? `<span class="aipick-tag">${letterGrade} · ${coursGrade} currently</span>` : '';
   document.getElementById('aipick-meta').innerHTML = urgTag + wtTag + crsTag + grTag;
 
@@ -16261,7 +16261,7 @@ function _renderLeaderboard(profiles, myUid) {
       const displayXP = byWeekly ? `${(p._sortXP || 0).toLocaleString()} XP this week` : `${(p.xp || 0).toLocaleString()} XP`;
       return `<div class="fr-pod ${rankCls[origRank] || ''}">
         <span class="fr-pod-medal">${medals[origRank] || ''}</span>
-        <span class="fr-pod-tree">${p.stage || '🌱'}</span>
+        <span class="fr-pod-tree">${esc(p.stage || '🌱')}</span>
         <span class="fr-pod-name">${esc(p.name || 'Friend')}${isMe ? ' ✦' : ''}</span>
         <span class="fr-pod-xp">${displayXP}</span>
       </div>`;
@@ -16284,7 +16284,7 @@ function _renderLeaderboard(profiles, myUid) {
       : `<div class="fr-row-xp">${(p.xp || 0).toLocaleString()}</div>`;
     return `<div class="fr-row${isMe ? ' me' : ''}">
       <span class="fr-rank-num">${idx + 1}</span>
-      <span class="fr-row-tree">${p.stage || '🌱'}</span>
+      <span class="fr-row-tree">${esc(p.stage || '🌱')}</span>
       <div class="fr-row-info">
         <div class="fr-row-name">${esc(p.name || 'Friend')}${isMe ? '<span class="fr-me-chip">YOU</span>' : ''}${isLeader ? '<span class="fr-week-crown">👑</span>' : ''}</div>
         <div class="fr-row-sub">Lv ${p.level || 1} · 🔥 ${p.streak || 0}-day streak</div>
