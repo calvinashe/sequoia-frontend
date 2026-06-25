@@ -90,6 +90,10 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Warm up connections to Firebase CDN and the backend API so first auth + data fetch are faster -->
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://sequoia-backend-szss.onrender.com">
+<link rel="dns-prefetch" href="https://sequoia-backend-szss.onrender.com">
 <!-- Load fonts async so they never block first paint; text shows in system font first then swaps -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap"></noscript>
@@ -151,6 +155,7 @@ body {
 }
 @keyframes ldFadeIn  { from { opacity:0; } to { opacity:1; } }
 @keyframes ldFadeOut { from { opacity:1; } to { opacity:0; } }
+@keyframes splashPulse { 0%,100% { transform:scale(1); opacity:.8; } 50% { transform:scale(1.15); opacity:1; } }
 
 /* Nav */
 .ld-nav {
@@ -1529,7 +1534,7 @@ a.ld-trust-item, a.ld-trust-item:visited { color:rgba(255,255,255,0.45); }
 .g-hide-btn {
   flex-shrink:0; background:none; border:none; cursor:pointer;
   color:rgba(255,255,255,0.2); font-size:14px; line-height:1;
-  padding:2px 4px; border-radius:4px; transition:color .15s;
+  padding:8px 10px; border-radius:4px; transition:color .15s;
 }
 .g-hide-btn:hover { color:rgba(255,100,80,0.7); }
 .g-letter { font-size:13px; font-weight:800; padding:3px 9px; border-radius:7px; flex-shrink:0; }
@@ -2212,8 +2217,9 @@ input.g-slider::-moz-range-thumb {
 .syl-handle { width:36px; height:4px; border-radius:2px; background:rgba(255,255,255,0.15); margin:0 auto 16px; }
 .syl-title  { font-family:'Playfair Display',serif; font-size:20px; font-weight:700; color:var(--text); margin-bottom:4px; }
 .syl-sub    { font-size:13px; color:var(--mid); margin-bottom:18px; line-height:1.5; }
-.syl-close  { position:absolute; top:18px; right:18px; background:none; border:none;
-              font-size:18px; color:var(--mid); cursor:pointer; padding:4px 8px; }
+.syl-close  { position:absolute; top:10px; right:10px; background:none; border:none;
+              font-size:18px; color:var(--mid); cursor:pointer; padding:11px 13px;
+              line-height:1; display:flex; align-items:center; justify-content:center; }
 /* Course cards */
 .syl-course-list { display:flex; flex-direction:column; gap:10px; margin-bottom:18px; }
 .syl-course-card {
@@ -2303,8 +2309,9 @@ input.g-slider::-moz-range-thumb {
 #wc-overlay.show .wc-sheet { transform:translateY(0); }
 .wc-title  { font-family:'Playfair Display',serif; font-size:19px; font-weight:700; color:var(--text); margin-bottom:3px; }
 .wc-sub    { font-size:12.5px; color:var(--mid); margin-bottom:16px; line-height:1.5; }
-.wc-close  { position:absolute; top:16px; right:16px; background:none; border:none;
-             font-size:18px; color:var(--mid); cursor:pointer; padding:4px; }
+.wc-close  { position:absolute; top:9px; right:9px; background:none; border:none;
+             font-size:18px; color:var(--mid); cursor:pointer; padding:12px;
+             line-height:1; display:flex; align-items:center; justify-content:center; }
 .wc-ta {
   width:100%; min-height:90px; padding:12px 14px; border-radius:12px;
   background:rgba(255,255,255,0.06); border:1.5px solid var(--border);
@@ -4592,7 +4599,7 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 
 @media (max-width:640px) {
   /* Nav — tall bar, items pinned to bottom so bell/account sit lower on screen */
-  .nav { padding:0 12px 10px; gap:6px; height:90px; align-items:flex-end; }
+  .nav { padding:0 12px 10px; gap:6px; height:90px; align-items:flex-end; justify-content:space-between; }
   .nav-wordmark { display:none; }
   .nav-xp, .nav-streak { display:none; }
   .nav-tabs { display:none; }
@@ -4930,6 +4937,24 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 [data-theme="light"] .ws-course-sel { border-color:var(--border); background:var(--card); color:var(--text); }
 
 /* ── LIGHT THEME: My Tree ────────────────────────────────── */
+/* The My Tree screen is an immersive dark forest in BOTH themes. Instead of
+   lightening it in light mode (which turned the cards cream), re-point the palette
+   variables this screen consumes back to dark values so everything below stays dark. */
+[data-theme="light"] #sc2 {
+  --card:    #132813;
+  --card-2:  #0E1D10;
+  --border:  rgba(255,255,255,0.08);
+  --g-pale:  rgba(255,255,255,0.07);
+  --g1:      #ffffff;
+  --mid:     rgba(255,255,255,0.55);
+  --light:   rgba(255,255,255,0.40);
+  --text:    #ffffff;
+  --shadow:  none;
+}
+/* --g1 is white inside #sc2 now, so keep the active tab a green pill (not white-on-white)
+   and the unlock count bright green. */
+[data-theme="light"] #sc2 .deco-tab.active     { background:var(--g3); border-color:var(--g3); color:#fff; }
+[data-theme="light"] #sc2 .deco-unlocked-count { color:var(--g4); }
 [data-theme="light"] .tree-screen-top h2 { color:var(--g1); }
 [data-theme="light"] .tree-screen-top .sub { color:var(--mid); }
 [data-theme="light"] .tree-xp-labels { color:var(--mid); }
@@ -4959,9 +4984,9 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 [data-theme="light"] .stage-name { color:var(--g1); }
 [data-theme="light"] .stage-desc { color:var(--mid); }
 [data-theme="light"] .stage-xp-needed { background:var(--g-pale); color:var(--g2); }
-[data-theme="light"] .deco-title { color:var(--g1); }
-[data-theme="light"] .deco-unlocked-count { color:var(--g2); }
-[data-theme="light"] .deco-tab { border-color:var(--border); color:var(--mid); }
+/* The My Tree screen is a dark forest in BOTH themes (the tree visualization and
+   forest layer need a dark backdrop), so its section headers must keep their light
+   colors. The earlier light overrides made this text dark-green on dark = invisible. */
 [data-theme="light"] .deco-tab.active { background:var(--g1); border-color:var(--g1); color:#fff; }
 [data-theme="light"] .deco-cell {
   background:var(--card);
@@ -4985,6 +5010,12 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 [data-theme="light"] .deco-cell-name { color:var(--text); }
 [data-theme="light"] .deco-cell-sub  { color:var(--light); }
 [data-theme="light"] .deco-hint { color:var(--light); }
+/* Decoration badges were white/light-on-dark for dark mode; on cream light-mode
+   cells they washed out to near-invisible. Give them readable colors. */
+[data-theme="light"] .dbadge-level  { background:rgba(30,61,30,0.10); color:rgba(30,61,30,0.58); }
+[data-theme="light"] .dbadge-season { background:rgba(46,110,170,0.12); color:#2C6FA8; border-color:rgba(46,110,170,0.3); }
+[data-theme="light"] .dbadge-price  { background:rgba(212,136,43,0.16); color:#A85D14; }
+[data-theme="light"] .deco-cell.deco-locked .deco-cell-badge { filter:none; }
 [data-theme="light"] .streak-cal-wrap { background:var(--card); border:1px solid var(--border); }
 [data-theme="light"] .streak-cal-title { color:var(--g1); }
 [data-theme="light"] .streak-cal-legend { color:var(--mid); }
@@ -5479,6 +5510,10 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
 <!-- ════════════════════════════════════════════════════════
      AUTH SCREEN
 ════════════════════════════════════════════════════════ -->
+<div id="sq-splash" style="position:fixed;inset:0;z-index:99999;background:#04090A;display:flex;align-items:center;justify-content:center;transition:opacity .3s ease">
+  <div style="font-size:48px;animation:splashPulse 1.2s ease-in-out infinite">🌲</div>
+</div>
+
 <div id="auth-screen">
   <div class="auth-landing" id="auth-landing">
 
@@ -6375,9 +6410,9 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         The <strong style="color:#fff">Organic Chemistry Midterm</strong> is due in 2 days — but it beats your Bio lab due <em>today</em>.
         That's because it's worth <strong style="color:var(--g4)">35%</strong> of your grade vs 18%.
         Grade weight × urgency, not just due date.
-        <button onclick="document.getElementById('demo-insight').style.display='none'"
+        <button aria-label="Dismiss" onclick="document.getElementById('demo-insight').style.display='none'"
           style="float:right;background:none;border:none;color:rgba(255,255,255,0.3);
-          font-size:15px;cursor:pointer;padding:0;margin-top:-2px;line-height:1">✕</button>
+          font-size:15px;cursor:pointer;padding:8px 10px;margin:-8px -8px 0 0;line-height:1">✕</button>
       </div>
 
       <div class="assign-list" id="assign-list">
@@ -7841,7 +7876,9 @@ async function authSubmit() {
   const conf  = document.getElementById('auth-confirm').value;
   const err   = document.getElementById('auth-err');
   const btn   = document.getElementById('auth-submit');
-  err.textContent = '';
+  // Reset any green "success" styling left over from a password-reset confirmation
+  // so a subsequent error never renders in success colors.
+  err.textContent = ''; err.style.color = ''; err.style.background = ''; err.style.borderColor = '';
   if (!email || !pass) { err.textContent = 'Please enter your email and password.'; return; }
   if (_authTab === 'signup' && pass !== conf) { err.textContent = "Passwords don't match."; return; }
   if (_authTab === 'signup' && pass.length < 6) { err.textContent = 'Password must be at least 6 characters.'; return; }
@@ -7887,13 +7924,16 @@ async function signInWithGoogle() {
     }
     // onAuthStateChanged handles the rest
   } catch(e) {
-    if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
-      // Popup was blocked or closed — fall back to redirect flow
+    if (e.code === 'auth/popup-blocked') {
+      // Browser blocked the popup — fall back to a full-page redirect
       try {
         await auth.signInWithRedirect(provider);
       } catch(e2) {
         _showErr('Sign-in failed — please try again or use email instead.');
       }
+    } else if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
+      // User closed the popup or a new attempt superseded it — they cancelled,
+      // so do nothing rather than yank them to a full-page Google redirect.
     } else if (e.code === 'auth/network-request-failed') {
       _showErr('No internet connection — check your network and try again.');
     } else if (e.code === 'auth/unauthorized-domain') {
@@ -8095,16 +8135,24 @@ async function _obStartReveal(token, url, name) {
     if (scanSub)   scanSub.textContent   = msgs[mi][1];
   }, 1400);
 
-  // Fetch assignments
+  // Fetch assignments — with a timeout so a slow/cold backend can't hang the
+  // reveal forever. If it fails, we still let the student in; the dashboard's
+  // loadAssignments retry loop will populate everything once they enter.
   let assigns = [];
+  let fetchOk = false;
   try {
+    const ctrl = new AbortController();
+    const t    = setTimeout(() => ctrl.abort(), 30000);
     const res  = await fetch(`${API}/assignments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ canvas_url: url, token }),
+      signal: ctrl.signal,
     });
+    clearTimeout(t);
     const d = await res.json();
-    assigns  = d.assignments || [];
+    assigns = d.assignments || [];
+    fetchOk = !!d.ok;
   } catch(e) {}
 
   clearInterval(msgTimer);
@@ -8123,9 +8171,10 @@ async function _obStartReveal(token, url, name) {
   const top     = assigns[0];
 
   document.getElementById('ob-reveal-name').textContent     = `Welcome, ${name.split(' ')[0]}! 🌱`;
-  document.getElementById('ob-reveal-sub').textContent      = assigns.length
-    ? `Found ${assigns.length} assignment${assigns.length !== 1 ? 's' : ''} across ${courses} course${courses !== 1 ? 's' : ''}.`
-    : 'Your tree is planted. Connect Canvas anytime in Settings.';
+  document.getElementById('ob-reveal-sub').textContent =
+      assigns.length ? `Found ${assigns.length} assignment${assigns.length !== 1 ? 's' : ''} across ${courses} course${courses !== 1 ? 's' : ''}.`
+    : fetchOk        ? "You're all caught up — nothing due right now. 🌲"
+    :                  "Your courses are loading — they'll be ready inside. 🌲";
   document.getElementById('ob-reveal-courses').textContent  = courses || '—';
   document.getElementById('ob-reveal-assigns').textContent  = assigns.length || '—';
   document.getElementById('ob-reveal-urgent').textContent   = urgent || '0';
@@ -8630,11 +8679,15 @@ async function obConnectIcal() {
     // Save iCal URL — if logged in, save to Firestore; otherwise save to localStorage temporarily
     if (currentUser) {
       const idToken = await currentUser.getIdToken();
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 20000);
       const res = await fetch(API + '/save-ical-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
         body: JSON.stringify({ ical_url: icalUrl }),
+        signal: ctrl.signal,
       });
+      clearTimeout(t);
       const data = await res.json();
       if (data.ok) {
         localStorage.setItem('sq_ical_connected', '1');
@@ -8654,11 +8707,15 @@ async function obConnectIcal() {
     try {
       const headers = { 'Content-Type': 'application/json' };
       if (currentUser) headers['Authorization'] = 'Bearer ' + await currentUser.getIdToken();
+      const sctrl = new AbortController();
+      const st = setTimeout(() => sctrl.abort(), 20000);
       const syncRes = await fetch(API + '/ical-sync', {
         method: 'POST',
         headers,
         body: JSON.stringify({ ical_url: icalUrl }),
+        signal: sctrl.signal,
       });
+      clearTimeout(st);
       const syncData = await syncRes.json();
       if (syncData.ok) {
         syncOk = true;
@@ -9005,7 +9062,15 @@ window.addEventListener('DOMContentLoaded', () => {
   setInterval(checkStreakRisk, 15 * 60 * 1000);
 
   // Firebase auth state drives the whole startup flow
+  function _dismissSplash() {
+    const s = document.getElementById('sq-splash');
+    if (!s) return;
+    s.style.opacity = '0';
+    setTimeout(() => s.remove(), 320);
+  }
+
   auth.onAuthStateChanged(async (user) => {
+    _dismissSplash();
     if (!user) {
       // Not signed in — show landing (or auth directly for special flows)
       if (_shouldShowLanding()) {
@@ -10045,7 +10110,7 @@ function renderUpcomingList(assignments) {
   list.innerHTML = upcoming.map(a => {
     const month = a._d.toLocaleDateString('en-US',{month:'short'}).toUpperCase();
     const day   = a._d.getDate();
-    const diff  = Math.ceil((a._d - today) / 86400000);
+    const diff  = _calDaysUntil(a.due_at);
     let urgLbl = '', urgCls = '';
     if      (diff <= 1) { urgLbl = diff === 0 ? 'Today' : 'Tomorrow'; urgCls = 'hi'; }
     else if (diff <= 3) { urgLbl = diff + 'd left'; urgCls = 'med'; }
@@ -10130,9 +10195,10 @@ function renderFocusBanner() {
   const top = scored[0];
 
   const gradeVal = gradeMap[top.course];
-  const hasDays  = top.days_until !== null;
+  const _cd      = _calDaysUntil(top.due_at);
+  const hasDays  = _cd !== null;
   const dayStr   = hasDays
-    ? (top.days_until <= 0 ? 'overdue' : top.days_until < 1 ? 'due today' : `due in ${Math.ceil(top.days_until)}d`)
+    ? (_cd < 0 ? 'overdue' : _cd === 0 ? 'due today' : _cd === 1 ? 'due tomorrow' : `due in ${_cd}d`)
     : 'no due date';
 
   let reason = `<strong>${top.course}</strong> · ${top.weight_pct}% weight · ${dayStr}`;
@@ -10196,6 +10262,20 @@ const SVGICONS = [
 
 function rowIcon(w, i) {
   return SVGICONS[i % SVGICONS.length];
+}
+
+// Calendar-day difference between today and a due date (local time, midnight-to-
+// midnight). Use this for "Today / Tomorrow / Nd" labels — NOT the fractional
+// days_until, which counts 24h windows and mislabels e.g. a Jun 22 due date as
+// "Tomorrow" on Jun 20, or shows "4d" for something 3 calendar days out.
+function _calDaysUntil(dueAt) {
+  if (!dueAt) return null;
+  const due = new Date(dueAt);
+  if (isNaN(due)) return null;
+  const now = new Date();
+  const d0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const d1 = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+  return Math.round((d1 - d0) / 86400000);
 }
 
 function renderAssignments(list, _skipCal) {
@@ -10290,12 +10370,13 @@ function renderAssignments(list, _skipCal) {
     let dueStr = 'No due date', urgStr = '', urgCls = '';
     if (a.due_at) {
       dueStr = new Date(a.due_at).toLocaleDateString('en-US', { month:'short', day:'numeric' });
-      if (a.days_until !== null) {
-        if      (a.days_until < 0)  { urgStr = 'Overdue';  urgCls = 'tag-high'; }
-        else if (a.days_until < 1)  { urgStr = 'Today';    urgCls = 'tag-high'; }
-        else if (a.days_until < 2)  { urgStr = 'Tomorrow'; urgCls = 'tag-med'; }
-        else if (a.days_until <= 7) { urgStr = Math.ceil(a.days_until) + 'd'; urgCls = 'tag-med'; }
-        else                        { urgStr = Math.ceil(a.days_until) + 'd'; urgCls = 'tag-low'; }
+      const cd = _calDaysUntil(a.due_at);
+      if (cd !== null) {
+        if      (cd < 0)  { urgStr = 'Overdue';  urgCls = 'tag-high'; }
+        else if (cd === 0){ urgStr = 'Today';    urgCls = 'tag-high'; }
+        else if (cd === 1){ urgStr = 'Tomorrow'; urgCls = 'tag-med'; }
+        else if (cd <= 7) { urgStr = cd + 'd';   urgCls = 'tag-med'; }
+        else              { urgStr = cd + 'd';   urgCls = 'tag-low'; }
       }
     }
     const iconBg = w >= 25 ? 'ai-green' : w >= 10 ? 'ai-yellow' : 'ai-blue';
@@ -12749,9 +12830,9 @@ function openAssignDetail(id) {
   let dueStr = '—', daysStr = '—';
   if (a.due_at) {
     dueStr = new Date(a.due_at).toLocaleDateString('en-US',{month:'short',day:'numeric'});
-    if (a.days_until !== null) {
-      const d = a.days_until;
-      daysStr = d < 0 ? 'Overdue' : d < 1 ? 'Today' : Math.ceil(d) + 'd';
+    const cd = _calDaysUntil(a.due_at);
+    if (cd !== null) {
+      daysStr = cd < 0 ? 'Overdue' : cd === 0 ? 'Today' : cd === 1 ? 'Tomorrow' : cd + 'd';
     }
   }
   document.getElementById('ad-due-val').textContent  = dueStr;
@@ -14265,17 +14346,27 @@ function setAmbienceVol(val) {
 // ice1/ice2 are mirrored servers; the fallback chain tries both before moving
 // to the next channel so a single server hiccup doesn't interrupt playback.
 const LOFI_STREAMS = [
-  'https://ice2.somafm.com/groovesalad-256-mp3',  // Groove Salad — downtempo/ambient
-  'https://ice1.somafm.com/groovesalad-256-mp3',  // Groove Salad mirror
-  'https://ice2.somafm.com/lush-128-mp3',         // Lush — chilled indie/electronic
-  'https://ice1.somafm.com/lush-128-mp3',         // Lush mirror
-  'https://ice2.somafm.com/beatblender-128-mp3',  // Beat Blender — hip-hop/beats
-  'https://ice1.somafm.com/beatblender-128-mp3',  // Beat Blender mirror
+  '/audio/lofi1.mp3',
+  '/audio/lofi2.mp3',
+  '/audio/lofi3.mp3',
+  '/audio/lofi4.mp3',
+  '/audio/lofi5.mp3',
+  '/audio/lofi6.mp3',
+  '/audio/lofi7.mp3',
+  '/audio/lofi8.mp3',
+  '/audio/lofi9.mp3',
+  '/audio/lofi10.mp3',
+  '/audio/lofi11.mp3',
+  '/audio/lofi12.mp3',
+  '/audio/lofi13.mp3',
+  '/audio/lofi14.mp3',
+  '/audio/lofi15.mp3',
 ];
 
 let _lofiStreamIdx  = 0;
 let _lofiStallTimer = null;
 let _lofiEl         = null;
+let _lofiShuffled   = [];
 
 function _getLofiEl() {
   if (_lofiEl) return _lofiEl;
@@ -14315,34 +14406,35 @@ function _setLofiBtn(state) {
 }
 
 function _lofiStallDetect() {
-  // If we've been waiting more than 10s, try next stream
+  // If a track hasn't become playable within 12s, skip to the next one
   _lofiStallTimer = setTimeout(() => {
     const el = _getLofiEl();
     if (el.paused || el.readyState < 2) {
-      console.warn('[lofi] stream stalled, trying next');
+      console.warn('[lofi] track stalled, trying next');
       _tryLofiStream(_lofiStreamIdx + 1);
     }
-  }, 10000);
+  }, 12000);
 }
 
 function _tryLofiStream(idx) {
   if (ambActive !== 'lofi') return; // user stopped while we were connecting
   clearTimeout(_lofiStallTimer);
 
-  if (idx >= LOFI_STREAMS.length) {
-    // All streams exhausted
-    _setLofiBtn('error');
-    showToast('🎵 All streams unavailable — tap Lo-fi to retry', 4000);
-    stopAmbience();
+  const list = _lofiShuffled.length ? _lofiShuffled : LOFI_STREAMS;
+
+  if (idx >= list.length) {
+    // Finished all tracks — reshuffle and loop
+    _shuffleLofi();
+    _tryLofiStream(0);
     return;
   }
 
   _lofiStreamIdx = idx;
   const el  = _getLofiEl();
-  const url = LOFI_STREAMS[idx];
+  const url = list[idx];
 
   // Tear down old listeners before reassigning src
-  el.oncanplay = null; el.onerror = null;
+  el.oncanplay = null; el.onerror = null; el.onended = null; el.onwaiting = null; el.onplaying = null;
 
   el.src = url;
   el.load();
@@ -14354,27 +14446,33 @@ function _tryLofiStream(idx) {
     clearTimeout(_lofiStallTimer);
     el.play().then(() => {
       _setLofiBtn('playing');
-      console.log('[lofi] playing stream', idx, url);
     }).catch(() => _tryLofiStream(idx + 1));
   };
 
   el.onerror = () => {
-    console.warn('[lofi] stream', idx, 'failed, trying next');
-    setTimeout(() => _tryLofiStream(idx + 1), 400);
+    console.warn('[lofi] track', idx, 'failed, trying next');
+    setTimeout(() => _tryLofiStream(idx + 1), 200);
   };
 
-  // Stall detection: if waiting event fires and doesn't clear in 10s, move on
-  el.onwaiting = () => { clearTimeout(_lofiStallTimer); _lofiStallDetect(); };
-  el.onplaying = () => { clearTimeout(_lofiStallTimer); };
+  // Auto-advance to next track when this one ends
+  el.onended = () => {
+    if (ambActive === 'lofi') _tryLofiStream(idx + 1);
+  };
 
-  // Start stall timer immediately (covers cases where oncanplay never fires)
+  // Safety net: if neither oncanplay nor onerror fires within 12s (slow/flaky
+  // network on first uncached play), move on so the button never hangs on ⏳.
+  el.onplaying = () => clearTimeout(_lofiStallTimer);
   _lofiStallDetect();
 }
 
+function _shuffleLofi() {
+  _lofiShuffled = [...LOFI_STREAMS].sort(() => Math.random() - 0.5);
+  _lofiStreamIdx = 0;
+}
+
 function startLofi() {
-  // Start from a random stream to distribute load across sources
-  const startIdx = Math.floor(Math.random() * Math.min(3, LOFI_STREAMS.length));
-  _tryLofiStream(startIdx);
+  _shuffleLofi();
+  _tryLofiStream(0);
 }
 
 function stopLofi() {
@@ -17817,7 +17915,7 @@ function _showPwaInstallBanner() {
       <div class="cht-title">Daily XP cap reached!</div>
       <div class="cht-sub" id="cht-cap-sub">You earned 400 XP today — great work.</div>
     </div>
-    <button onclick="_hideCapHit()" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:16px;cursor:pointer;flex-shrink:0;padding:0 0 0 4px;line-height:1">✕</button>
+    <button aria-label="Dismiss" onclick="_hideCapHit()" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:16px;cursor:pointer;flex-shrink:0;padding:8px 8px 8px 12px;margin:-8px -4px -8px 0;line-height:1">✕</button>
   </div>
   <div class="cht-reset" id="cht-reset-label">Your cap resets in —</div>
   <button class="cht-upgrade-btn" id="cht-upgrade-btn" onclick="_hideCapHit();openPaywall('cap-hit')" style="display:none">

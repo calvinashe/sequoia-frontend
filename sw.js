@@ -1,6 +1,8 @@
 // Sequoia Service Worker
-const CACHE = 'sequoia-v86';
+const CACHE = 'sequoia-v93';
 const BASE  = '';
+// App shell only — kept tiny so first load is fast. Audio (ambience + lo-fi,
+// ~73MB total) is cached on first play via runtime caching below, NOT here.
 const SHELL = [
   '/',
   '/index.html',
@@ -8,8 +10,6 @@ const SHELL = [
   '/icon-192.png',
   '/icon-512.png',
   '/icon-maskable.png',
-  '/audio/rain.mp3',
-  '/audio/forest.mp3',
 ];
 
 // ── Install: cache app shell (fail-safe) ─────────────────
@@ -47,6 +47,28 @@ self.addEventListener('fetch', e => {
 
   if (isAPI) {
     e.respondWith(fetch(e.request).catch(() => new Response('', { status: 503 })));
+    return;
+  }
+
+  // ── Audio (ambience + lo-fi): cache on first play, then offline-ready ──
+  // The <audio> element sends Range requests → 206 responses, which the Cache
+  // API refuses to store. So on a miss we fetch the FULL file (no Range header)
+  // to get a cacheable 200, store it, and return it. Returning a 200 to a Range
+  // request is valid and plays fine.
+  if (url.pathname.startsWith('/audio/') && url.pathname.endsWith('.mp3')) {
+    e.respondWith(
+      caches.open(CACHE).then(async cache => {
+        const cached = await cache.match(url.pathname);
+        if (cached) return cached;
+        try {
+          const res = await fetch(url.pathname);
+          if (res && res.status === 200) cache.put(url.pathname, res.clone());
+          return res;
+        } catch (_) {
+          return new Response('', { status: 503 });
+        }
+      })
+    );
     return;
   }
 
