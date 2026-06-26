@@ -1314,7 +1314,7 @@ a.ld-trust-item, a.ld-trust-item:visited { color:rgba(255,255,255,0.45); }
   pointer-events:none;
 }
 @keyframes rowDone {
-  0%   { opacity:1; transform:translateX(0) scaleY(1); max-height:80px; }
+  0%   { opacity:1; transform:translateX(0) scaleY(1); max-height:140px; }
   60%  { opacity:0; transform:translateX(16px) scaleY(0.85); }
   100% { opacity:0; transform:translateX(16px) scaleY(0); max-height:0; padding-top:0; padding-bottom:0; margin:0; overflow:hidden; }
 }
@@ -1356,7 +1356,7 @@ a.ld-trust-item, a.ld-trust-item:visited { color:rgba(255,255,255,0.45); }
 .a-name { font-size:14px; font-weight:700; color:#FFFEF8; margin-bottom:3px; display:flex; align-items:flex-start; gap:5px; }
 .a-name-text {
   flex:1; min-width:0;
-  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2;
+  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3;
   overflow:hidden; line-height:1.35;
 }
 .a-course { font-size:11px; font-weight:600; color:rgba(255,255,255,0.68); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; letter-spacing:.01em; }
@@ -1386,7 +1386,9 @@ a.ld-trust-item, a.ld-trust-item:visited { color:rgba(255,255,255,0.45); }
   display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0;
   margin-top:1px;
 }
-.a-right { text-align:right; flex-shrink:0; padding-top:1px; min-width:64px; }
+.a-right { text-align:right; flex-shrink:0; padding-top:1px; min-width:64px; display:flex; flex-direction:column; align-items:flex-end; gap:5px; }
+.a-right .a-due { margin-bottom:0; }
+.a-right .a-weight-pill { margin-bottom:1px; }
 .ai-green  { background:rgba(76,161,48,0.18);  border:1px solid rgba(76,161,48,0.22); }
 .ai-yellow { background:rgba(212,136,43,0.18); border:1px solid rgba(212,136,43,0.22); }
 .ai-blue   { background:rgba(41,128,185,0.18); border:1px solid rgba(41,128,185,0.22); }
@@ -3109,6 +3111,8 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
   border:1px solid rgba(76,161,48,0.08); border-radius:16px; overflow:hidden;
   box-shadow:0 8px 24px rgba(0,0,0,0.4);
 }
+.fr-empty { text-align:center; padding:32px 16px; font-size:13px; line-height:1.6; color:rgba(255,255,255,0.5); }
+[data-theme="light"] .fr-empty { color:var(--mid); }
 .fr-row {
   display:flex; align-items:center; gap:12px; padding:13px 16px;
   border-bottom:1px solid rgba(255,255,255,0.05); transition:background .15s;
@@ -10390,10 +10394,11 @@ function renderAssignments(list, _skipCal) {
       <div class="a-check${done ? ' checked' : ''}" onclick="toggleDone('${esc(a.id)}', this, '${esc(a.title)}', ${Math.round(w)})">${done ? '✓' : ''}</div>
       <div class="a-icon ${iconBg}">${rowIcon(w, i)}</div>
       <div class="a-info" onclick="openAssignDetail('${esc(a.id)}')" style="cursor:pointer;flex:1;min-width:0">
-        <div class="a-name${done ? ' struck' : ''}"><span class="a-name-text">${esc(a.title)}</span><span class="a-weight-pill editable${pillHigh}" onclick="event.stopPropagation();editAssignmentWeight('${esc(a.id)}',this)" title="Click to edit weight">${w > 0 ? Math.round(w*10)/10+'%' : a.source === 'extension' ? (a.submitted ? '✓' : '🔌') : a.source === 'ical' ? '🗓' : a.manual ? '＋' : '—'}</span></div>
+        <div class="a-name${done ? ' struck' : ''}"><span class="a-name-text">${esc(a.title)}</span></div>
         <div class="a-course">${esc(a.course)}</div>
       </div>
       <div class="a-right" onclick="openAssignDetail('${esc(a.id)}')" style="cursor:pointer">
+        <span class="a-weight-pill editable${pillHigh}" onclick="event.stopPropagation();editAssignmentWeight('${esc(a.id)}',this)" title="Click to edit weight">${w > 0 ? Math.round(w*10)/10+'%' : a.source === 'extension' ? (a.submitted ? '✓' : '🔌') : a.source === 'ical' ? '🗓' : a.manual ? '＋' : '—'}</span>
         <div class="a-due">${dueStr}</div>
         ${urgStr ? `<span class="a-tag ${urgCls}">${urgStr}</span>` : ''}
       </div>
@@ -10458,7 +10463,7 @@ function toggleDone(id, el, title, weight) {
 
   const a        = allAssignments.find(x => x.id === id);
   const daysLeft = a?.days_until ?? null;
-  const daysEarly= (daysLeft !== null && daysLeft > 0) ? Math.min(daysLeft, 7) : 0;
+  const daysEarly= (daysLeft !== null && daysLeft > 0) ? Math.min(Math.floor(daysLeft), 7) : 0;
   // Formula matches backend xp.py: early_bonus = min(1.0 + days_early * 0.033, 1.2)
   const early    = Math.min(1.2, 1 + daysEarly * 0.033);
   const gradeW   = weight / 100;
@@ -13727,9 +13732,17 @@ function editAssignmentWeight(id, pillEl) {
     <button class="wep-save">✓</button>`;
 
   const rect = pillEl.getBoundingClientRect();
-  pop.style.cssText = `top:${rect.bottom + window.scrollY + 6}px;left:${Math.max(8, rect.left + window.scrollX - 30)}px`;
   document.body.appendChild(pop);
   _wepActive = pop;
+  // Position below the pill, clamped so the popover never spills off either screen edge.
+  // The weight pill now sits at the right edge of each row, so the right-edge clamp matters.
+  const vw   = document.documentElement.clientWidth;
+  const popW = pop.offsetWidth;
+  let left   = rect.left + window.scrollX - 30;
+  left = Math.min(left, window.scrollX + vw - popW - 8);
+  left = Math.max(window.scrollX + 8, left);
+  pop.style.top  = `${rect.bottom + window.scrollY + 6}px`;
+  pop.style.left = `${left}px`;
 
   const input = pop.querySelector('input');
   input.focus(); input.select();
@@ -16344,8 +16357,7 @@ async function loadFriendsScreen() {
     document.getElementById('fr-hero-tree').textContent = _stageEmoji(xp);
     document.getElementById('fr-my-code').textContent   = '——';
     document.getElementById('fr-list').innerHTML =
-      '<div style="text-align:center;padding:32px 16px;opacity:0.55;font-size:13px;line-height:1.6">' +
-      '🌲 Sign in to add friends<br>and compare your progress</div>';
+      '<div class="fr-empty">🌲 Sign in to add friends<br>and compare your progress</div>';
     return;
   }
   // Tear down any previous listeners before setting up fresh ones
