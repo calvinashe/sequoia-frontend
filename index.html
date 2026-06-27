@@ -11779,17 +11779,21 @@ function renderDecorations() {
 }
 
 const MAX_EQUIPPED_DECOS = 3;  // keep the tree calm, not chaotic — adjust to taste
+// Atmospheric effects (weather, seasons, sky lighting) fill the whole scene, so
+// only ONE can be active at a time — equipping one swaps out any other.
+const SKY_DECOS = ['snow','autumn','spring','summer','rainbow','moonlight','northern_lights','golden_hour','thunderstorm'];
 function toggleDecoration(id) {
   const equipped = getEquipped();
   const idx = equipped.indexOf(id);
   if (idx >= 0) {
     equipped.splice(idx, 1);
   } else {
-    // Seasonal decos are mutually exclusive — unequip any other seasonal first
-    const d = DECORATIONS.find(x => x.id === id);
-    if (d && d.cat === 'seasonal') {
-      const seasonalIds = DECORATIONS.filter(x => x.cat === 'seasonal').map(x => x.id);
-      seasonalIds.forEach(sid => {
+    // Atmospheric effects fill the whole scene, so only one can be active at a
+    // time — equipping one swaps out any other (covers seasons + weather + sky
+    // lighting, so e.g. snow + thunderstorm or golden hour + moonlight can't clash).
+    if (SKY_DECOS.includes(id)) {
+      SKY_DECOS.forEach(sid => {
+        if (sid === id) return;
         const si = equipped.indexOf(sid);
         if (si >= 0) equipped.splice(si, 1);
       });
