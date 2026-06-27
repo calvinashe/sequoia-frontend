@@ -11768,6 +11768,7 @@ function renderDecorations() {
   }
 }
 
+const MAX_EQUIPPED_DECOS = 3;  // keep the tree calm, not chaotic — adjust to taste
 function toggleDecoration(id) {
   const equipped = getEquipped();
   const idx = equipped.indexOf(id);
@@ -11782,6 +11783,12 @@ function toggleDecoration(id) {
         const si = equipped.indexOf(sid);
         if (si >= 0) equipped.splice(si, 1);
       });
+    }
+    // Cap simultaneously-equipped effects so the tree stays calm, not chaotic.
+    // (The seasonal swap above already removed one, so it never blocks a swap.)
+    if (equipped.length >= MAX_EQUIPPED_DECOS) {
+      showToast(`You can have up to ${MAX_EQUIPPED_DECOS} effects at once — remove one to add another. 🌿`);
+      return;
     }
     equipped.push(id);
   }
