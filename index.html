@@ -198,7 +198,8 @@ body {
   line-height:1.65; max-width:540px; margin:0 auto 32px;
 }
 .ld-sub em { color:var(--g4); font-style:normal; font-weight:700; }
-.ld-ctas { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom:16px; }
+.ld-ctas { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom:10px; }
+.ld-cta-note { text-align:center; font-size:13px; font-weight:600; color:rgba(255,255,255,0.5); margin:0 0 18px; letter-spacing:.01em; }
 .ld-btn-primary {
   background:linear-gradient(135deg,#4CA130,#3A8A25);
   color:#fff; font-family:'DM Sans',sans-serif; font-size:16px; font-weight:800;
@@ -3900,6 +3901,16 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 .ob-method-grid {
   display:flex; flex-direction:column; gap:8px; margin-bottom:4px;
 }
+/* Mobile: the Chrome Extension is desktop-only and the token is high-friction, so
+   lead with the phone-friendly paths (syllabus → weights, calendar → dates) and
+   demote the rest. Ranks are hidden since the visual order changes. */
+.ob-method-grid.mob .ob-method-rank { display:none; }
+.ob-method-grid.mob #ob-mc-syllabus { order:1; }
+.ob-method-grid.mob #ob-mc-ical     { order:2; }
+.ob-method-grid.mob #ob-mc-token    { order:3; }
+.ob-method-grid.mob #ob-mc-ext      { order:4; opacity:0.6; }
+.ob-method-grid.mob #ob-mc-manual   { order:5; }
+.ob-method-grid.mob #ob-mc-ext .ob-method-badge { display:none; }
 .ob-method-card {
   background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
   border-radius:14px; padding:13px 14px 12px; cursor:pointer;
@@ -5322,6 +5333,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
       <button class="ld-btn-primary" onclick="loadDemoFromLanding()">🌱 See it in action</button>
       <button class="ld-btn-demo"    onclick="showAuthFromLanding('signup')">Create free account →</button>
     </div>
+    <div class="ld-cta-note">No signup, no Canvas needed — explore the full app in 10 seconds.</div>
   </section>
 
   <!-- Trust bar -->
@@ -5780,10 +5792,31 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
           <div class="ob-method-arrow">›</div>
         </button>
 
-        <!-- #2 Token — full features, any browser -->
-        <button class="ob-method-card ob-method-alt" id="ob-mc-token" onclick="track('onboard_method_chosen',{method:'token'});obGo(2)">
+        <!-- #2 Syllabus — grade weights without Canvas, mobile-friendly -->
+        <button class="ob-method-card" id="ob-mc-syllabus" onclick="track('onboard_method_chosen',{method:'syllabus'});obConnectSyllabus()">
           <div class="ob-method-left">
             <div class="ob-method-rank">#2</div>
+            <div class="ob-method-icon">📄</div>
+          </div>
+          <div class="ob-method-body">
+            <div class="ob-method-header">
+              <div class="ob-method-title">Upload Your Syllabus</div>
+              <div class="ob-method-badge ob-method-badge-blue">No Canvas</div>
+            </div>
+            <div class="ob-method-desc">Paste or upload your syllabus — AI pulls out your assignments and grade weights. Works on any phone, no token.</div>
+            <div class="ob-method-chips">
+              <span class="ob-chip ob-chip-green">Grade weights</span>
+              <span class="ob-chip ob-chip-blue">Any phone</span>
+              <span class="ob-chip ob-chip-blue">No token</span>
+            </div>
+          </div>
+          <div class="ob-method-arrow">›</div>
+        </button>
+
+        <!-- #3 Token — full features, any browser -->
+        <button class="ob-method-card ob-method-alt" id="ob-mc-token" onclick="track('onboard_method_chosen',{method:'token'});obGo(2)">
+          <div class="ob-method-left">
+            <div class="ob-method-rank">#3</div>
             <div class="ob-method-icon">🔑</div>
           </div>
           <div class="ob-method-body">
@@ -5803,9 +5836,9 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         </button>
 
         <!-- #3 iCal — limited but universal -->
-        <button class="ob-method-card" onclick="track('onboard_method_chosen',{method:'ical'});obGo(3)">
+        <button class="ob-method-card" id="ob-mc-ical" onclick="track('onboard_method_chosen',{method:'ical'});obGo(3)">
           <div class="ob-method-left">
-            <div class="ob-method-rank">#3</div>
+            <div class="ob-method-rank">#4</div>
             <div class="ob-method-icon">🗓</div>
           </div>
           <div class="ob-method-body">
@@ -5825,9 +5858,9 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         </button>
 
         <!-- #4 Manual — no Canvas needed -->
-        <button class="ob-method-card" onclick="track('onboard_method_chosen',{method:'manual'});obGoManual()">
+        <button class="ob-method-card" id="ob-mc-manual" onclick="track('onboard_method_chosen',{method:'manual'});obGoManual()">
           <div class="ob-method-left">
-            <div class="ob-method-rank">#4</div>
+            <div class="ob-method-rank">#5</div>
             <div class="ob-method-icon">✏️</div>
           </div>
           <div class="ob-method-body">
@@ -8000,6 +8033,17 @@ document.addEventListener('click', e => {
 
 // ── ONBOARDING ──────────────────────────────────────────
 let obCur = 0;
+function _isMobile() {
+  return window.matchMedia('(max-width:640px)').matches
+    || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+}
+function _obAdaptPicker() {
+  // On phones the desktop-only Chrome Extension is dead weight and the API token
+  // is brutal — so lead with the paths that work on mobile (syllabus → weights,
+  // calendar → dates) and demote the rest. CSS does the reorder; we flip the flag.
+  const grid = document.getElementById('ob-method-grid');
+  if (grid) grid.classList.toggle('mob', _isMobile());
+}
 function showOnboard(startStep) {
   const ob = document.getElementById('onboard');
   if (!ob) return;
@@ -8010,11 +8054,13 @@ function showOnboard(startStep) {
   if (steps[step]) steps[step].classList.add('active');
   obCur = step;
   ob.classList.remove('gone');
+  _obAdaptPicker();
 }
 function obGo(to) {
   const steps = document.querySelectorAll('.ob-step');
   steps[obCur].classList.remove('active'); steps[obCur].classList.add('exit');
   const prev = obCur; obCur = to;
+  if (to === 1) _obAdaptPicker();
   setTimeout(() => steps[prev].classList.remove('exit'), 380);
   setTimeout(() => steps[to].classList.add('active'), 40);
   // Reset reveal step if navigating away from it
@@ -8846,6 +8892,16 @@ async function _obExtPoll() {
 }
 
 // ── Manual onboarding path ───────────────────────────────────────────────────
+function obConnectSyllabus() {
+  // Syllabus → grade weights without Canvas or a token. The importer saves into
+  // manual storage, so set manual mode (persisted so a refresh doesn't re-prompt),
+  // leave onboarding, then open the importer straight into its paste/upload step.
+  localStorage.setItem('sq_manual_mode', '1');
+  if (!isDemo) saveUserData({ manual_mode: true });
+  closeOnboard();
+  setTimeout(() => openSyllabusImport(), 400);
+}
+
 function obGoManual() {
   closeOnboard();
   // Open the Courses modal so they set up courses immediately
@@ -13197,18 +13253,20 @@ function _renderManualSylCourses() {
   const picker  = document.getElementById('syl-course-picker-wrap');
 
   if (!courses.length) {
-    // No courses set up yet — guide user to set them up first or just paste
-    list.innerHTML = `<div class="syl-empty" style="text-align:center;padding:20px 16px">
-      <div style="font-size:32px;margin-bottom:8px">📋</div>
-      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">No courses set up yet</div>
+    // First-time / no-Canvas user (often arriving from the "Upload Your Syllabus"
+    // onboarding option): name the course, then upload a PDF or paste text.
+    list.innerHTML = `<div class="syl-empty" style="text-align:center;padding:12px 16px 2px">
+      <div style="font-size:30px;margin-bottom:6px">📄</div>
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">Add your first syllabus</div>
       <div style="font-size:12px;color:var(--mid);line-height:1.5">
-        Set up your courses first for the best experience, or just paste your syllabus below — we'll extract the course name automatically.
+        Upload or paste a syllabus — Sequoia pulls out every assignment and grade weight. No Canvas needed.
       </div>
-      <button class="es-add-btn" style="margin:12px auto 0;display:block" onclick="closeSyllabusImport();openCoursesModal()">📚 Set Up My Courses →</button>
-    </div>`;
-    // Still allow paste even without courses
+    </div>
+    <input id="syl-onb-course" type="text" placeholder="Course name (e.g. CHEM 2310)" autocomplete="off"
+      style="width:100%;box-sizing:border-box;margin:12px 0 8px;padding:11px 13px;border-radius:11px;border:1px solid var(--border);background:var(--card);color:var(--text);font-family:inherit;font-size:13px;outline:none">
+    <button class="es-add-btn" style="width:100%;display:block;margin:0 0 2px" onclick="sylOnbUploadPDF()">⬆ Upload Syllabus PDF</button>`;
     picker.style.display = 'none';
-    document.getElementById('syl-paste-label').textContent = 'Paste your syllabus text:';
+    document.getElementById('syl-paste-label').textContent = 'Or paste your syllabus text:';
     document.getElementById('syl-paste-wrap').classList.add('show');
     return;
   }
@@ -13333,6 +13391,37 @@ function _setSylCardState(courseId, type, label, statusText) {
   if (card && type === 'done') card.classList.add('syl-imported');
 }
 
+async function sylOnbUploadPDF() {
+  // PDF upload for the first-time / no-Canvas syllabus screen — no course card to
+  // update, and the endpoint requires auth, so send the Firebase token directly.
+  const name = (document.getElementById('syl-onb-course')?.value || '').trim() || 'My Course';
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = '.pdf';
+  input.onchange = async () => {
+    const file = input.files[0];
+    if (!file) return;
+    showToast('⏳ Reading your syllabus…', 4000);
+    const form = new FormData();
+    form.append('file', file);
+    form.append('course_name', name);
+    try {
+      const idTok = currentUser ? await currentUser.getIdToken() : null;
+      const res   = await fetch(API + '/parse-syllabus-pdf', {
+        method:  'POST',
+        headers: idTok ? { 'Authorization': 'Bearer ' + idTok } : {},
+        body:    form,
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'parse failed');
+      const tagged = (data.assignments || []).map(a => ({ ...a, course: name }));
+      _showReview(tagged, `Found ${tagged.length} assignment${tagged.length !== 1 ? 's' : ''} in ${name}`);
+    } catch (e) {
+      showToast("⚠️ Couldn't read that PDF — try pasting the text instead.");
+    }
+  };
+  input.click();
+}
+
 function sylUploadPDF(courseId, courseName) {
   const input = document.createElement('input');
   input.type  = 'accept' in input ? 'file' : 'text';
@@ -13376,11 +13465,14 @@ async function parsePastedSyllabus() {
   // Read course name from picker (manual mode) or fall back to 'Pasted Syllabus'
   const pickerSel  = document.getElementById('syl-course-picker');
   const otherInput = document.getElementById('syl-course-other-input');
-  let courseName   = 'Pasted Syllabus';
+  const onbInput   = document.getElementById('syl-onb-course');
+  let courseName   = 'My Course';
   if (pickerSel && pickerSel.value && pickerSel.value !== '__other__') {
     courseName = pickerSel.value;
   } else if (otherInput && otherInput.value.trim()) {
     courseName = otherInput.value.trim();
+  } else if (onbInput && onbInput.value.trim()) {
+    courseName = onbInput.value.trim();
   }
   try {
     const _pasteSylToken = currentUser ? await currentUser.getIdToken() : null;
