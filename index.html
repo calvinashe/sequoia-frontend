@@ -7108,6 +7108,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
       <div class="deco-header">
         <span class="deco-title">Decorations</span>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+          <span class="deco-unlocked-count" id="deco-equipped-count">0 / 3 effects on</span>
           <span class="deco-unlocked-count" id="deco-unlocked-count">0 / 6 earned</span>
           <span class="deco-leaves-bal" style="font-size:11px;font-weight:700;color:rgba(80,180,80,0.75)">🍃 0</span>
         </div>
@@ -10554,10 +10555,14 @@ function toggleDone(id, el, title, weight) {
   checkBadges();
   document.getElementById('hstat-done').textContent = totalCompleted;
 
-  // ── Show appropriate celebration ────────────────────────
-  showUndoToast(id, title, xp, weight, daysEarly);
-  if (weight >= 20) {
+  // ── Show ONE celebration, never a pile-up ────────────────
+  // Big assignments (≥30% of grade) get the shareable Big Win card; everything
+  // else gets the compact Undo toast. Never both at once. Badge unlocks are
+  // delayed in checkBadges() so they land as a separate later beat, not on top.
+  if (weight >= 30) {
     setTimeout(() => _showBigWin(title, xp, weight, daysEarly, a?.course || ''), 180);
+  } else {
+    showUndoToast(id, title, xp, weight, daysEarly);
   }
   _checkCompletionMilestone(totalCompleted);
 
@@ -11287,7 +11292,7 @@ function _awardBadge(badge) {
   setTimeout(() => {
     showToast(`${badge.emoji} Badge unlocked: ${badge.name}!`, 4000);
     addNotification('badge', `${badge.emoji} ${badge.name} earned!`, badge.desc);
-  }, 1200);
+  }, 2400);  // land as a separate beat, after the completion toast/card registers
 }
 
 // Track max days-early across all assignments for the Early Bird badge
@@ -11651,6 +11656,11 @@ function renderDecorations() {
   const unlockedCount = levelDecos.filter(d => lv >= d.unlockLevel).length;
   const countEl = document.getElementById('deco-unlocked-count');
   if (countEl) countEl.textContent = unlockedCount + ' / ' + levelDecos.length + ' earned';
+  const eqEl = document.getElementById('deco-equipped-count');
+  if (eqEl) {
+    eqEl.textContent = equipped.length + ' / ' + MAX_EQUIPPED_DECOS + ' effects on';
+    eqEl.style.color = equipped.length >= MAX_EQUIPPED_DECOS ? 'rgba(212,136,43,0.95)' : '';
+  }
 
   // filter by tab
   let list = DECORATIONS;
