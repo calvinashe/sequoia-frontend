@@ -7633,6 +7633,11 @@ async function initNewUser(user, name) {
   const snap = await db.collection('users').doc(user.uid).get().catch(() => ({ exists: false }));
   if (snap.exists) return; // already exists, don't overwrite
 
+  // New account created — the "signup" step of the launch funnel. Fires once per
+  // account (the early return above guarantees it), tagged with provider and
+  // whether they tried demo first.
+  try { track('signed_up', { provider: user?.providerData?.[0]?.providerId || 'password', from_demo: isDemo }); } catch(_) {}
+
   // Migrate pending iCal URL for users who connected the calendar before signing in.
   // obConnectIcal() stores sq_pending_ical_url when !currentUser so /save-ical-url can be
   // called here once the auth record exists.
@@ -8770,6 +8775,7 @@ async function obConnectIcal() {
       const syncData = await syncRes.json();
       if (syncData.ok) {
         syncOk = true;
+        try { track('ical_connect_success'); } catch(_) {}
       } else {
         const errMsg = syncRes.status === 403 ? 'Your school blocked this feed. Try a different URL.' :
                        syncRes.status === 404 ? 'Calendar feed not found. Double-check the URL.' :
