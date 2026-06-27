@@ -13441,7 +13441,8 @@ function sylUploadPDF(courseId, courseName) {
     form.append('file', file);
     form.append('course_name', courseName);
     try {
-      const res  = await fetch(API + '/parse-syllabus-pdf', { method: 'POST', body: form });
+      const idTok = currentUser ? await currentUser.getIdToken() : null;
+      const res  = await fetch(API + '/parse-syllabus-pdf', { method: 'POST', headers: idTok ? { 'Authorization': 'Bearer ' + idTok } : {}, body: form });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error);
       const count = data.assignments.length;
