@@ -11874,6 +11874,10 @@ function updateHeroDecorations() {
     overlay.className = 'th-deco-overlay';
     overlay.dataset.decoId = id;
     overlay.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:3;overflow:hidden;';
+    // Sky decos (storm cloud, rainbow) sit BEHIND the tree (z-index:2) so they
+    // never slice through the canopy — otherwise on tall mobile scenes the tree
+    // pokes "through" the cloud and reads as a faint second tree.
+    if (id === 'thunderstorm' || id === 'rainbow') overlay.style.zIndex = '1';
 
     if (id === 'fireflies') {
       overlay.style.filter = 'blur(0.3px)';
