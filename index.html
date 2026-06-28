@@ -2408,6 +2408,9 @@ input.g-slider::-moz-range-thumb {
   font-family:'DM Sans',sans-serif;
 }
 [data-theme="light"] .weight-edit-pop { background:#fff; }
+/* Dark mode: base surface is var(--card) (cream) + label is var(--mid) (dark) —
+   re-point both so the popover doesn't flashbang. Input/save use green, fine as-is. */
+[data-theme="dark"]  .weight-edit-pop { --card:#16301A; --mid:rgba(255,255,255,0.62); }
 
 /* ── ADD ASSIGNMENT SHEET ───────────────────────────────── */
 #add-assign-overlay {
@@ -5072,6 +5075,18 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 [data-theme="light"] .cal-upcoming-count { color:var(--mid); }
 [data-theme="light"] .cal-upcoming-row  { background:var(--card); }
 [data-theme="light"] .cal-upcoming-row:hover { background:var(--g-pale); }
+/* Dark mode: these rows are light-first (var(--card) surface + hardcoded light
+   hover), so they flashbang cream in dark. Re-point the surface/text vars on the
+   row and give the weight chip the dashboard's dark pill colours so it matches. */
+[data-theme="dark"] .cal-upcoming-row {
+  --card:   #132813;
+  --text:   #ffffff;
+  --mid:    rgba(255,255,255,0.55);
+  --light:  rgba(255,255,255,0.40);
+  --border: rgba(255,255,255,0.08);
+}
+[data-theme="dark"] .cal-upcoming-row:hover { background:#16301A; }
+[data-theme="dark"] .cal-up-weight { background:rgba(76,161,48,0.22); color:#82D455; }
 [data-theme="light"] .cal-up-month      { color:var(--mid); }
 
 /* Calendar — dark mode card */
