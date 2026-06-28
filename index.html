@@ -155,7 +155,9 @@ body {
 }
 @keyframes ldFadeIn  { from { opacity:0; } to { opacity:1; } }
 @keyframes ldFadeOut { from { opacity:1; } to { opacity:0; } }
-@keyframes splashPulse { 0%,100% { transform:scale(1); opacity:.8; } 50% { transform:scale(1.15); opacity:1; } }
+@keyframes splashPulse { 0%,100% { transform:scale(1); opacity:.85; } 50% { transform:scale(1.07); opacity:1; } }
+@keyframes splashDot   { 0%,100% { opacity:.25; transform:translateY(0); } 50% { opacity:1; transform:translateY(-4px); } }
+@keyframes splashFadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
 
 /* Nav */
 .ld-nav {
@@ -5579,8 +5581,26 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
 <!-- ════════════════════════════════════════════════════════
      AUTH SCREEN
 ════════════════════════════════════════════════════════ -->
-<div id="sq-splash" style="position:fixed;inset:0;z-index:99999;background:#04090A;display:flex;align-items:center;justify-content:center;transition:opacity .3s ease">
-  <div style="font-size:48px;animation:splashPulse 1.2s ease-in-out infinite">🌲</div>
+<div id="sq-splash" style="position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse 85% 60% at 50% 42%, #11301A 0%, #0A1E0E 48%, #04090A 100%);transition:opacity .3s ease">
+  <!-- Tree mark with soft forest glow -->
+  <div style="animation:splashPulse 2s ease-in-out infinite;filter:drop-shadow(0 0 26px rgba(76,161,48,0.45))">
+    <svg viewBox="0 0 30 30" width="66" height="66" xmlns="http://www.w3.org/2000/svg">
+      <rect x="13" y="22" width="4" height="7" rx="1" fill="#7B4A1E"/>
+      <polygon points="15,4 8,14 22,14" fill="#3A7A1E"/>
+      <polygon points="15,9 7,19 23,19" fill="#4A9028"/>
+      <polygon points="15,14 6,23 24,23" fill="#5AAF35"/>
+    </svg>
+  </div>
+  <!-- Wordmark -->
+  <div style="font-family:'Playfair Display',serif;font-weight:800;font-size:30px;color:#F5F1E6;margin-top:18px;letter-spacing:.4px;animation:splashFadeUp .6s ease-out both">Sequoia</div>
+  <!-- Tagline -->
+  <div style="font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:500;color:rgba(130,204,85,.85);margin-top:7px;letter-spacing:.4px;animation:splashFadeUp .6s ease-out .12s both">Grow through every semester</div>
+  <!-- Loading dots -->
+  <div style="display:flex;gap:7px;margin-top:30px;animation:splashFadeUp .6s ease-out .24s both">
+    <span style="width:7px;height:7px;border-radius:50%;background:#4CA130;animation:splashDot 1.4s ease-in-out infinite"></span>
+    <span style="width:7px;height:7px;border-radius:50%;background:#4CA130;animation:splashDot 1.4s ease-in-out .2s infinite"></span>
+    <span style="width:7px;height:7px;border-radius:50%;background:#4CA130;animation:splashDot 1.4s ease-in-out .4s infinite"></span>
+  </div>
 </div>
 
 <div id="auth-screen">
@@ -9192,6 +9212,9 @@ window.addEventListener('DOMContentLoaded', () => {
     s.style.opacity = '0';
     setTimeout(() => s.remove(), 320);
   }
+  // Fail-safe: if auth never resolves (offline, blocked SDK), don't trap the user
+  // on the splash — reveal whatever's behind it (landing/auth render without auth).
+  setTimeout(_dismissSplash, 8000);
 
   auth.onAuthStateChanged(async (user) => {
     _dismissSplash();
