@@ -4522,6 +4522,20 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 .cal-up-urgency.lo  { color:var(--g3); }
 
 /* ── FOCUS BANNER ────────────────────────────────────────── */
+.grade-guard {
+  grid-column: 1 / -1;
+  padding: 11px 16px; border-radius: 14px;
+  font-size: 13.5px; font-weight: 600; line-height: 1.45;
+  background: rgba(212,136,43,0.12);
+  border: 1px solid rgba(212,136,43,0.30);
+  color: rgba(255,255,255,0.82);
+}
+.grade-guard.high  { background: rgba(199,91,58,0.15); border-color: rgba(199,91,58,0.34); }
+.grade-guard.clear { background: rgba(76,161,48,0.10); border-color: rgba(76,161,48,0.26); }
+.grade-guard strong { color: #fff; font-weight: 800; }
+.grade-guard.hidden { display: none; }
+[data-theme="light"] .grade-guard { color: var(--text); }
+[data-theme="light"] .grade-guard strong { color: var(--g1); }
 .focus-banner {
   grid-column: 1 / -1;
   background: linear-gradient(135deg, #112811 0%, #1E4A1E 50%, #2A6020 100%);
@@ -6247,6 +6261,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
     </div>
 
     <!-- FOCUS BANNER -->
+    <div class="grade-guard hidden" id="grade-guard"></div>
     <div class="focus-banner hidden" id="focus-banner">
       <div class="focus-icon" id="focus-icon">🎯</div>
       <div class="focus-body">
@@ -10248,7 +10263,44 @@ function calClickDay(e, dateKey) {
   }, 0);
 }
 
+// Grade Guard — the painkiller. Every open, quantify how much of the student's
+// grade is on the line this week so Sequoia feels like it's protecting them.
+function renderGradeGuard() {
+  const el = document.getElementById('grade-guard');
+  if (!el) return;
+  if (!allAssignments.length) { el.className = 'grade-guard hidden'; return; }
+
+  const pending  = allAssignments.filter(a => !completedIds.has(String(a.id)));
+  // Due within the next 7 calendar days — overdue counts too (sharpest risk).
+  const upcoming = pending.filter(a => { const cd = _calDaysUntil(a.due_at); return cd !== null && cd <= 7; });
+
+  if (!upcoming.length) {
+    el.className = 'grade-guard clear';
+    el.innerHTML = "🛡️ Nothing major due this week — you're ahead. Keep it up. 🌱";
+    return;
+  }
+
+  // How much of each course's grade is on the line — surface the most exposed.
+  const byCourse = {};
+  upcoming.forEach(a => { const c = a.course || 'this course'; byCourse[c] = (byCourse[c] || 0) + (a.weight_pct || 0); });
+  let worstCourse = null, worstPct = 0;
+  Object.entries(byCourse).forEach(([c, p]) => { if (p > worstPct) { worstPct = p; worstCourse = c; } });
+  worstPct = Math.round(worstPct);
+  const count = upcoming.length;
+
+  if (worstPct >= 12) {
+    el.className = 'grade-guard ' + (worstPct >= 30 ? 'high' : '');
+    el.innerHTML = `🛡️ <strong>${worstPct}% of your ${esc(worstCourse)} grade</strong> is on the line this week`
+      + (count > 1 ? ` · ${count} assignments due` : '');
+  } else {
+    // Weights missing (e.g. Canvas has none) — fall back to a count.
+    el.className = 'grade-guard';
+    el.innerHTML = `🛡️ <strong>${count} assignment${count !== 1 ? 's' : ''}</strong> due this week — stay on top of them to protect your grade.`;
+  }
+}
+
 function renderFocusBanner() {
+  renderGradeGuard();
   const banner = document.getElementById('focus-banner');
   const pending = allAssignments.filter(a => !completedIds.has(String(a.id)));
   if (!pending.length) { banner.classList.add('hidden'); return; }
