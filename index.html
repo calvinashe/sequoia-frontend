@@ -5183,6 +5183,30 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
    only resolves correctly in light mode — override here)
 ══════════════════════════════════════════════════════════ */
 
+/* Bottom-sheets & modals that paint their surface with var(--card) flashbang
+   cream in dark mode (the token only resolves correctly in light mode). Re-point
+   the palette variables on each sheet container — same technique as the My Tree
+   exception — so the surface, text, inputs, and borders inside all adapt to dark
+   without per-element overrides. #aipick-sheet is excluded (already dark-first). */
+[data-theme="dark"] .syl-sheet,
+[data-theme="dark"] .wc-sheet,
+[data-theme="dark"] .add-assign-sheet,
+[data-theme="dark"] .sc-sheet,
+[data-theme="dark"] .ad-sheet,
+[data-theme="dark"] .lu-modal {
+  --card:    #132813;
+  --card-2:  #0E1D10;
+  --border:  rgba(255,255,255,0.08);
+  --g-pale:  rgba(255,255,255,0.07);
+  --text:    #ffffff;
+  --mid:     rgba(255,255,255,0.55);
+  --light:   rgba(255,255,255,0.40);
+  /* NB: --g1 is deliberately NOT re-pointed — these sheets use var(--g1) as a
+     dark-green button background (.settings-save, .sc-btn-primary, .ad-done-btn),
+     and no dark-mode text here uses it, so flipping it to white would only break
+     the CTAs (white-on-white). Body text uses --text/--mid, handled above. */
+}
+
 /* Notification panel — dark */
 [data-theme="dark"] .notif-panel {
   background:#0E1F10;
@@ -6890,10 +6914,10 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         <div class="stage-tree-area">
           <svg viewBox="0 0 160 200" width="130" xmlns="http://www.w3.org/2000/svg">
             <!-- Soil mound -->
-            <ellipse cx="80" cy="186" rx="52" ry="13" fill="#1A0A02" opacity="0.95"/>
-            <ellipse cx="80" cy="180" rx="40" ry="9" fill="#2E1408"/>
-            <ellipse cx="58" cy="179" rx="9" ry="5" fill="#2A1C10"/>
-            <ellipse cx="104" cy="178" rx="8" ry="4" fill="#2A1C10"/>
+            <ellipse cx="80" cy="186" rx="52" ry="13" fill="#0F1109" opacity="0.95"/>
+            <ellipse cx="80" cy="180" rx="40" ry="9" fill="#1C160E"/>
+            <ellipse cx="58" cy="179" rx="9" ry="5" fill="#2A271D"/>
+            <ellipse cx="104" cy="178" rx="8" ry="4" fill="#2A271D"/>
             <!-- Thin young trunk -->
             <rect x="77.5" y="155" width="5" height="28" rx="2" fill="#6B3810"/>
             <rect x="79" y="157" width="2" height="23" rx="1" fill="#8B5422" opacity="0.5"/>
@@ -6931,12 +6955,12 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         <div class="stage-tree-area">
           <svg viewBox="0 0 160 260" width="110" xmlns="http://www.w3.org/2000/svg">
             <!-- Rocks & ground -->
-            <ellipse cx="80" cy="248" rx="48" ry="12" fill="#1A0A02" opacity="0.9"/>
-            <ellipse cx="80" cy="242" rx="36" ry="8" fill="#261006"/>
-            <ellipse cx="55" cy="242" rx="11" ry="6" fill="#2E2018"/>
-            <ellipse cx="59" cy="237" rx="7" ry="4" fill="#3A2820"/>
-            <ellipse cx="108" cy="240" rx="9" ry="5" fill="#2E2018"/>
-            <ellipse cx="111" cy="236" rx="6" ry="3.5" fill="#3A2820"/>
+            <ellipse cx="80" cy="248" rx="48" ry="12" fill="#0F1109" opacity="0.9"/>
+            <ellipse cx="80" cy="242" rx="36" ry="8" fill="#1C160E"/>
+            <ellipse cx="55" cy="242" rx="11" ry="6" fill="#2A271D"/>
+            <ellipse cx="59" cy="237" rx="7" ry="4" fill="#343026"/>
+            <ellipse cx="108" cy="240" rx="9" ry="5" fill="#2A271D"/>
+            <ellipse cx="111" cy="236" rx="6" ry="3.5" fill="#343026"/>
             <!-- Thin trunk — tall and slender -->
             <rect x="77" y="168" width="6" height="76" rx="3" fill="#5A2E0A"/>
             <rect x="78.5" y="171" width="2.5" height="69" rx="1.5" fill="#7B4A1E" opacity="0.55"/>
@@ -6991,12 +7015,12 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         <div class="stage-tree-area">
           <svg viewBox="0 0 200 280" width="145" xmlns="http://www.w3.org/2000/svg">
             <!-- Rocks -->
-            <ellipse cx="100" cy="264" rx="68" ry="16" fill="#1A0A02" opacity="0.92"/>
-            <ellipse cx="100" cy="257" rx="52" ry="10" fill="#221008"/>
-            <ellipse cx="64" cy="256" rx="17" ry="9" fill="#2E2018"/>
-            <ellipse cx="68" cy="249" rx="12" ry="6" fill="#3A2820"/>
-            <ellipse cx="138" cy="254" rx="15" ry="8" fill="#2E2018"/>
-            <ellipse cx="141" cy="248" rx="10" ry="5" fill="#3A2820"/>
+            <ellipse cx="100" cy="264" rx="68" ry="16" fill="#0F1109" opacity="0.92"/>
+            <ellipse cx="100" cy="257" rx="52" ry="10" fill="#1A150D"/>
+            <ellipse cx="64" cy="256" rx="17" ry="9" fill="#2A271D"/>
+            <ellipse cx="68" cy="249" rx="12" ry="6" fill="#343026"/>
+            <ellipse cx="138" cy="254" rx="15" ry="8" fill="#2A271D"/>
+            <ellipse cx="141" cy="248" rx="10" ry="5" fill="#343026"/>
             <!-- Trunk — wider than sapling -->
             <rect x="91" y="170" width="18" height="92" rx="4" fill="#3D1A06"/>
             <rect x="95" y="175" width="7" height="82" rx="2" fill="#5A3010" opacity="0.65"/>
@@ -7055,13 +7079,13 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         <div class="stage-tree-area">
           <svg viewBox="0 0 220 280" width="160" xmlns="http://www.w3.org/2000/svg">
             <!-- Large rocks -->
-            <ellipse cx="110" cy="268" rx="86" ry="18" fill="#1A0A02" opacity="0.95"/>
-            <ellipse cx="110" cy="260" rx="66" ry="12" fill="#221008"/>
-            <ellipse cx="66" cy="259" rx="23" ry="11" fill="#2E2018"/>
-            <ellipse cx="72" cy="251" rx="16" ry="8" fill="#3A2820"/>
-            <ellipse cx="156" cy="257" rx="21" ry="10" fill="#2E2018"/>
-            <ellipse cx="161" cy="249" rx="14" ry="7" fill="#3A2820"/>
-            <ellipse cx="110" cy="263" rx="11" ry="6" fill="#2E2018"/>
+            <ellipse cx="110" cy="268" rx="86" ry="18" fill="#0F1109" opacity="0.95"/>
+            <ellipse cx="110" cy="260" rx="66" ry="12" fill="#1A150D"/>
+            <ellipse cx="66" cy="259" rx="23" ry="11" fill="#2A271D"/>
+            <ellipse cx="72" cy="251" rx="16" ry="8" fill="#343026"/>
+            <ellipse cx="156" cy="257" rx="21" ry="10" fill="#2A271D"/>
+            <ellipse cx="161" cy="249" rx="14" ry="7" fill="#343026"/>
+            <ellipse cx="110" cy="263" rx="11" ry="6" fill="#2A271D"/>
             <!-- Root buttresses -->
             <path d="M98,252 Q80,260 62,265 Q76,246 98,240Z" fill="#2E1206"/>
             <path d="M122,252 Q140,258 158,263 Q144,244 122,238Z" fill="#2E1206"/>
@@ -10362,10 +10386,20 @@ function filteredList() {
   // Never show assignments from courses the student has hidden
   const hidden = _hiddenCourses();
   const notHidden = a => !hidden.size || !hidden.has(esc(a.course || ''));
+  // This list IS "Your Priorities" — it must rank by grade impact (priority_score),
+  // NOT array/due-date order. Without this sort the highest-weight item (e.g. a 35%
+  // midterm) sinks below earlier-but-lighter work, contradicting the "ranked #1"
+  // callout and the core differentiator. Mirrors the iCal/extension merge tiebreak
+  // (priority_score desc, then due_at asc) so every data source orders identically.
+  const byPriority = (a, b) => {
+    const ps = (b.priority_score || 0) - (a.priority_score || 0);
+    if (ps !== 0) return ps;
+    return (a.due_at || '9999') < (b.due_at || '9999') ? -1 : 1;
+  };
   if (activeFilter === 'done')   return allAssignments.filter(a => completedIds.has(String(a.id)) && notHidden(a));
-  if (activeFilter === 'today')  return allAssignments.filter(a => !completedIds.has(String(a.id)) && notAncient(a) && notHidden(a) && a.days_until !== null && a.days_until <= 3);
-  if (activeFilter === 'high')   return allAssignments.filter(a => !completedIds.has(String(a.id)) && notAncient(a) && notHidden(a) && a.weight_pct >= 20);
-  return allAssignments.filter(a => !completedIds.has(String(a.id)) && notAncient(a) && notHidden(a));
+  if (activeFilter === 'today')  return allAssignments.filter(a => !completedIds.has(String(a.id)) && notAncient(a) && notHidden(a) && a.days_until !== null && a.days_until <= 3).sort(byPriority);
+  if (activeFilter === 'high')   return allAssignments.filter(a => !completedIds.has(String(a.id)) && notAncient(a) && notHidden(a) && a.weight_pct >= 20).sort(byPriority);
+  return allAssignments.filter(a => !completedIds.has(String(a.id)) && notAncient(a) && notHidden(a)).sort(byPriority);
 }
 
 // SVG icons matching the Sequoia icon pack style
