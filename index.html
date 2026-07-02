@@ -83,6 +83,51 @@
 }
 </script>
 
+<!-- FAQ rich-result schema — mirrors the landing-page FAQ section -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is giving Sequoia a Canvas token safe?",
+      "acceptedAnswer": { "@type": "Answer", "text": "A token only grants the same access you already have as a student, and Sequoia uses it read-only — assignments, due dates, and grade weights. Nothing is ever posted or changed in Canvas, and you can revoke the token any time from Canvas Settings. Prefer not to use one at all? The Chrome extension, syllabus upload, and calendar feed all work without a token." }
+    },
+    {
+      "@type": "Question",
+      "name": "Will my school know I'm using it?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Sequoia talks to Canvas through the same official API the Canvas mobile app uses, signed in as you. It reads your data, changes nothing, and requires no institutional approval." }
+    },
+    {
+      "@type": "Question",
+      "name": "My professor didn't set grade weights in Canvas. Does the ranking still work?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes — upload or paste your syllabus and Sequoia reads the grading breakdown and fills in every weight automatically. You can also set weights by hand once per course, and the ranking works from there all semester." }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I need Canvas at all?",
+      "acceptedAnswer": { "@type": "Answer", "text": "No. Syllabus upload, calendar feed, or plain manual mode all work without Canvas — you still get priority ranking, the study timer, XP, and your tree." }
+    },
+    {
+      "@type": "Question",
+      "name": "Is it actually free?",
+      "acceptedAnswer": { "@type": "Answer", "text": "The core app is free forever: priority-ranked assignments, the study timer, XP, and your tree. Premium ($9.99 per semester) adds the AI schedule, GPA calculator, all cosmetics, and a bigger daily XP cap. No credit card to start." }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it work on iPhone?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. Open getsequoia.app in Safari, tap Share, then Add to Home Screen — it installs like an app, push notifications included (iOS 16.4+). Android and desktop work the same way." }
+    },
+    {
+      "@type": "Question",
+      "name": "How is this different from a to-do list?",
+      "acceptedAnswer": { "@type": "Answer", "text": "A to-do list treats a 3% quiz and a 35% midterm as two equal checkboxes. Sequoia knows the difference — it ranks by what each assignment does to your grade and warns you before a heavy week, so your effort goes where the points are." }
+    }
+  ]
+}
+</script>
+
 <!-- PWA icons -->
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231C3A1C'/><polygon points='50,12 20,50 35,50 22,72 50,72 50,72 78,72 65,50 80,50' fill='%234CA130'/><rect x='45' y='72' width='10' height='14' rx='3' fill='%235A2E0A'/></svg>">
 <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
@@ -5402,6 +5447,87 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
       style="text-decoration:none"><span>🔌</span> Chrome extension — install free</a>
   </div>
 
+  <!-- Product proof — show the ranking, don't describe it -->
+  <section style="padding:72px 24px 8px;max-width:980px;margin:0 auto">
+    <style>
+      /* scoped styles for the two new landing sections (proof + FAQ) */
+      .ld-proof-grid { display:grid; grid-template-columns:minmax(0,380px) minmax(0,1fr); gap:44px; align-items:center; justify-content:center; }
+      @media (max-width:760px){ .ld-proof-grid { grid-template-columns:1fr; gap:28px; } .ld-proof-notes { max-width:420px; margin:0 auto; } }
+      .ld-faq details { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:14px; overflow:hidden; }
+      .ld-faq details + details { margin-top:10px; }
+      .ld-faq summary { list-style:none; cursor:pointer; padding:16px 18px; display:flex; align-items:center; gap:12px; font-size:14.5px; font-weight:700; color:rgba(255,255,255,0.88); }
+      .ld-faq summary::-webkit-details-marker { display:none; }
+      .ld-faq summary::after { content:'+'; margin-left:auto; font-size:18px; font-weight:600; color:var(--g3); transition:transform .2s; flex-shrink:0; }
+      .ld-faq details[open] summary::after { transform:rotate(45deg); }
+      .ld-faq .ld-faq-a { padding:0 18px 16px; font-size:13.5px; line-height:1.65; color:rgba(255,255,255,0.6); }
+    </style>
+    <div style="text-align:center;margin-bottom:36px">
+      <div style="font-size:13px;font-weight:700;color:var(--g3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">See the difference</div>
+      <h2 style="font-size:clamp(26px,4vw,36px);font-weight:900;color:#FFFEF8;font-family:'Playfair Display',serif;line-height:1.2">Canvas sorts by due date.<br>Sequoia sorts by damage.</h2>
+    </div>
+    <div class="ld-proof-grid">
+
+      <!-- Phone mock (pure CSS — always crisp) -->
+      <div style="background:linear-gradient(165deg,#0D1F0E,#081408);border:1px solid rgba(76,161,48,0.25);border-radius:34px;padding:18px 14px 22px;box-shadow:0 24px 70px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)">
+        <div style="width:74px;height:5px;border-radius:3px;background:rgba(255,255,255,0.12);margin:0 auto 16px"></div>
+        <div style="background:rgba(212,136,43,0.13);border:1px solid rgba(212,136,43,0.32);border-radius:12px;padding:9px 12px;font-size:11.5px;font-weight:600;color:rgba(255,255,255,0.85);line-height:1.45;margin-bottom:12px">🛡️ <strong style="color:#fff">47% of your CHEM 2310 grade</strong> is on the line this week</div>
+        <div style="font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin:0 2px 8px">Your priorities</div>
+        <div style="background:rgba(76,161,48,0.12);border:1.5px solid rgba(76,161,48,0.45);border-radius:14px;padding:12px;display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+          <div style="width:20px;height:20px;border-radius:50%;background:var(--g2);color:#fff;font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">1</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:700;color:#fff;line-height:1.3">Organic Chemistry II Midterm</div>
+            <div style="font-size:10.5px;color:rgba(255,255,255,0.45);margin-top:2px">CHEM 2310 · due in 2 days</div>
+            <div style="font-size:10.5px;font-weight:700;color:#FFB347;margin-top:3px">grade at risk (72%)</div>
+          </div>
+          <div style="background:rgba(76,161,48,0.25);color:#82D455;font-size:11px;font-weight:800;border-radius:20px;padding:3px 9px;flex-shrink:0">35%</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:14px;padding:12px;display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+          <div style="width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">2</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.85);line-height:1.3">Reaction Mechanism Problem Set</div>
+            <div style="font-size:10.5px;color:rgba(255,255,255,0.45);margin-top:2px">CHEM 2310 · <span style="color:#E87730;font-weight:700">overdue</span></div>
+          </div>
+          <div style="background:rgba(76,161,48,0.16);color:#82D455;font-size:11px;font-weight:800;border-radius:20px;padding:3px 9px;flex-shrink:0">12%</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:12px;display:flex;gap:10px;align-items:flex-start;opacity:.62">
+          <div style="width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">7</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.75);line-height:1.3">Participation Quiz: Week 13</div>
+            <div style="font-size:10.5px;color:rgba(255,255,255,0.45);margin-top:2px">SOC 1010 · due <em>tomorrow</em></div>
+          </div>
+          <div style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.55);font-size:11px;font-weight:800;border-radius:20px;padding:3px 9px;flex-shrink:0">4%</div>
+        </div>
+      </div>
+
+      <!-- Annotations -->
+      <div class="ld-proof-notes" style="display:flex;flex-direction:column;gap:22px">
+        <div style="display:flex;gap:14px;align-items:flex-start">
+          <div style="width:34px;height:34px;border-radius:10px;background:rgba(76,161,48,0.15);border:1px solid rgba(76,161,48,0.3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">⚡</div>
+          <div>
+            <div style="font-size:15px;font-weight:800;color:#FFFEF8;margin-bottom:3px">The 35% midterm outranks everything</div>
+            <div style="font-size:13.5px;line-height:1.6;color:rgba(255,255,255,0.55)">Even the overdue problem set and the quiz due tomorrow — because grade weight × urgency beats due date alone.</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px;align-items:flex-start">
+          <div style="width:34px;height:34px;border-radius:10px;background:rgba(212,136,43,0.14);border:1px solid rgba(212,136,43,0.3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🛡️</div>
+          <div>
+            <div style="font-size:15px;font-weight:800;color:#FFFEF8;margin-bottom:3px">Grade Guard sees the heavy week coming</div>
+            <div style="font-size:13.5px;line-height:1.6;color:rgba(255,255,255,0.55)">When a big chunk of one course's grade lands in the same week, you hear about it before it's on top of you.</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px;align-items:flex-start">
+          <div style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">💤</div>
+          <div>
+            <div style="font-size:15px;font-weight:800;color:#FFFEF8;margin-bottom:3px">The 4% quiz can wait</div>
+            <div style="font-size:13.5px;line-height:1.6;color:rgba(255,255,255,0.55)">It's due first — and ranked seventh. That's the whole point.</div>
+          </div>
+        </div>
+        <button onclick="loadDemoFromLanding()" style="align-self:flex-start;margin-top:4px;padding:11px 20px;border-radius:100px;border:1px solid rgba(76,161,48,0.4);background:rgba(76,161,48,0.1);color:var(--g4);font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:700;cursor:pointer">🌱 See it live in the demo →</button>
+      </div>
+
+    </div>
+  </section>
+
   <!-- Origin story / social proof -->
   <div class="ld-origin">
     <div class="ld-origin-inner">
@@ -5561,6 +5687,42 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
 
     </div>
     <p style="margin-top:20px;font-size:12px;color:rgba(255,255,255,0.3)">🔒 Powered by Stripe · No hidden fees · Works at any Canvas school</p>
+  </section>
+
+  <!-- FAQ — answer the objections right before the last ask -->
+  <section class="ld-faq" style="padding:56px 24px 40px;max-width:720px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="font-size:13px;font-weight:700;color:var(--g3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">FAQ</div>
+      <h2 style="font-size:clamp(24px,4vw,32px);font-weight:900;color:#FFFEF8;font-family:'Playfair Display',serif">Fair questions.</h2>
+    </div>
+    <details ontoggle="this.open&&typeof track==='function'&&track('faq_opened',{q:'token-safety'})">
+      <summary>Is giving Sequoia a Canvas token safe?</summary>
+      <div class="ld-faq-a">A token only grants the same access you already have as a student, and Sequoia uses it read-only — assignments, due dates, and grade weights. Nothing is ever posted or changed in Canvas, and you can revoke it any time from Canvas → Settings. Prefer not to use one at all? The Chrome extension, syllabus upload, and calendar feed all work without a token.</div>
+    </details>
+    <details ontoggle="this.open&&typeof track==='function'&&track('faq_opened',{q:'school'})">
+      <summary>Will my school know I'm using it?</summary>
+      <div class="ld-faq-a">Sequoia talks to Canvas through the same official API the Canvas mobile app uses, signed in as you. It reads your data, changes nothing, and requires no institutional approval.</div>
+    </details>
+    <details ontoggle="this.open&&typeof track==='function'&&track('faq_opened',{q:'no-weights'})">
+      <summary>My professor didn't set grade weights in Canvas. Does the ranking still work?</summary>
+      <div class="ld-faq-a">Yes — upload or paste your syllabus and Sequoia reads the grading breakdown and fills in every weight automatically. You can also set weights by hand once per course, and the ranking works from there all semester.</div>
+    </details>
+    <details ontoggle="this.open&&typeof track==='function'&&track('faq_opened',{q:'no-canvas'})">
+      <summary>Do I need Canvas at all?</summary>
+      <div class="ld-faq-a">No. Syllabus upload, calendar feed, or plain manual mode all work without Canvas — you still get priority ranking, the study timer, XP, and your tree.</div>
+    </details>
+    <details ontoggle="this.open&&typeof track==='function'&&track('faq_opened',{q:'free'})">
+      <summary>Is it actually free?</summary>
+      <div class="ld-faq-a">The core app is free forever: priority-ranked assignments, the study timer, XP, and your tree. Premium ($9.99 per semester) adds the AI schedule, GPA calculator, all cosmetics, and a bigger daily XP cap. No credit card to start.</div>
+    </details>
+    <details ontoggle="this.open&&typeof track==='function'&&track('faq_opened',{q:'iphone'})">
+      <summary>Does it work on iPhone?</summary>
+      <div class="ld-faq-a">Yes. Open getsequoia.app in Safari, tap Share, then <strong style="color:rgba(255,255,255,0.8)">Add to Home Screen</strong> — it installs like an app, push notifications included (iOS 16.4+). Android and desktop work the same way.</div>
+    </details>
+    <details ontoggle="this.open&&typeof track==='function'&&track('faq_opened',{q:'todo'})">
+      <summary>How is this different from a to-do list?</summary>
+      <div class="ld-faq-a">A to-do list treats a 3% quiz and a 35% midterm as two equal checkboxes. Sequoia knows the difference — it ranks by what each assignment does to your grade and warns you before a heavy week, so your effort goes where the points are.</div>
+    </details>
   </section>
 
   <!-- Final CTA -->
