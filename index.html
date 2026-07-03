@@ -4585,6 +4585,55 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 .grade-guard strong { color: #fff; font-weight: 800; }
 .grade-guard.hidden { display: none; }
 [data-theme="light"] .grade-guard { color: var(--text); }
+
+/* ── SETUP CHECKLIST — new-user activation card ──────────── */
+.setup-card {
+  grid-column: 1 / -1;
+  padding: 16px 18px 14px; border-radius: 16px;
+  background: rgba(76,161,48,0.07);
+  border: 1px solid rgba(76,161,48,0.28);
+}
+.setup-card.hidden { display: none; }
+.suc-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.suc-title { font-size: 15px; font-weight: 800; color: #FFFEF8; }
+.suc-sub { font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 2px; }
+.suc-sub strong { color: var(--g4); }
+.suc-head-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.suc-bar { width: 72px; height: 6px; border-radius: 4px; background: rgba(255,255,255,0.1); overflow: hidden; }
+.suc-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg,#2E6020,#4CA130); width: 0%; transition: width .4s ease; }
+.suc-dismiss { background: none; border: none; color: rgba(255,255,255,0.35); font-size: 14px; cursor: pointer; padding: 4px 6px; line-height: 1; }
+.suc-dismiss:hover { color: rgba(255,255,255,0.7); }
+.suc-steps { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+@media (max-width: 640px) { .suc-steps { grid-template-columns: 1fr; } }
+.suc-step {
+  display: flex; align-items: center; gap: 10px; text-align: left;
+  padding: 10px 12px; border-radius: 12px; cursor: pointer;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+  font-family: 'DM Sans', sans-serif; transition: background .15s, border-color .15s;
+}
+.suc-step:hover { background: rgba(76,161,48,0.1); border-color: rgba(76,161,48,0.35); }
+.suc-step.done { background: rgba(76,161,48,0.06); border-color: rgba(76,161,48,0.18); cursor: default; opacity: .72; }
+.suc-check {
+  width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid rgba(255,255,255,0.25); color: #fff; font-size: 12px; font-weight: 800;
+}
+.suc-step.done .suc-check { background: #2E6020; border-color: #2E6020; }
+.suc-step-body { flex: 1; min-width: 0; }
+.suc-step-label { display: block; font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.88); }
+.suc-step-hint { display: block; font-size: 11px; color: rgba(255,255,255,0.42); margin-top: 1px; }
+.suc-step-icon { font-size: 16px; flex-shrink: 0; }
+/* Light mode */
+[data-theme="light"] .setup-card { background: rgba(76,161,48,0.08); border-color: rgba(76,161,48,0.3); }
+[data-theme="light"] .suc-title { color: var(--g1); }
+[data-theme="light"] .suc-sub { color: var(--mid); }
+[data-theme="light"] .suc-bar { background: rgba(0,0,0,0.08); }
+[data-theme="light"] .suc-dismiss { color: rgba(0,0,0,0.3); }
+[data-theme="light"] .suc-step { background: var(--card); border-color: var(--border); }
+[data-theme="light"] .suc-step-label { color: var(--g1); }
+[data-theme="light"] .suc-step-hint { color: var(--light); }
+[data-theme="light"] .suc-check { border-color: rgba(0,0,0,0.2); color: transparent; }
+[data-theme="light"] .suc-step.done .suc-check { color: #fff; }
 [data-theme="light"] .grade-guard strong { color: var(--g1); }
 .focus-banner {
   grid-column: 1 / -1;
@@ -6482,6 +6531,21 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
     </div>
 
     <!-- FOCUS BANNER -->
+    <!-- Setup checklist — new-user activation (hidden for demo / once done or dismissed) -->
+    <div class="setup-card hidden" id="setup-checklist">
+      <div class="suc-head">
+        <div>
+          <div class="suc-title">🌱 Get set up</div>
+          <div class="suc-sub"><strong id="suc-count">0 of 4</strong> — finish these and the forest takes it from here</div>
+        </div>
+        <div class="suc-head-right">
+          <div class="suc-bar"><div class="suc-bar-fill" id="suc-bar"></div></div>
+          <button class="suc-dismiss" aria-label="Dismiss setup checklist" onclick="dismissSetupChecklist()">✕</button>
+        </div>
+      </div>
+      <div class="suc-steps" id="suc-steps"></div>
+    </div>
+
     <div class="grade-guard hidden" id="grade-guard"></div>
     <div class="focus-banner hidden" id="focus-banner">
       <div class="focus-icon" id="focus-icon">🎯</div>
@@ -9608,6 +9672,9 @@ function _ensureNavCache() {
 }
 function showScreen(i) {
   _ensureNavCache();
+  // Returning to the dashboard re-checks setup progress (a session run or
+  // notification grant elsewhere should tick its step immediately)
+  if (i === 0 && typeof renderSetupChecklist === 'function') renderSetupChecklist();
   // Exit animation on outgoing screen
   _navScreens.forEach((s, j) => {
     if (j !== i && s.classList.contains('active')) {
@@ -10523,8 +10590,71 @@ function renderGradeGuard() {
   }
 }
 
+// ── SETUP CHECKLIST — new-user activation ─────────────────────────────────
+// Four steps to an activated user: connected → assignment listed → first
+// focus session → grade-risk alerts on. Reads live state on every render, so
+// steps tick themselves as the user progresses. Hidden in demo, once
+// dismissed, or after the one-time completion XP beat.
+function _setupSteps() {
+  const hasConnection = !!(localStorage.getItem('sq_token') || localStorage.getItem('sq_ical')
+    || localStorage.getItem('sq_ext_last_sync') || localStorage.getItem('sq_ext_chosen') === '1'
+    || (localStorage.getItem('sq_manual_mode') === '1' && getCourses().length > 0)
+    || allAssignments.length > 0);
+  const hasAssign  = allAssignments.length > 0;
+  const hasSession = parseInt(localStorage.getItem('sq_pomo_sessions') || '0') > 0;
+  const hasNotifs  = (typeof Notification !== 'undefined' && Notification.permission === 'granted');
+  return [
+    { id:'connect', icon:'🔗', label:'Connect your classes',            done:hasConnection, hint:'Canvas, syllabus, or manual — 60 seconds',  action:'showOnboard(1)' },
+    { id:'assign',  icon:'📋', label:'Get your first assignment listed', done:hasAssign,     hint:'Synced from Canvas or added by hand',       action:'openAddAssign()' },
+    { id:'session', icon:'⏱',  label:'Run your first focus session',     done:hasSession,    hint:'25 minutes — earns your first session XP',  action:'showScreen(2)' },
+    { id:'notifs',  icon:'🔔', label:'Turn on grade-risk alerts',        done:hasNotifs,     hint:"So a heavy week can't sneak up on you",     action:'toggleNotifPanel()' },
+  ];
+}
+
+function renderSetupChecklist() {
+  const el = document.getElementById('setup-checklist');
+  if (!el) return;
+  const hide = () => el.classList.add('hidden');
+  if (isDemo || !currentUser) return hide();
+  if (localStorage.getItem('sq_setup_dismissed') === '1') return hide();
+  if (localStorage.getItem('sq_setup_complete') === '1') return hide();
+
+  const steps = _setupSteps();
+  const done  = steps.filter(s => s.done).length;
+
+  if (done === steps.length) {
+    // One-time completion beat, then the card retires forever
+    localStorage.setItem('sq_setup_complete', '1');
+    starterGrant('sq_grant_setup_done', 50, '🌱 +50 XP — Setup complete! Your forest takes it from here.');
+    track('setup_checklist_complete');
+    return hide();
+  }
+
+  document.getElementById('suc-count').textContent = done + ' of ' + steps.length;
+  document.getElementById('suc-bar').style.width   = Math.round(done / steps.length * 100) + '%';
+  document.getElementById('suc-steps').innerHTML   = steps.map(s => `
+    <button class="suc-step${s.done ? ' done' : ''}"
+      onclick="track('setup_step_tap',{step:'${s.id}',done:${s.done}});${s.done ? '' : s.action}">
+      <span class="suc-check">${s.done ? '✓' : ''}</span>
+      <span class="suc-step-body">
+        <span class="suc-step-label">${s.label}</span>
+        <span class="suc-step-hint">${s.done ? 'Done ✓' : s.hint}</span>
+      </span>
+      <span class="suc-step-icon">${s.icon}</span>
+    </button>`).join('');
+  el.classList.remove('hidden');
+}
+
+function dismissSetupChecklist() {
+  localStorage.setItem('sq_setup_dismissed', '1');
+  track('setup_checklist_dismissed');
+  const el = document.getElementById('setup-checklist');
+  if (el) el.classList.add('hidden');
+}
+
 function renderFocusBanner() {
   renderGradeGuard();
+  renderSetupChecklist();
   const banner = document.getElementById('focus-banner');
   const pending = allAssignments.filter(a => !completedIds.has(String(a.id)));
   if (!pending.length) { banner.classList.add('hidden'); return; }
