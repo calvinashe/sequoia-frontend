@@ -5445,6 +5445,40 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
   autocapture: false,        // manual only — cleaner event names
   capture_pageview: false,   // we fire app_opened manually
 });
+
+// ── CLIENT ERROR TRACKING ─────────────────────────────────────────────────
+// Forwards uncaught errors + unhandled promise rejections to PostHog so
+// breakage on real users' devices is visible (critical once launch traffic
+// hits browsers we've never tested). Deduped per message, capped per session,
+// credential-scrubbing, and guaranteed never to throw itself.
+(function () {
+  var seen = {}, sent = 0;
+  function report(kind, msg, src, line) {
+    try {
+      msg = String(msg || 'unknown').slice(0, 300);
+      if (/gsk_|ghp_|Bearer\s|token=|api[_-]?key/i.test(msg)) msg = '[scrubbed: credential-like text]';
+      var key = kind + '|' + msg;
+      if (sent >= 8 || seen[key]) return;   // keep noisy loops from flooding events
+      seen[key] = 1; sent++;
+      var screen = document.querySelector('.screen.active');
+      if (window.posthog && posthog.capture) posthog.capture('client_error', {
+        kind: kind,
+        message: msg,
+        source: String(src || '').split('/').pop().slice(0, 80),
+        line: line || 0,
+        screen: screen ? screen.id : 'boot',
+      });
+    } catch (_) { /* the error reporter must never be a source of errors */ }
+  }
+  window.addEventListener('error', function (e) {
+    report('error', e.message, e.filename, e.lineno);
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    var r = e.reason;
+    report('rejection', (r && (r.message || r)) || 'unhandled rejection',
+      r && r.stack ? String(r.stack).split('\n')[1] : '', 0);
+  });
+})();
 </script>
 </head>
 <body>
