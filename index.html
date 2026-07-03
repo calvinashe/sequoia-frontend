@@ -11912,9 +11912,13 @@ function _capResetIn() {
 
 function _capForMonth() {
   const mo = new Date().getMonth() + 1; // 1-12
-  if (mo === 5 || mo === 12) return 700;  // finals
-  if (mo === 3 || mo === 10) return 550;  // midterms
-  return 400;
+  let cap = 400;
+  if (mo === 5 || mo === 12) cap = 700;       // finals
+  else if (mo === 3 || mo === 10) cap = 550;  // midterms
+  // Premium floor — mirrors the server's effective_daily_cap (the advertised
+  // "extended XP cap 550/day"); never lowers a finals/midterms cap.
+  if (typeof isPremium === 'function' && isPremium()) cap = Math.max(cap, 550);
+  return cap;
 }
 
 function updateCapUI() {
