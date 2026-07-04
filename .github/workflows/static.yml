@@ -41,3 +41,8 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
+        with:
+          # The Pages backend sometimes takes >10 min to report success; the
+          # action's default 600000ms timeout was aborting otherwise-healthy
+          # deployments ("Timeout reached, aborting!"). Give it 25 minutes.
+          timeout: 1500000
