@@ -174,6 +174,16 @@
 *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
 * { -webkit-tap-highlight-color:transparent; }
 button, a, [onclick], [role="button"] { touch-action:manipulation; }
+/* Vestibular-safety: the app is animation-heavy (splash, tree sway, effects,
+   toasts) — collapse all motion for users who ask the OS for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 html { height:100%; }
 body {
   font-family:'DM Sans',sans-serif;
@@ -287,7 +297,7 @@ a.ld-trust-item, a.ld-trust-item:visited { color:rgba(255,255,255,0.45); }
   line-height:1.65; font-style:italic; margin-bottom:10px;
 }
 .ld-origin-attr {
-  font-size:12px; font-weight:700; color:rgba(76,161,48,0.7);
+  font-size:12px; font-weight:700; color:#82CC55;
   letter-spacing:.04em;
 }
 
@@ -306,7 +316,7 @@ a.ld-trust-item, a.ld-trust-item:visited { color:rgba(255,255,255,0.45); }
 .ld-stage-hi { border-color:rgba(76,161,48,0.35); background:rgba(76,161,48,0.07); }
 .ld-stage-tree { font-size:36px; line-height:1; }
 .ld-stage-label { font-size:12px; font-weight:700; color:rgba(255,255,254,0.75); text-align:center; }
-.ld-stage-sub { font-size:10px; color:rgba(255,255,255,0.38); }
+.ld-stage-sub { font-size:10px; color:rgba(255,255,255,0.62); }
 .ld-stage-arrow { font-size:18px; color:rgba(76,161,48,0.4); flex-shrink:0; }
 
 /* Features grid */
@@ -382,8 +392,8 @@ a.ld-trust-item, a.ld-trust-item:visited { color:rgba(255,255,255,0.45); }
 }
 .ld-bottom-headline { font-family:'Playfair Display',serif; font-size:28px; font-weight:800; color:#FFFEF8; margin-bottom:10px; }
 .ld-bottom-sub { font-size:15px; color:rgba(255,255,255,0.5); margin-bottom:24px; }
-.ld-bottom-legal { font-size:11px; color:rgba(255,255,255,0.25); margin-top:16px; line-height:1.8; }
-.ld-bottom-legal a { color:rgba(76,161,48,0.6); }
+.ld-bottom-legal { font-size:11px; color:rgba(255,255,255,0.55); margin-top:16px; line-height:1.8; }
+.ld-bottom-legal a { color:#6BBF4A; }
 
 /* Responsive */
 @media (max-width:640px) {
@@ -808,7 +818,7 @@ a.ld-trust-item, a.ld-trust-item:visited { color:rgba(255,255,255,0.45); }
   .notif-push-btn { padding:15px; font-size:15px; min-height:52px; }
 }
 .nav-streak.at-risk {
-  color:#E8773A !important;
+  color:#FFA05C !important;
   animation:streakPulse 2s ease-in-out infinite;
 }
 @keyframes streakPulse {
@@ -5336,7 +5346,7 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 [data-theme="dark"] .notif-item-title   { color:#FFFEF8; }
 [data-theme="dark"] .notif-item-body    { color:rgba(255,255,255,0.55); }
 [data-theme="dark"] .notif-item-time    { color:rgba(255,255,255,0.3); }
-[data-theme="dark"] .notif-empty        { color:rgba(255,255,255,0.3); }
+[data-theme="dark"] .notif-empty        { color:rgba(255,255,255,0.62); }
 [data-theme="dark"] .notif-push-section { border-bottom-color:rgba(76,161,48,0.1); }
 [data-theme="dark"] .notif-push-btn {
   background:#0B1C0E; border-color:rgba(76,161,48,0.22);
@@ -5735,9 +5745,9 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
 
       <!-- Free tier -->
       <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:28px 24px;text-align:left">
-        <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px">Free</div>
+        <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.65);text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px">Free</div>
         <div style="font-size:40px;font-weight:900;color:#FFFEF8;font-family:'Playfair Display',serif;line-height:1;margin-bottom:4px">$0</div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:24px">forever free</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:24px">forever free</div>
         <div style="display:flex;flex-direction:column;gap:10px">
           <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.7)"><span style="color:var(--g3);flex-shrink:0">✓</span>Priority-sorted assignments</div>
           <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.7)"><span style="color:var(--g3);flex-shrink:0">✓</span>XP &amp; tree growth</div>
@@ -5756,7 +5766,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
           <span style="font-size:18px;font-weight:800;color:rgba(255,255,255,0.6);margin-top:6px">$</span>
           <span style="font-size:40px;font-weight:900;color:#FFFEF8;font-family:'Playfair Display',serif;line-height:1">9.99</span>
         </div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:24px">every 6 months · cancel anytime</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:24px">every 6 months · cancel anytime</div>
         <div style="display:flex;flex-direction:column;gap:10px">
           <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--g3);flex-shrink:0">✓</span>Everything in Free</div>
           <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--g3);flex-shrink:0">✓</span>GPA impact calculator</div>
@@ -5769,7 +5779,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
       </div>
 
     </div>
-    <p style="margin-top:20px;font-size:12px;color:rgba(255,255,255,0.3)">🔒 Powered by Stripe · No hidden fees · Works at any Canvas school</p>
+    <p style="margin-top:20px;font-size:12px;color:rgba(255,255,255,0.55)">🔒 Powered by Stripe · No hidden fees · Works at any Canvas school</p>
   </section>
 
   <!-- FAQ — answer the objections right before the last ask -->
@@ -6798,7 +6808,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
           <span class="courses-title">Grade Intelligence</span>
           <div style="display:flex;align-items:center;gap:6px">
             <span id="grades-target-label" style="font-size:11px;color:var(--light)">Target</span>
-            <select id="grades-target" onchange="renderGrades(window._lastGrades||[])"
+            <select id="grades-target" aria-label="Target grade" onchange="renderGrades(window._lastGrades||[])"
               style="font-size:11px;font-weight:700;border:1px solid rgba(76,161,48,0.25);border-radius:6px;padding:3px 6px;background:var(--card);color:var(--text);cursor:pointer">
               <option value="90">A (90%)</option>
               <option value="80">B (80%)</option>
@@ -18381,7 +18391,7 @@ function _showPwaInstallBanner() {
   </div>
 </div>
 
-<div id="paywall-overlay" aria-modal="true" role="dialog">
+<div id="paywall-overlay" aria-modal="true" role="dialog" aria-label="Upgrade to Sequoia Premium">
   <div id="paywall-card">
     <div class="pw-pill">✦ Premium</div>
     <div class="pw-heading" id="pw-heading">Unlock your full<br>grove potential.</div>
@@ -18478,7 +18488,7 @@ function _showPwaInstallBanner() {
 </div>
 
 <!-- DECO SHOP MODAL -->
-<div id="deco-shop-modal" aria-modal="true" role="dialog" onclick="if(event.target===this)closeDecoShopModal()">
+<div id="deco-shop-modal" aria-modal="true" role="dialog" aria-label="Decoration shop" onclick="if(event.target===this)closeDecoShopModal()">
   <div class="dsm-card">
     <span class="dsm-emoji" id="dsm-emoji">🪄</span>
     <div class="dsm-name" id="dsm-name">Fairy Lights</div>
