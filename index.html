@@ -8000,9 +8000,10 @@ async function initNewUser(user, name) {
   }
 
   // Demo data is fake — never seed it into a real account.
-  // If the user played demo before signing up, start them clean at 0.
-  // If they had genuine localStorage data (used the app before creating an account), migrate it.
-  const fromDemo = isDemo;
+  // Trust the persistent marker, not just the live isDemo flag: the in-app signup
+  // path reloads (clearing isDemo) but leaves demo's localStorage intact, so
+  // `isDemo` alone would wrongly migrate 2850 XP / 12 streak / etc. into the new account.
+  const fromDemo = isDemo || localStorage.getItem('sq_demo_active') === '1';
   await db.collection('users').doc(user.uid).set({
     name:               name || user.displayName || '',
     email:              user.email || '',
@@ -8019,6 +8020,14 @@ async function initNewUser(user, name) {
     manual_assignments: fromDemo ? [] : (() => { try { return JSON.parse(localStorage.getItem('sq_manual') || '[]'); } catch(e) { return []; } })(),
     created_at:         firebase.firestore.FieldValue.serverTimestamp(),
   }).catch(() => {});
+
+  // Demo-originated signup: scrub every demo-seeded localStorage key so fake
+  // progress (XP, streak, leaves currency, sessions, study history) can't bleed
+  // into the fresh account. loadUserData() then repopulates real values from the
+  // doc we just wrote (fields we don't write, like leaves/history, simply default
+  // fresh). Synchronous + early, so it wins any race with onAuthStateChanged.
+  if (fromDemo) _DEMO_KEYS.forEach(k => localStorage.removeItem(k));
+  localStorage.removeItem('sq_demo_active');
 
   // ── Auto-connect friend from invite link ─────────────────────
   // If the user arrived via a friend invite (?code=XXXXXX), the code was stored
@@ -9008,10 +9017,8 @@ async function connectCanvas() {
 
     // If coming from demo mode, restore snapshotted data and exit demo cleanly
     if (_wasDemo) {
-      const s = window._demoSnap || {};
-      const restore = (k, v) => v !== null && v !== undefined ? localStorage.setItem(k, v) : localStorage.removeItem(k);
-      restore('sq_xp', s.xp); restore('sq_done', s.done); restore('sq_streak', s.streak);
-      restore('sq_last_study', s.last);
+      _restoreRealStateFromDemo();
+      localStorage.setItem('sq_name', name); // keep the just-connected Canvas name, not the pre-demo one
       const demoBanner = document.getElementById('demo-banner');
       if (demoBanner) demoBanner.style.display = 'none';
       const demoInsightEl = document.getElementById('demo-insight');
@@ -9267,16 +9274,41 @@ function obGoManual() {
   if (!isDemo) saveUserData({ manual_mode: true });
 }
 
+// Every localStorage key that loadDemo() overwrites with fake progress. The
+// snapshot/restore and the signup purge both key off this list so none get missed.
+const _DEMO_KEYS = ['sq_xp','sq_streak','sq_last_study','sq_done','sq_name',
+                    'sq_leaves','sq_pomo_sessions','sq_study_history',
+                    'sq_xp_today','sq_xp_today_date'];
+
+// Restore the exact pre-demo localStorage state captured in window._demoSnap and
+// clear the demo marker. Used by every path that exits demo back to the real app.
+function _restoreRealStateFromDemo() {
+  const s = window._demoSnap || {};
+  const restore = (k, v) => v !== null && v !== undefined ? localStorage.setItem(k, v) : localStorage.removeItem(k);
+  restore('sq_xp', s.xp);         restore('sq_done', s.done);   restore('sq_streak', s.streak);
+  restore('sq_last_study', s.last); restore('sq_name', s.name); restore('sq_leaves', s.leaves);
+  restore('sq_pomo_sessions', s.pomo); restore('sq_study_history', s.history);
+  localStorage.removeItem('sq_demo_active');
+}
+
 function loadDemo() {
   isDemo = true;
-  // Snapshot real state so we can restore it on exit
+  // Snapshot ALL keys demo overwrites so exit restores real state completely —
+  // not just the visible ones (leaves currency, session count, study history leaked before).
   window._demoSnap = {
-    xp:     localStorage.getItem('sq_xp'),
-    done:   localStorage.getItem('sq_done'),
-    streak: localStorage.getItem('sq_streak'),
-    last:   localStorage.getItem('sq_last_study'),
-    name:   localStorage.getItem('sq_name'),
+    xp:      localStorage.getItem('sq_xp'),
+    done:    localStorage.getItem('sq_done'),
+    streak:  localStorage.getItem('sq_streak'),
+    last:    localStorage.getItem('sq_last_study'),
+    name:    localStorage.getItem('sq_name'),
+    leaves:  localStorage.getItem('sq_leaves'),
+    pomo:    localStorage.getItem('sq_pomo_sessions'),
+    history: localStorage.getItem('sq_study_history'),
   };
+  // Persistent marker (survives location.reload()) so a later signup — even one
+  // that reloads out of demo first (the account-menu path does) — is still
+  // recognized as demo-originated and never migrates fake data into the real account.
+  localStorage.setItem('sq_demo_active', '1');
   // Seed demo with realistic progress
   const today = _localDateStr();
   localStorage.setItem('sq_xp',            '2850');
@@ -9817,10 +9849,7 @@ function _sc2SpawnOne() {
 }
 function disconnect() {
   if (isDemo) {
-    const s = window._demoSnap || {};
-    const restore = (k, v) => v !== null && v !== undefined ? localStorage.setItem(k, v) : localStorage.removeItem(k);
-    restore('sq_xp', s.xp); restore('sq_done', s.done); restore('sq_streak', s.streak);
-    restore('sq_last_study', s.last); restore('sq_name', s.name);
+    _restoreRealStateFromDemo();
     location.reload(); return;
   }
   // confirm() is silently blocked in iOS PWA (standalone) mode — use a toast-confirm instead.
