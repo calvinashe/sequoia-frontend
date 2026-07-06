@@ -9650,6 +9650,9 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     // Sync browser extension data if available
     setTimeout(() => loadExtensionAssignments(), 2000);
+    // Safety net: if no load path replaced the "Loading…" placeholders by now
+    // (manual/syllabus user, post-onboarding landing, etc.), render the real states.
+    setTimeout(() => _ensureDashRendered(), 3000);
     // Notify the Sequoia browser extension (if installed) with a fresh auth token
     // The extension listens for this event via sequoia-bridge.js
     user.getIdToken().then(token => {
@@ -10766,6 +10769,26 @@ function renderFocusBanner() {
   document.getElementById('focus-title').textContent = top.title;
   document.getElementById('focus-reason').innerHTML  = reason;
   banner.classList.remove('hidden');
+}
+
+// Safety net: several boot/onboarding permutations reveal the dashboard without
+// ever running a Canvas-API load (manual/syllabus users, post-onboarding landings,
+// Firestore-restored connections on a fresh device). In those cases the static
+// "Loading…" placeholders in #assign-list / #grades-list are never replaced and sit
+// there forever. If they're STILL the original placeholder shortly after boot — a
+// real load would have swapped in skeleton rows immediately — render the proper
+// states now. Keyed on the exact placeholder text so it never clobbers an in-flight
+// load, a rendered empty state, or demo mode.
+function _ensureDashRendered() {
+  if (isDemo) return;
+  const al = document.getElementById('assign-list');
+  if (al && /Loading your Canvas assignments/.test(al.textContent)) {
+    _applyAssignments([]); // merges any sq_manual assignments, else shows the setup card
+  }
+  const gl = document.getElementById('grades-list');
+  if (gl && /Loading grades/.test(gl.textContent)) {
+    renderGrades(window._lastGrades || []); // shows "No courses found — Connect Canvas"
+  }
 }
 
 function refreshAssignments() {
