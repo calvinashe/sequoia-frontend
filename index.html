@@ -16936,7 +16936,10 @@ async function _upsertPublicProfile() {
   const uid  = currentUser.uid;
   const code = _friendCode(uid);
   const xp   = getXP(), streak = getStreak();
-  const name = localStorage.getItem('sq_name') || 'Sequoia Student';
+  // First name ONLY — public_profiles is readable by every signed-in user, so we
+  // never publish a last name. Mirrors the shareable stats card (first-name-only)
+  // and the app's "first name + stats, never PII" privacy rule.
+  const name = ((localStorage.getItem('sq_name') || '').split(' ')[0]) || 'Sequoia Student';
   const lvl  = levelFor(xp);
   const weekXP = _getWeeklyXP();
   const weekKey = _isoWeekKey();
