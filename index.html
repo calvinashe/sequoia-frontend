@@ -13871,13 +13871,78 @@ function _renderSylCourseList() {
   }
 }
 
+// ── Resilient syllabus-parse fetch ───────────────────────────────
+// Syllabus upload is the promoted #1 onboarding path, so a first-time
+// user's very first backend call can hit a cold Render dyno (30-50s to
+// wake). A bare fetch would just hang with no feedback. This mirrors the
+// /assignments cold-start pattern: a per-attempt timeout, auto-retry on
+// network/timeout/502/503, and a persistent "server is waking up"
+// indicator that escalates after 8s so a long wait never looks frozen.
+let _sylWakeEl = null, _sylWakeTimer = null;
+function _sylWakeShow(msg) {
+  _sylWakeHide();
+  const el = document.createElement('div');
+  el.id = 'syl-wake';
+  el.style.cssText = 'position:fixed;bottom:calc(90px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);' +
+    'background:#1A3A1A;color:#fff;font-size:13px;font-weight:700;padding:12px 20px;border-radius:100px;' +
+    'z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.4);max-width:calc(100% - 32px);text-align:center;line-height:1.4;' +
+    'border:1px solid rgba(76,161,48,0.3);animation:fadeUp .3s ease;pointer-events:none;';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  _sylWakeEl = el;
+}
+function _sylWakeUpdate(msg) { if (_sylWakeEl) _sylWakeEl.textContent = msg; }
+function _sylWakeHide() {
+  if (_sylWakeTimer) { clearTimeout(_sylWakeTimer); _sylWakeTimer = null; }
+  if (_sylWakeEl) { _sylWakeEl.remove(); _sylWakeEl = null; }
+}
+
+async function _parseSyllabusFetch(url, options) {
+  const MAX_ATTEMPTS   = 4;
+  const PER_ATTEMPT_MS = 24000; // Render typically wakes in 30-50s; 4 attempts ≈ 100s
+  _sylWakeShow('⏳ Reading your syllabus…');
+  // Escalate to a cold-start explanation after 8s so a long wait never looks frozen
+  _sylWakeTimer = setTimeout(() => {
+    _sylWakeUpdate('🌱 Waking up the server — first parse can take 20–40s…');
+  }, 8000);
+  try {
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        const ctrl = new AbortController();
+        const to   = setTimeout(() => ctrl.abort(), PER_ATTEMPT_MS);
+        let res;
+        try { res = await fetch(url, { ...options, signal: ctrl.signal }); }
+        finally { clearTimeout(to); }
+        // Render's edge sometimes 502/503s while the dyno is still waking — retry those
+        if ((res.status === 502 || res.status === 503) && attempt < MAX_ATTEMPTS) {
+          _sylWakeUpdate(`🌱 Waking up the server — retrying (${attempt}/${MAX_ATTEMPTS})…`);
+          await new Promise(r => setTimeout(r, 1500));
+          continue;
+        }
+        return res; // real response — let the caller handle ok/error
+      } catch (e) {
+        // AbortError (timeout) or TypeError (network) → cold dyno; retry
+        const retryable = e.name === 'AbortError' || e instanceof TypeError;
+        if (retryable && attempt < MAX_ATTEMPTS) {
+          _sylWakeUpdate(`🌱 Waking up the server — retrying (${attempt}/${MAX_ATTEMPTS})…`);
+          await new Promise(r => setTimeout(r, 1500));
+          continue;
+        }
+        throw e; // out of retries / non-retryable
+      }
+    }
+  } finally {
+    _sylWakeHide();
+  }
+}
+
 async function _autoParseCanvasSyllabi() {
   const toparse = _sylCourses.filter(c => c.has_syllabus);
   for (const c of toparse) {
     _setSylCardState(c.course_id, 'loading', '⏳ Parsing…', 'Parsing with AI…');
     try {
       const _sylToken = currentUser ? await currentUser.getIdToken() : null;
-      const res  = await fetch(API + '/parse-syllabus', {
+      const res  = await _parseSyllabusFetch(API + '/parse-syllabus', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(_sylToken ? { 'Authorization': 'Bearer ' + _sylToken } : {}) },
         body: JSON.stringify({
@@ -13924,13 +13989,12 @@ async function sylOnbUploadPDF() {
   input.onchange = async () => {
     const file = input.files[0];
     if (!file) return;
-    showToast('⏳ Reading your syllabus…', 4000);
     const form = new FormData();
     form.append('file', file);
     form.append('course_name', name);
     try {
       const idTok = currentUser ? await currentUser.getIdToken() : null;
-      const res   = await fetch(API + '/parse-syllabus-pdf', {
+      const res   = await _parseSyllabusFetch(API + '/parse-syllabus-pdf', {
         method:  'POST',
         headers: idTok ? { 'Authorization': 'Bearer ' + idTok } : {},
         body:    form,
@@ -13960,7 +14024,7 @@ function sylUploadPDF(courseId, courseName) {
     form.append('course_name', courseName);
     try {
       const idTok = currentUser ? await currentUser.getIdToken() : null;
-      const res  = await fetch(API + '/parse-syllabus-pdf', { method: 'POST', headers: idTok ? { 'Authorization': 'Bearer ' + idTok } : {}, body: form });
+      const res  = await _parseSyllabusFetch(API + '/parse-syllabus-pdf', { method: 'POST', headers: idTok ? { 'Authorization': 'Bearer ' + idTok } : {}, body: form });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error);
       const count = data.assignments.length;
@@ -14001,7 +14065,7 @@ async function parsePastedSyllabus() {
   }
   try {
     const _pasteSylToken = currentUser ? await currentUser.getIdToken() : null;
-    const res  = await fetch(API + '/parse-syllabus', {
+    const res  = await _parseSyllabusFetch(API + '/parse-syllabus', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...(_pasteSylToken ? { 'Authorization': 'Bearer ' + _pasteSylToken } : {}) },
       body: JSON.stringify({ content: text, content_type: 'text', course_name: courseName }),
