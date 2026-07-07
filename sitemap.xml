@@ -13,6 +13,18 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://getsequoia.app/weighted-grade-calculator</loc>
+    <lastmod>2026-07-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://getsequoia.app/gpa-calculator</loc>
+    <lastmod>2026-07-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://getsequoia.app/support.html</loc>
     <lastmod>2026-07-02</lastmod>
     <changefreq>monthly</changefreq>
