@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Final Grade Calculator — What Do I Need on My Final Exam? | Sequoia</title>
+<meta name="description" content="Free final grade calculator. Enter your current grade, your final exam's weight, and the grade you want — see exactly what score you need on your final. No signup.">
+<link rel="canonical" href="https://getsequoia.app/final-grade-calculator">
+<meta name="robots" content="index, follow">
+
+<!-- Open Graph / Twitter -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Final Grade Calculator — What Do I Need on My Final?">
+<meta property="og:description" content="Enter your current grade and your final's weight — see the exact score you need on your final exam. Free, no signup.">
+<meta property="og:url" content="https://getsequoia.app/final-grade-calculator">
+<meta property="og:image" content="https://getsequoia.app/social-preview.jpg?v=2">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Final Grade Calculator — What Do I Need on My Final?">
+<meta name="twitter:description" content="See the exact score you need on your final exam. Free, no signup.">
+
+<!-- Fonts: match the Sequoia brand -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap">
+
+<!-- FAQ structured data → rich snippets + long-tail capture -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I calculate what I need on my final exam?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Take your current grade and multiply it by the portion of your grade that isn't the final (100% minus the final's weight). Subtract that from your target grade, then divide by the final's weight. This calculator does it instantly: enter your current grade, the final's weight, and the grade you want."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How much is my final exam worth?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It's listed in your syllabus under the grading breakdown — finals are usually worth 20% to 50% of your total grade. If your course is on Canvas, the weight is set on the assignment group; Sequoia can read it automatically."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What if I need more than 100% on my final?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It means your target grade isn't reachable from the final alone. Aim for the highest realistic score, and ask about extra credit or a grade curve. The calculator flags this automatically."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I calculate this for all my classes at once?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Sequoia connects to Canvas and shows what you need in every course automatically, then ranks which assignments actually move your grade so you study the right thing first. It's free to start at getsequoia.app."
+      }
+    }
+  ]
+}
+</script>
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --g2: #2E6020; --g3: #4CA130; --g4: #82CC55;
+    --card: #F8F6EF; --card-2: #F2EFE6;
+    --ink: #1A2E1A; --muted: #5A6B54; --line: #E4E0D3;
+  }
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    color: #EAF3E4;
+    background: linear-gradient(165deg, #0E1C0A 0%, #14260F 55%, #1B3315 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--g4); text-decoration: none; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 20px 18px 64px; }
+
+  /* Header */
+  header { display: flex; align-items: center; justify-content: space-between; padding: 6px 0 22px; }
+  .brand { font-family: 'Playfair Display', serif; font-weight: 800; font-size: 19px; color: #FFFEF8; letter-spacing: -0.2px; }
+  .brand span { color: var(--g4); }
+  .brand-link { font-size: 13px; font-weight: 700; color: #EAF3E4; background: rgba(76,161,48,0.14); border: 1px solid rgba(76,161,48,0.3); padding: 7px 13px; border-radius: 100px; }
+
+  /* Hero */
+  h1 { font-family: 'Playfair Display', serif; font-weight: 800; font-size: clamp(30px, 7vw, 44px); color: #FFFEF8; line-height: 1.1; letter-spacing: -0.5px; margin-bottom: 12px; }
+  .lede { font-size: 16px; color: #B9CDB0; max-width: 34em; margin-bottom: 26px; }
+  .lede b { color: var(--g4); font-weight: 700; }
+
+  /* Calculator card */
+  .calc { background: var(--card); color: var(--ink); border-radius: 20px; padding: 24px 22px; box-shadow: 0 18px 50px rgba(0,0,0,0.4); }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 7px; }
+  .field .hint { font-weight: 400; color: var(--muted); font-size: 12.5px; }
+  .inputwrap { position: relative; }
+  .inputwrap input {
+    width: 100%; font-family: inherit; font-size: 17px; font-weight: 600; color: var(--ink);
+    padding: 13px 40px 13px 14px; border: 1.5px solid var(--line); border-radius: 12px; background: #fff;
+  }
+  .inputwrap input:focus { outline: none; border-color: var(--g3); box-shadow: 0 0 0 3px rgba(76,161,48,0.15); }
+  .inputwrap .pct { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-weight: 700; font-size: 15px; }
+  .calc-btn {
+    width: 100%; font-family: inherit; font-size: 16px; font-weight: 700; color: #fff; cursor: pointer;
+    padding: 15px; border: none; border-radius: 12px; margin-top: 4px;
+    background: linear-gradient(135deg, #4CA130, #3A8A25);
+  }
+  .calc-btn:hover { background: linear-gradient(135deg, #5AB33A, #4CA130); }
+
+  /* Result */
+  .result { display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--line); }
+  .result.show { display: block; }
+  .result-lead { font-size: 14px; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+  .result-big { font-family: 'Playfair Display', serif; font-weight: 800; font-size: 40px; color: var(--g2); line-height: 1.1; }
+  .result-msg { font-size: 15px; color: var(--ink); margin-top: 8px; }
+  .result-msg.warn { color: #B4531E; }
+  .result-msg.safe { color: var(--g2); }
+  .grid { margin-top: 18px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .grid-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 14px; font-size: 14px; }
+  .grid-row + .grid-row { border-top: 1px solid var(--line); }
+  .grid-row .lbl { font-weight: 600; color: var(--ink); }
+  .grid-row .val { font-weight: 700; color: var(--g2); }
+  .grid-row .val.na { color: var(--muted); font-weight: 600; }
+  .share-btn {
+    margin-top: 16px; width: 100%; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+    padding: 12px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card-2); color: var(--ink);
+  }
+  .share-btn:hover { border-color: var(--g3); color: var(--g2); }
+
+  /* Canvas funnel CTA */
+  .cta { margin-top: 22px; background: linear-gradient(135deg, #1E3D1E, #2E6020); border: 1px solid rgba(130,204,85,0.25); border-radius: 20px; padding: 24px 22px; }
+  .cta h2 { font-family: 'Playfair Display', serif; font-weight: 800; font-size: 22px; color: #FFFEF8; margin-bottom: 8px; }
+  .cta p { font-size: 15px; color: #C7DABE; margin-bottom: 16px; }
+  .cta p b { color: var(--g4); font-weight: 700; }
+  .cta-btn { display: inline-block; font-size: 15px; font-weight: 700; color: #10200C; background: var(--g4); padding: 13px 22px; border-radius: 100px; }
+  .cta-btn:hover { background: #93d966; }
+
+  /* SEO content */
+  .content { margin-top: 40px; color: #CBDCC2; }
+  .content h2 { font-family: 'Playfair Display', serif; font-weight: 800; font-size: 24px; color: #FFFEF8; margin: 30px 0 12px; }
+  .content h3 { font-size: 16px; font-weight: 700; color: #EAF3E4; margin: 20px 0 6px; }
+  .content p { margin-bottom: 12px; font-size: 15.5px; }
+  .content .formula { background: rgba(0,0,0,0.25); border: 1px solid rgba(130,204,85,0.18); border-radius: 12px; padding: 14px 16px; font-size: 15px; color: #EAF3E4; margin: 10px 0; }
+  .content .example { background: var(--card); color: var(--ink); border-radius: 14px; padding: 18px 18px; margin: 12px 0; font-size: 15px; }
+  .content .example b { color: var(--g2); }
+  .faq-q { font-weight: 700; color: #FFFEF8; margin: 18px 0 4px; font-size: 16px; }
+
+  footer { margin-top: 44px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 13px; color: #8FA286; text-align: center; }
+  footer a { color: #A9BDA0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">Sequoia<span>.</span></div>
+    <a class="brand-link" href="https://getsequoia.app/">Open the app →</a>
+  </header>
+
+  <main>
+    <h1>Final Grade Calculator</h1>
+    <p class="lede">Find out <b>exactly what you need on your final exam</b> to hit the grade you want. Enter three numbers — no signup, no catch.</p>
+
+    <!-- Calculator -->
+    <section class="calc" aria-label="Final grade calculator">
+      <div class="field">
+        <label for="current">Your current grade <span class="hint">— what you have in the class now</span></label>
+        <div class="inputwrap">
+          <input id="current" type="number" inputmode="decimal" min="0" max="150" placeholder="88" aria-label="Current grade percentage">
+          <span class="pct">%</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="weight">Your final is worth <span class="hint">— check your syllabus</span></label>
+        <div class="inputwrap">
+          <input id="weight" type="number" inputmode="decimal" min="1" max="100" placeholder="30" aria-label="Final exam weight percentage">
+          <span class="pct">%</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="target">Grade you want <span class="hint">— your goal for the class</span></label>
+        <div class="inputwrap">
+          <input id="target" type="number" inputmode="decimal" min="0" max="100" placeholder="90" aria-label="Target grade percentage">
+          <span class="pct">%</span>
+        </div>
+      </div>
+      <button class="calc-btn" id="go" type="button">Calculate what I need</button>
+
+      <div class="result" id="result" aria-live="polite">
+        <div class="result-lead">To finish with your target, you need</div>
+        <div class="result-big" id="bigNum">—</div>
+        <div class="result-msg" id="resultMsg"></div>
+
+        <div class="grid" id="grid" aria-label="Score needed for each letter grade"></div>
+
+        <button class="share-btn" id="share" type="button">Share this result</button>
+      </div>
+    </section>
+
+    <!-- Canvas funnel -->
+    <section class="cta">
+      <h2>Don't do this for every class by hand</h2>
+      <p>Sequoia connects to <b>Canvas</b> and shows what you need in <b>every course automatically</b> — then ranks which assignments actually move your grade, so you study the right thing first.</p>
+      <a class="cta-btn" href="https://getsequoia.app/">Try Sequoia — free →</a>
+    </section>
+
+    <!-- SEO content -->
+    <div class="content">
+      <h2>How to calculate what you need on your final</h2>
+      <p>Your final exam is worth a set slice of your grade — the rest is everything you've already done. So the math is: how high does the final have to be to pull your whole grade up to your target?</p>
+      <div class="formula">
+        needed&nbsp;=&nbsp;( target&nbsp;−&nbsp;current&nbsp;×&nbsp;(1&nbsp;−&nbsp;weight)&nbsp;)&nbsp;÷&nbsp;weight
+      </div>
+      <p>Where <b>weight</b> is your final's share as a decimal (30% → 0.30). The calculator above does this for you, and also shows what you'd need for an A, B, C, or D so you can pick a realistic target.</p>
+
+      <h3>Example</h3>
+      <div class="example">
+        You have an <b>88%</b> going in, your final is worth <b>30%</b>, and you want a <b>90%</b> in the class.<br><br>
+        needed = ( 90 − 88 × 0.70 ) ÷ 0.30 = <b>94.7%</b> on the final.<br><br>
+        Aim for a B (80%) instead and you'd only need a <b>61.3%</b> — a much calmer study week.
+      </div>
+
+      <h2>Frequently asked questions</h2>
+      <p class="faq-q">How much is my final exam worth?</p>
+      <p>It's in your syllabus under the grading breakdown — finals are usually 20–50% of your grade. If your class is on Canvas, that weight is already set, and Sequoia can read it for you.</p>
+      <p class="faq-q">What if I need more than 100%?</p>
+      <p>Your target isn't reachable from the final alone. Aim for the highest realistic score and ask about extra credit or a curve. The calculator flags this automatically.</p>
+      <p class="faq-q">Can I calculate this for all my classes at once?</p>
+      <p>Yes — that's exactly what <a href="https://getsequoia.app/">Sequoia</a> does. It pulls every course from Canvas, shows what you need in each, and ranks what to study first. Free to start.</p>
+    </div>
+  </main>
+
+  <footer>
+    Built by <a href="https://getsequoia.app/">Sequoia</a> — the app that ranks your Canvas assignments by what they do to your grade.
+  </footer>
+
+</div>
+
+<script>
+  // "What do I need on my final" — solve the weighted-average for the final score.
+  // overall = current*(1-w) + final*w  →  final = (target - current*(1-w)) / w
+  function neededOnFinal(current, weightPct, target) {
+    var w = weightPct / 100;
+    if (!(w > 0)) return null;
+    return (target - current * (1 - w)) / w;
+  }
+  function round1(n) { return Math.round(n * 10) / 10; }
+
+  var el = function (id) { return document.getElementById(id); };
+  var lastResultText = '';
+
+  function calc() {
+    var current = parseFloat(el('current').value);
+    var weight  = parseFloat(el('weight').value);
+    var target  = parseFloat(el('target').value);
+
+    if (isNaN(current) || isNaN(weight) || isNaN(target) || weight <= 0) {
+      el('resultMsg').className = 'result-msg warn';
+      el('resultMsg').textContent = 'Enter your current grade, your final’s weight, and the grade you want.';
+      el('bigNum').textContent = '—';
+      el('grid').innerHTML = '';
+      el('result').classList.add('show');
+      return;
+    }
+
+    var need = neededOnFinal(current, weight, target);
+    var needR = round1(need);
+    var msgEl = el('resultMsg');
+
+    if (need <= 0) {
+      el('bigNum').textContent = 'a 0 works';
+      msgEl.className = 'result-msg safe';
+      msgEl.textContent = 'You’ve already locked in your ' + round1(target) + '% — even a zero on the final keeps it. Breathe.';
+      lastResultText = 'I’ve already locked in my ' + round1(target) + '% before the final even starts 😎';
+    } else if (need > 100) {
+      el('bigNum').textContent = needR + '%';
+      msgEl.className = 'result-msg warn';
+      msgEl.textContent = 'That’s over 100% — a ' + round1(target) + '% isn’t reachable from the final alone. Aim high and ask about extra credit.';
+      lastResultText = 'I’d need a ' + needR + '% on my final for a ' + round1(target) + '% 💀 (yes, over 100)';
+    } else {
+      el('bigNum').textContent = needR + '%';
+      msgEl.className = 'result-msg';
+      msgEl.textContent = 'Score ' + needR + '% on your final to finish with a ' + round1(target) + '% in the class.';
+      lastResultText = 'I need a ' + needR + '% on my final to keep my ' + round1(target) + '% 😳';
+    }
+
+    // A / B / C / D table
+    var tiers = [['an A', 90], ['a B', 80], ['a C', 70], ['a D', 60]];
+    var rows = tiers.map(function (t) {
+      var n = neededOnFinal(current, weight, t[1]);
+      var val, cls = 'val';
+      if (n <= 0) { val = 'already yours ✓'; cls = 'val na'; }
+      else if (n > 100) { val = 'not reachable'; cls = 'val na'; }
+      else { val = round1(n) + '%'; }
+      return '<div class="grid-row"><span class="lbl">For ' + t[0] + ' (' + t[1] + '%)</span><span class="' + cls + '">' + val + '</span></div>';
+    }).join('');
+    el('grid').innerHTML = rows;
+
+    el('result').classList.add('show');
+  }
+
+  el('go').addEventListener('click', calc);
+  // Enter key on any input runs it too
+  ['current', 'weight', 'target'].forEach(function (id) {
+    el(id).addEventListener('keydown', function (e) { if (e.key === 'Enter') calc(); });
+  });
+
+  // Share: native share sheet where available, clipboard fallback.
+  el('share').addEventListener('click', function () {
+    var url = 'https://getsequoia.app/final-grade-calculator';
+    var text = (lastResultText || 'What do I need on my final?') + ' — find out yours:';
+    if (navigator.share) {
+      navigator.share({ title: 'Final Grade Calculator', text: text, url: url }).catch(function () {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(text + ' ' + url).then(function () {
+        var b = el('share'); var old = b.textContent;
+        b.textContent = 'Copied ✓'; setTimeout(function () { b.textContent = old; }, 1600);
+      });
+    }
+  });
+</script>
+</body>
+</html>
