@@ -1,5 +1,5 @@
 // Sequoia Service Worker
-const CACHE = 'sequoia-v124';
+const CACHE = 'sequoia-v125';
 const BASE  = '';
 // App shell only — kept tiny so first load is fast. Audio (ambience + lo-fi,
 // ~73MB total) is cached on first play via runtime caching below, NOT here.
