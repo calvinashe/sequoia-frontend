@@ -10942,7 +10942,7 @@ function renderAssignments(list, _skipCal) {
     }
     return;
   }
-  const FREE_ASSIGN_LIMIT = 10;
+  const FREE_ASSIGN_LIMIT = 5; // matches paywall copy ("Free shows your top 5") + CLAUDE.md
   const visibleList = (!isPremium() && fl.length > FREE_ASSIGN_LIMIT)
     ? fl.slice(0, FREE_ASSIGN_LIMIT) : fl;
   const lockedList  = (!isPremium() && fl.length > FREE_ASSIGN_LIMIT)
