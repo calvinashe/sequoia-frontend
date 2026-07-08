@@ -16041,7 +16041,18 @@ function _resetSemesterState() {
   allAssignments = [];
   sessionEntries = []; renderSessionLog();
   completedIds = new Set(); totalCompleted = 0; treeFaded = false;
-  saveUserData({ xp: 0, streak: 0, pomo_sessions: 0, done_ids: [], last_study: '', leaves: 0 });
+  // Clear server-side too. _resetSemesterState() wipes these locally, but loadUserData()
+  // restores each `if (d.field)` on the next reload / device sync — so without this the
+  // regrow leaks last semester back (old manual/syllabus assignments reappearing, stale
+  // weekly-XP chart, weight overrides, streak state). delete() is REQUIRED for the map
+  // fields: set(merge) recursively merges {} into a map, which is a no-op.
+  const _del = firebase.firestore.FieldValue.delete();
+  saveUserData({
+    xp: 0, streak: 0, pomo_sessions: 0, done_ids: [], last_study: '', leaves: 0,
+    manual_assignments: _del, xp_history: _del, weight_overrides: _del,
+    sessions_today: _del, streak_before_break: _del, streak_break_date: _del,
+    streak_freeze_date: _del,
+  });
   // Increment semester archive counter so ghost stumps appear next time
   const prevCount = parseInt(localStorage.getItem('sq_semester_count') || '0');
   localStorage.setItem('sq_semester_count', Math.min(prevCount + 1, 3));
