@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Weighted Grade Calculator — Find Your Overall Course Grade | Sequoia</title>
-<meta name="description" content="Free weighted grade calculator. Enter each category's weight and your score — get your overall course grade instantly. No signup.">
-<link rel="canonical" href="https://getsequoia.app/weighted-grade-calculator">
+<title>College Grade Calculator — Calculate Your Class Grade Free | Sequoia</title>
+<meta name="description" content="Free college grade calculator. Enter your assignment points earned and possible — get your current grade and letter grade instantly. Plus final-grade, weighted-grade, and GPA calculators. No signup.">
+<link rel="canonical" href="https://getsequoia.app/college-grade-calculator">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Weighted Grade Calculator — Find Your Overall Course Grade">
-<meta property="og:description" content="Enter each category's weight and your score — see your overall grade instantly. Free, no signup.">
-<meta property="og:url" content="https://getsequoia.app/weighted-grade-calculator">
+<meta property="og:title" content="College Grade Calculator — Calculate Your Class Grade">
+<meta property="og:description" content="Enter your points earned and possible — get your current grade instantly. Free, no signup.">
+<meta property="og:url" content="https://getsequoia.app/college-grade-calculator">
 <meta property="og:image" content="https://getsequoia.app/social-preview.jpg?v=2">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,12 +21,12 @@
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-    { "@type": "Question", "name": "How do I calculate my weighted grade?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Multiply your score in each category by that category's weight, add them all up, then divide by the total weight. This calculator does it as you type — enter each category's weight and your score in it." } },
-    { "@type": "Question", "name": "What if my category weights don't add up to 100%?",
-      "acceptedAnswer": { "@type": "Answer", "text": "The calculator still works — it divides by the total weight you entered, so it always gives a correct weighted average. It also tells you what your weights add up to so you can spot a missing category." } },
-    { "@type": "Question", "name": "Can it pull my grades from Canvas automatically?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Yes — Sequoia connects to Canvas and calculates your weighted grade in every course automatically, then ranks which assignments actually move your grade. Free to start at getsequoia.app." } }
+    { "@type": "Question", "name": "How do I calculate my grade in a class?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Add up all the points you've earned across your assignments, add up all the points possible, and divide earned by possible, then multiply by 100. This calculator does it as you type. If your class uses weighted categories instead of raw points, use the weighted grade calculator." } },
+    { "@type": "Question", "name": "What's the difference between a points grade and a weighted grade?",
+      "acceptedAnswer": { "@type": "Answer", "text": "A points grade is total points earned divided by total points possible. A weighted grade gives each category (exams, homework) a percentage of your final grade regardless of points. Check your syllabus — if it lists category percentages, use the weighted grade calculator." } },
+    { "@type": "Question", "name": "Can I see my grade for every class automatically?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. Sequoia connects to Canvas and shows your current grade in every course, then ranks which assignments actually move your grade so you study the right thing first. Free to start at getsequoia.app." } }
   ]
 }
 </script>
@@ -45,11 +45,11 @@
   .lede b { color:var(--g4); font-weight:700; }
   .calc { background:var(--card); color:var(--ink); border-radius:20px; padding:22px 20px; box-shadow:0 18px 50px rgba(0,0,0,0.4); }
   .rowhead { display:flex; gap:8px; font-size:11.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.4px; margin-bottom:8px; padding:0 2px; }
-  .rowhead .h-name { flex:1.7; } .rowhead .h-w, .rowhead .h-s { flex:1; } .rowhead .h-x { width:24px; }
+  .rowhead .h-name { flex:1.7; } .rowhead .h-e, .rowhead .h-p { flex:1; } .rowhead .h-x { width:24px; }
   .row { display:flex; gap:8px; margin-bottom:9px; align-items:center; }
   .row input { font-family:inherit; font-size:15px; font-weight:600; color:var(--ink); padding:11px 12px; border:1.5px solid var(--line); border-radius:10px; background:#fff; min-width:0; }
   .row input:focus { outline:none; border-color:var(--g3); box-shadow:0 0 0 3px rgba(76,161,48,0.15); }
-  .row .r-name { flex:1.7; } .row .r-weight, .row .r-score { flex:1; }
+  .row .r-name { flex:1.7; } .row .r-earned, .row .r-poss { flex:1; }
   .r-del { background:none; border:none; color:#B4531E; font-size:22px; line-height:1; cursor:pointer; padding:0 4px; width:24px; }
   .addrow { margin-top:4px; font-family:inherit; font-size:14px; font-weight:700; color:var(--g2); background:var(--card-2); border:1.5px dashed var(--line); border-radius:10px; padding:10px; width:100%; cursor:pointer; }
   .addrow:hover { border-color:var(--g3); }
@@ -58,7 +58,7 @@
   .result { display:none; margin-top:20px; padding-top:20px; border-top:1px solid var(--line); }
   .result.show { display:block; }
   .result-lead { font-size:14px; color:var(--muted); font-weight:600; margin-bottom:6px; }
-  .result-big { font-family:'Playfair Display',serif; font-weight:800; font-size:44px; color:var(--g2); line-height:1.1; }
+  .result-big { font-family:'Playfair Display',serif; font-weight:800; font-size:46px; color:var(--g2); line-height:1.05; }
   .result-msg { font-size:15px; color:var(--ink); margin-top:8px; }
   .result-msg.warn { color:#B4531E; }
   .cta { margin-top:22px; background:linear-gradient(135deg,#1E3D1E,#2E6020); border:1px solid rgba(130,204,85,0.25); border-radius:20px; padding:24px 22px; }
@@ -90,96 +90,96 @@
     <a class="brand-link" href="https://getsequoia.app/">Open the app →</a>
   </header>
   <main>
-    <h1>Weighted Grade Calculator</h1>
-    <p class="lede">See your <b>overall course grade</b> from weighted categories. Add each category's weight and your score — get your real grade instantly.</p>
+    <h1>College Grade Calculator</h1>
+    <p class="lede">Enter your <b>points earned and points possible</b> for each assignment — get your current class grade instantly. No signup.</p>
 
-    <section class="calc" aria-label="Weighted grade calculator">
-      <div class="rowhead"><span class="h-name">Category</span><span class="h-w">Weight %</span><span class="h-s">Your %</span><span class="h-x"></span></div>
+    <section class="calc" aria-label="College grade calculator">
+      <div class="rowhead"><span class="h-name">Assignment</span><span class="h-e">Earned</span><span class="h-p">Possible</span><span class="h-x"></span></div>
       <div id="rows"></div>
-      <button class="addrow" id="add" type="button">+ Add category</button>
+      <button class="addrow" id="add" type="button">+ Add assignment</button>
       <button class="calc-btn" id="go" type="button">Calculate my grade</button>
       <div class="result" id="result" aria-live="polite">
-        <div class="result-lead">Your overall grade is</div>
+        <div class="result-lead">Your current grade is</div>
         <div class="result-big" id="bigNum">—</div>
         <div class="result-msg" id="resultMsg"></div>
       </div>
     </section>
 
     <section class="cta">
-      <h2>Stop rebuilding this every week</h2>
-      <p>Sequoia reads your <b>weighted grade in every Canvas course automatically</b> — then ranks which assignments actually move your grade, so you study the right thing first.</p>
+      <h2>See every class grade at once</h2>
+      <p>Sequoia connects to <b>Canvas</b> and shows your current grade in <b>every course automatically</b> — then ranks which assignments actually move your grade, so you study the right thing first.</p>
       <a class="cta-btn" href="https://getsequoia.app/">Try Sequoia — free →</a>
     </section>
 
     <nav class="related" aria-label="Related calculators">
-      <a href="https://getsequoia.app/college-grade-calculator">Grade Calculator<span>Your current class grade</span></a>
       <a href="https://getsequoia.app/final-grade-calculator">Final Grade Calculator<span>What you need on your final</span></a>
-      <a href="https://getsequoia.app/gpa-calculator">GPA Calculator<span>Your semester &amp; cumulative GPA</span></a>
+      <a href="https://getsequoia.app/weighted-grade-calculator">Weighted Grade Calculator<span>Grades from category weights</span></a>
+      <a href="https://getsequoia.app/gpa-calculator">GPA Calculator<span>Semester &amp; cumulative GPA</span></a>
+      <a href="https://getsequoia.app/how-to-prioritize-assignments">How to Prioritize Assignments<span>Study the right thing first</span></a>
     </nav>
 
     <div class="content">
-      <h2>How to calculate a weighted grade</h2>
-      <p>Each category (exams, homework, labs…) is worth a set slice of your grade. Your overall grade is the weighted average: multiply your score in each category by its weight, add them up, and divide by the total weight.</p>
-      <div class="formula">overall = Σ ( score × weight ) ÷ Σ ( weight )</div>
+      <h2>How to calculate your grade in a class</h2>
+      <p>If your class grades on total points, your grade is simply all the points you've earned divided by all the points possible so far.</p>
+      <div class="formula">grade = ( total points earned ÷ total points possible ) × 100</div>
       <h3>Example</h3>
       <div class="example">
-        Exams 40% at 85%, Homework 30% at 95%, Labs 30% at 90%.<br><br>
-        = (85×40 + 95×30 + 90×30) ÷ 100 = <b>89.5%</b> overall.
+        You've earned 270 points out of 300 possible so far.<br><br>
+        = (270 ÷ 300) × 100 = <b>90% — an A−</b>.
       </div>
+      <h3>Points vs. weighted grades</h3>
+      <p>Some classes don't use raw points — they weight categories (Exams 40%, Homework 30%…). If your syllabus lists category percentages, use the <a href="https://getsequoia.app/weighted-grade-calculator">weighted grade calculator</a> instead. Want to know what you need on the final? Use the <a href="https://getsequoia.app/final-grade-calculator">final grade calculator</a>.</p>
+
       <h2>Frequently asked questions</h2>
-      <p class="faq-q">What if my weights don't add up to 100%?</p>
-      <p>Still works — it divides by whatever total you entered, so the weighted average is always correct. It also shows your total so you can catch a missing category.</p>
-      <p class="faq-q">Can it read my grades from Canvas?</p>
-      <p>Yes — that's what <a href="https://getsequoia.app/">Sequoia</a> does, for every course at once, and it ranks what to study first.</p>
+      <p class="faq-q">Which calculator should I use?</p>
+      <p>Total points → this page. Category percentages → <a href="https://getsequoia.app/weighted-grade-calculator">weighted</a>. What you need on the final → <a href="https://getsequoia.app/final-grade-calculator">final grade</a>. Your GPA across classes → <a href="https://getsequoia.app/gpa-calculator">GPA</a>.</p>
+      <p class="faq-q">Can it do all my classes automatically?</p>
+      <p>Yes — <a href="https://getsequoia.app/">Sequoia</a> reads every course from Canvas and ranks what to study first. Free to start.</p>
     </div>
   </main>
   <footer>Built by <a href="https://getsequoia.app/">Sequoia</a> — ranks your Canvas assignments by what they do to your grade.</footer>
 </div>
 <script>
-  var rowsEl = document.getElementById('rows');
-  function rowHTML(name, w, s) {
-    return '<div class="row">' +
-      '<input class="r-name" placeholder="e.g. Exams" aria-label="Category name" value="' + (name||'') + '">' +
-      '<input class="r-weight" type="number" inputmode="decimal" placeholder="40" aria-label="Weight percent" value="' + (w||'') + '">' +
-      '<input class="r-score" type="number" inputmode="decimal" placeholder="85" aria-label="Your score percent" value="' + (s||'') + '">' +
-      '<button class="r-del" type="button" aria-label="Remove category">&times;</button></div>';
+  function letterGrade(p) {
+    if (p >= 93) return 'A'; if (p >= 90) return 'A−'; if (p >= 87) return 'B+'; if (p >= 83) return 'B';
+    if (p >= 80) return 'B−'; if (p >= 77) return 'C+'; if (p >= 73) return 'C'; if (p >= 70) return 'C−';
+    if (p >= 67) return 'D+'; if (p >= 63) return 'D'; if (p >= 60) return 'D−'; return 'F';
   }
-  function seed() { rowsEl.innerHTML = rowHTML('Exams') + rowHTML('Homework') + rowHTML('Labs'); }
-  seed();
-  document.getElementById('add').addEventListener('click', function () {
-    rowsEl.insertAdjacentHTML('beforeend', rowHTML());
-  });
+  var rowsEl = document.getElementById('rows');
+  function rowHTML(name, e, p) {
+    return '<div class="row">' +
+      '<input class="r-name" placeholder="e.g. Midterm" aria-label="Assignment name" value="' + (name||'') + '">' +
+      '<input class="r-earned" type="number" inputmode="decimal" min="0" placeholder="88" aria-label="Points earned" value="' + (e||'') + '">' +
+      '<input class="r-poss" type="number" inputmode="decimal" min="0" placeholder="100" aria-label="Points possible" value="' + (p||'') + '">' +
+      '<button class="r-del" type="button" aria-label="Remove assignment">&times;</button></div>';
+  }
+  rowsEl.innerHTML = rowHTML() + rowHTML() + rowHTML();
+  document.getElementById('add').addEventListener('click', function () { rowsEl.insertAdjacentHTML('beforeend', rowHTML()); });
   rowsEl.addEventListener('click', function (e) {
-    if (e.target.classList.contains('r-del')) {
-      if (rowsEl.querySelectorAll('.row').length > 1) e.target.closest('.row').remove();
-    }
+    if (e.target.classList.contains('r-del') && rowsEl.querySelectorAll('.row').length > 1) e.target.closest('.row').remove();
   });
   function calc() {
     var rows = [].slice.call(rowsEl.querySelectorAll('.row'));
-    var sumWS = 0, sumW = 0, any = false;
+    var sumE = 0, sumP = 0, any = false;
     rows.forEach(function (r) {
-      var w = parseFloat(r.querySelector('.r-weight').value);
-      var s = parseFloat(r.querySelector('.r-score').value);
-      if (!isNaN(w) && !isNaN(s) && w > 0) { sumWS += s * w; sumW += w; any = true; }
+      var e = parseFloat(r.querySelector('.r-earned').value);
+      var p = parseFloat(r.querySelector('.r-poss').value);
+      if (!isNaN(e) && !isNaN(p) && p > 0) { sumE += e; sumP += p; any = true; }
     });
     var res = document.getElementById('result');
     var msg = document.getElementById('resultMsg');
     res.classList.add('show');
-    if (!any || sumW <= 0) {
+    if (!any || sumP <= 0) {
       document.getElementById('bigNum').textContent = '—';
       msg.className = 'result-msg warn';
-      msg.textContent = 'Enter a weight and a score for at least one category.';
+      msg.textContent = 'Enter points earned and points possible for at least one assignment.';
       return;
     }
-    var overall = sumWS / sumW;
-    document.getElementById('bigNum').textContent = (Math.round(overall * 10) / 10) + '%';
-    if (Math.abs(sumW - 100) > 0.5) {
-      msg.className = 'result-msg warn';
-      msg.textContent = 'Your weights add up to ' + (Math.round(sumW * 10) / 10) + '%, not 100% — this is the weighted average of what you entered. Add any missing categories for the full grade.';
-    } else {
-      msg.className = 'result-msg';
-      msg.textContent = 'Weighted across all your categories.';
-    }
+    var pct = (sumE / sumP) * 100;
+    var r1 = Math.round(pct * 10) / 10;
+    document.getElementById('bigNum').textContent = r1 + '%';
+    msg.className = 'result-msg';
+    msg.textContent = letterGrade(pct) + ' · ' + sumE + ' / ' + sumP + ' points earned.';
   }
   document.getElementById('go').addEventListener('click', calc);
 </script>
