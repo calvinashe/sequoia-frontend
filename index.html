@@ -4822,7 +4822,7 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 
   /* My Tree hero — give tree more breathing room */
   .tree-hero-scene { height:260px; }
-  .th-tree-wrap { margin-bottom:22px; }
+  .th-tree-wrap { margin-bottom:0; } /* was 22px — it floated the tree above the ground band (and clipped the tip) */
   /* My Tree hero info — stack vertically */
   .tree-hero-info { flex-direction:column; gap:10px; padding:16px 18px 20px; align-items:flex-start; }
   .th-badge { display:flex; align-items:center; gap:12px; }
