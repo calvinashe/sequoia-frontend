@@ -12427,7 +12427,7 @@ function updateHeroDecorations() {
         const bot = 8 + Math.random() * 65;
         const sz  = 3 + Math.random() * 5;
         const dur = 3.5 + Math.random() * 4.5;
-        const del = Math.random() * 8;
+        const del = -Math.random() * dur;   // negative → starts mid-drift (no first-load clump)
         const fx  = (Math.random() - 0.5) * 45;
         const fx2 = (Math.random() - 0.5) * 35;
         const fr  = Math.round((Math.random()-0.5)*40);
@@ -12451,7 +12451,7 @@ function updateHeroDecorations() {
         const x   = 4  + Math.random() * 92;
         const sz  = 10 + Math.random() * 10;
         const dur = 6  + Math.random() * 7;
-        const del = Math.random() * 9;
+        const del = -Math.random() * dur;   // negative → petals pre-distributed down the drift
         const px  = (Math.random() - 0.5) * 55;
         const px2 = (Math.random() - 0.5) * 45;
         const pr  = 80 + Math.random() * 200;
@@ -12491,7 +12491,7 @@ function updateHeroDecorations() {
       };
       let spores = '';
       for (let i = 0; i < 8; i++) {
-        const sx = -30+Math.random()*60, dur=3+Math.random()*3, del=Math.random()*4;
+        const sx = -30+Math.random()*60, dur=3+Math.random()*3, del=-Math.random()*dur;
         spores += `<circle cx="${sx}" cy="${-20-Math.random()*30}" r="1" fill="rgba(255,220,150,0.55)"
           style="animation:smokeRise ${dur}s ${del}s ease-in-out infinite;--sw:${(Math.random()-0.5)*20}px;"/>`;
       }
@@ -12515,7 +12515,7 @@ function updateHeroDecorations() {
         <div style="position:absolute;left:${x}%;bottom:${bot}px;">
           <svg style="display:block;overflow:visible;
             animation:treeHeroSway ${dur}s ${del}s ease-in-out infinite;transform-origin:50% 0%;
-            filter:drop-shadow(0 0 8px rgba(255,190,70,0.85)) drop-shadow(0 0 18px rgba(255,150,40,0.3));"
+            filter:drop-shadow(0 0 6px rgba(255,190,70,0.55)) drop-shadow(0 0 16px rgba(255,150,40,0.22));"
             width="14" height="28" viewBox="0 0 14 28" xmlns="http://www.w3.org/2000/svg">
             <line x1="7" y1="0" x2="7" y2="4" stroke="#8B7355" stroke-width="1.5"/>
             <rect x="1" y="4" width="12" height="17" rx="3" fill="rgba(255,195,75,0.2)" stroke="#8B7355" stroke-width="1"/>
@@ -12525,10 +12525,6 @@ function updateHeroDecorations() {
             <line x1="1" y1="17" x2="13" y2="17" stroke="#8B7355" stroke-width="0.7" opacity="0.45"/>
             <rect x="2" y="21" width="10" height="2.5" rx="1" fill="#8B7355"/>
           </svg>
-          <div style="position:absolute;top:100%;left:50%;transform:translateX(-50%);
-            width:36px;height:12px;border-radius:50%;margin-top:3px;
-            background:radial-gradient(ellipse,rgba(255,180,60,0.38),transparent 70%);
-            animation:fireflyPulse ${dur}s ${del}s ease-in-out infinite;"></div>
         </div>`;
       const wire = `<svg style="position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;" preserveAspectRatio="none">
         <path d="M 12% 46% Q 18% 56% 24% 32% Q 31% 12% 38% 38% Q 48% 55% 58% 36% Q 65% 22% 72% 28% Q 78% 38% 84% 44%"
@@ -12567,7 +12563,7 @@ function updateHeroDecorations() {
       let html = '';
       for (let i = 0; i < 8; i++) {
         const [c1,c2] = palettes[i % palettes.length];
-        html += makeButterfly(8+Math.random()*82, 18+Math.random()*58, 18+Math.random()*14, 5+Math.random()*4.5, Math.random()*6, c1, c2);
+        html += makeButterfly(8+Math.random()*82, 18+Math.random()*58, 18+Math.random()*14, 5+Math.random()*4.5, -Math.random()*9, c1, c2);
       }
       overlay.innerHTML = html;
 
@@ -12627,7 +12623,7 @@ function updateHeroDecorations() {
     } else if (id === 'campfire') {
       let smoke = '';
       for (let i = 0; i < 6; i++) {
-        const sx = -8 + Math.random()*16, dur = 3+Math.random()*3, del = Math.random()*3;
+        const sx = -8 + Math.random()*16, dur = 3+Math.random()*3, del = -Math.random()*dur;
         smoke += `<div style="position:absolute;bottom:46px;left:calc(50% + ${sx}px);
           width:${6+Math.random()*6}px;height:${6+Math.random()*6}px;border-radius:50%;
           background:rgba(180,180,180,0.25);
@@ -12708,8 +12704,8 @@ function updateHeroDecorations() {
 
     } else if (id === 'owls') {
       const makeOwl = (x, bot, sz, del, tiltDel) => `
-        <svg style="position:absolute;left:${x};bottom:${bot}px;width:${sz}px;height:${sz*1.2}px;overflow:visible;opacity:0.92;"
-          viewBox="0 0 32 38" xmlns="http://www.w3.org/2000/svg">
+        <svg style="position:absolute;left:${x};bottom:${bot}px;width:${sz}px;height:${sz*1.3}px;overflow:visible;opacity:0.92;"
+          viewBox="0 0 32 42" xmlns="http://www.w3.org/2000/svg">
           <ellipse cx="16" cy="27" rx="9" ry="10" fill="#7B5E3A"/>
           <ellipse cx="16" cy="27" rx="6"  ry="8"  fill="#F5E6C8" opacity="0.65"/>
           <ellipse cx="8"  cy="26" rx="5"  ry="9"  fill="#6B4E2A" transform="rotate(-10 8 26)"/>
@@ -12731,10 +12727,12 @@ function updateHeroDecorations() {
             <circle cx="20.1" cy="11.4" r="0.65" fill="white"/>
             <polygon points="16,14.5 14,17.5 18,17.5" fill="#C89040"/>
           </g>
-          <line x1="12" y1="36" x2="10" y2="38" stroke="#6B4E2A" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="12" y1="36" x2="12" y2="38" stroke="#6B4E2A" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="20" y1="36" x2="18" y2="38" stroke="#6B4E2A" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="20" y1="36" x2="22" y2="38" stroke="#6B4E2A" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M0,38.4 Q16,37 32,38.4 L32,40.6 Q16,39.4 0,40.6 Z" fill="#5A3E1A"/>
+          <path d="M0,38.6 Q16,37.2 32,38.6" fill="none" stroke="#3E2A12" stroke-width="0.45" opacity="0.5"/>
+          <line x1="12" y1="35" x2="10.5" y2="38.2" stroke="#4A3214" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="12" y1="35" x2="12" y2="38.2" stroke="#4A3214" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="20" y1="35" x2="18" y2="38.2" stroke="#4A3214" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="20" y1="35" x2="21.5" y2="38.2" stroke="#4A3214" stroke-width="1.5" stroke-linecap="round"/>
         </svg>`;
       overlay.innerHTML =
         makeOwl('calc(50% - 58px)', 58, 34, 0,   0) +
@@ -12852,7 +12850,7 @@ function updateHeroDecorations() {
       let ghMotes = '';
       for (let i = 0; i < 22; i++) {
         const x=4+Math.random()*92, bot=6+Math.random()*68;
-        const sz=1.5+Math.random()*3.5, dur=5+Math.random()*6, del=Math.random()*7;
+        const sz=1.5+Math.random()*3.5, dur=5+Math.random()*6, del=-Math.random()*dur;
         ghMotes += `<div style="position:absolute;left:${x}%;bottom:${bot}%;
           width:${sz}px;height:${sz}px;border-radius:50%;
           background:radial-gradient(circle,rgba(255,220,80,0.8),rgba(255,160,30,0.3) 60%,transparent 80%);
@@ -12898,7 +12896,7 @@ function updateHeroDecorations() {
       let tsRain = '';
       for (let i = 0; i < 30; i++) {
         const x=Math.random()*102, bot=8+Math.random()*78;
-        const dur=0.5+Math.random()*0.65, del=Math.random()*2.5, len=6+Math.random()*12;
+        const dur=0.5+Math.random()*0.65, del=-Math.random()*dur, len=6+Math.random()*12;
         tsRain += `<div style="position:absolute;left:${x}%;bottom:${bot}%;
           width:1px;height:${len}px;
           background:linear-gradient(to bottom,transparent,rgba(180,210,255,0.55),transparent);
@@ -12938,8 +12936,8 @@ function updateHeroDecorations() {
         const opa = layer==='L' ? 0.7+Math.random()*0.25 : layer==='M' ? 0.55+Math.random()*0.3 : 0.4+Math.random()*0.35;
         const x   = Math.random()*108 - 4;
         const sw  = (Math.random()-0.5)*32;
-        const del = Math.random()*11;
-        snowFlakes += `<div style="position:absolute;left:${x}%;top:8%;
+        const del = -Math.random()*dur;
+        snowFlakes += `<div style="position:absolute;left:${x}%;top:${(-4+Math.random()*12).toFixed(1)}%;
           width:${sz}px;height:${sz}px;border-radius:50%;
           background:radial-gradient(circle,rgba(255,255,255,${opa}),rgba(210,230,255,0.4) 65%,transparent 85%);
           box-shadow:0 0 ${sz*1.5}px ${sz*0.6}px rgba(200,220,255,0.22);
@@ -12957,7 +12955,7 @@ function updateHeroDecorations() {
           background:radial-gradient(ellipse 130% 130% at 50% 50%,transparent 58%,rgba(180,210,255,0.08) 78%,rgba(160,200,255,0.14) 100%);
           pointer-events:none;"></div>
         <div style="position:absolute;inset:0;
-          background:linear-gradient(180deg,rgba(160,190,240,0.09) 0%,transparent 55%);
+          background:linear-gradient(180deg,rgba(160,190,240,0.06) 0%,transparent 60%);
           pointer-events:none;"></div>`;
 
     } else if (id === 'autumn') {
@@ -12970,7 +12968,7 @@ function updateHeroDecorations() {
       let autHtml = '';
       for (let i = 0; i < 24; i++) {
         const x=3+Math.random()*94, sz=9+Math.random()*9;
-        const dur=7+Math.random()*8, del=Math.random()*11;
+        const dur=7+Math.random()*8, del=-Math.random()*dur;
         const px=(Math.random()-0.5)*65, px2=(Math.random()-0.5)*55;
         const pr=100+Math.random()*260, pr2=pr+100+Math.random()*200;
         const col=autPal[i%autPal.length], path=leafPaths[i%3];
@@ -12995,7 +12993,7 @@ function updateHeroDecorations() {
       let spHtml = '';
       for (let i = 0; i < 16; i++) {
         const x=6+Math.random()*88, sz=10+Math.random()*8;
-        const dur=9+Math.random()*9, del=Math.random()*11;
+        const dur=9+Math.random()*9, del=-Math.random()*dur;
         const fx=(Math.random()-0.5)*44, fx2=(Math.random()-0.5)*32;
         spHtml += `<svg style="position:absolute;left:${x}%;bottom:${4+Math.random()*15}%;overflow:visible;
           width:${sz}px;height:${sz*1.6}px;opacity:${0.65+Math.random()*0.3};
@@ -13018,7 +13016,7 @@ function updateHeroDecorations() {
       const spCols = ['#FFE082','#FFFFFF','#FFAECF','#B5EAD7','#C7F2A4','#FFC0CB','#E8F5E9'];
       for (let i = 0; i < 14; i++) {
         const x=4+Math.random()*92, sz=8+Math.random()*7;
-        const dur=7+Math.random()*6, del=Math.random()*11;
+        const dur=7+Math.random()*6, del=-Math.random()*dur;
         const px=(Math.random()-0.5)*44, px2=(Math.random()-0.5)*32;
         const pr=60+Math.random()*220, col=spCols[i%spCols.length];
         const p5=Array.from({length:5},(_,p)=>`<ellipse cx="0" cy="-4.5" rx="2" ry="4.5" fill="${col}" opacity="0.85" transform="rotate(${p*72})"/>`).join('');
@@ -13047,7 +13045,7 @@ function updateHeroDecorations() {
       let suMotes = '';
       for (let i = 0; i < 22; i++) {
         const x=4+Math.random()*92, bot=6+Math.random()*70;
-        const sz=1.5+Math.random()*3, dur=5+Math.random()*7, del=Math.random()*8;
+        const sz=1.5+Math.random()*3, dur=5+Math.random()*7, del=-Math.random()*dur;
         suMotes += `<div style="position:absolute;left:${x}%;bottom:${bot}%;
           width:${sz}px;height:${sz}px;border-radius:50%;
           background:radial-gradient(circle,rgba(255,230,80,0.75),rgba(255,180,40,0.3) 60%,transparent 85%);
