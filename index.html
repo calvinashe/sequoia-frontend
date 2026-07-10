@@ -7179,8 +7179,6 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
           <polygon points="782,232 762,268 802,268" fill="rgba(6,14,6,0.80)"/>
           <!-- Ground plane -->
           <ellipse cx="450" cy="298" rx="500" ry="28" fill="rgba(18,50,10,0.70)"/>
-          <!-- Earth anchor under hero tree -->
-          <ellipse cx="450" cy="298" rx="32" ry="8" fill="rgba(14,6,2,0.65)"/>
         </svg>
         <!-- glow under tree -->
         <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:180px;height:30px;background:radial-gradient(ellipse,rgba(76,161,48,0.35),transparent 70%);z-index:1;border-radius:50%"></div>
@@ -13117,6 +13115,10 @@ function syncTreeScreen() {
   const srcSvg   = document.querySelector('#stage-card-' + idx + ' svg');
   if (heroWrap && srcSvg) {
     const clone = srcSvg.cloneNode(true);
+    // Drop the dark base plate (#0F1109) in the hero — it dips below the scene's ground
+    // band and reads as an unintentional dark disc. Mound + rocks (#1C160E) stay for
+    // grounding; the stage-card thumbnails keep their base since we only strip the clone.
+    clone.querySelectorAll('ellipse').forEach(e => { if ((e.getAttribute('fill')||'').toUpperCase() === '#0F1109') e.remove(); });
     const scale = idx === 3 ? 1.55 : idx === 2 ? 1.6 : idx === 1 ? 1.7 : 1.8;
     const w     = parseFloat(srcSvg.getAttribute('width') || 130) * scale;
     // Parse original viewBox
