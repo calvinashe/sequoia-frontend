@@ -1900,6 +1900,7 @@ input.g-slider::-moz-range-thumb {
 [data-theme="light"] .xph-bar.xph-today { background:rgba(76,161,48,0.70); box-shadow:none; }
 [data-theme="light"] .xph-bar.xph-zero  { background:rgba(0,0,0,0.06); }
 [data-theme="light"] .xph-lbl      { color:var(--mid); }
+[data-theme="light"] .xph-title    { color:var(--mid); } /* was white 0.38 — invisible on cream */
 
 /* ── FRIEND REMOVE / INVITE ──────────────────────────────── */
 .fr-remove-btn {
@@ -5054,6 +5055,8 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 [data-theme="light"] .amb-btn:hover { border-color:var(--g3); color:var(--g1); background:var(--g-pale); }
 [data-theme="light"] .amb-btn.active { border-color:var(--g2); background:var(--g-pale); color:var(--g1); box-shadow:none; }
 [data-theme="light"] .amb-vol-row label { color:var(--light); }
+.sched-cta { color:rgba(255,255,255,0.75); } /* dark-first; white text on dark study card */
+[data-theme="light"] .sched-cta { color:var(--g1); } /* light mode: deep green — white was illegible on the pale pill */
 [data-theme="light"] .session-log { border-top-color:var(--border); }
 [data-theme="light"] .slog-title { color:var(--mid); }
 [data-theme="light"] .slog-day-label { color:var(--light); }
@@ -5130,7 +5133,9 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 [data-theme="light"] .stage-card.done { border-color:rgba(76,161,48,0.35); background:var(--card); }
 [data-theme="light"] .stage-name { color:var(--g1); }
 [data-theme="light"] .stage-desc { color:var(--mid); }
-[data-theme="light"] .stage-xp-needed { background:var(--g-pale); color:var(--g2); }
+/* .stage-xp-needed keeps its base white-on-dark style — the stage cards stay
+   dark in light mode (see note below), so the old var(--g2) override was
+   dark-green-on-dark = illegible. */
 /* The My Tree screen is a dark forest in BOTH themes (the tree visualization and
    forest layer need a dark backdrop), so its section headers must keep their light
    colors. The earlier light overrides made this text dark-green on dark = invisible. */
@@ -5157,11 +5162,9 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 [data-theme="light"] .deco-cell-name { color:var(--text); }
 [data-theme="light"] .deco-cell-sub  { color:var(--light); }
 [data-theme="light"] .deco-hint { color:var(--light); }
-/* Decoration badges were white/light-on-dark for dark mode; on cream light-mode
-   cells they washed out to near-invisible. Give them readable colors. */
-[data-theme="light"] .dbadge-level  { background:rgba(30,61,30,0.10); color:rgba(30,61,30,0.58); }
-[data-theme="light"] .dbadge-season { background:rgba(46,110,170,0.12); color:#2C6FA8; border-color:rgba(46,110,170,0.3); }
-[data-theme="light"] .dbadge-price  { background:rgba(212,136,43,0.16); color:#A85D14; }
+/* Deco badges keep their base light-on-dark styles: the deco cells sit inside
+   the always-dark My Tree screen, so the old cream-cell overrides (dark green /
+   #2C6FA8 / #A85D14 literals) rendered dark-on-dark. Reverted. */
 [data-theme="light"] .deco-cell.deco-locked .deco-cell-badge { filter:none; }
 [data-theme="light"] .streak-cal-wrap { background:var(--card); border:1px solid var(--border); }
 [data-theme="light"] .streak-cal-title { color:var(--g1); }
@@ -5201,6 +5204,8 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
   --border: rgba(255,255,255,0.08);
 }
 [data-theme="dark"] .cal-upcoming-row:hover { background:#16301A; }
+[data-theme="dark"] .cal-month-lbl { color:rgba(255,255,255,0.5); } /* base var(--mid) is a light-theme value — dim on dark */
+[data-theme="dark"] .pomo-session-info { color:rgba(255,255,255,0.55); } /* same */
 [data-theme="dark"] .cal-up-weight { background:rgba(76,161,48,0.22); color:#82D455; }
 [data-theme="light"] .cal-up-month      { color:var(--mid); }
 
@@ -5259,6 +5264,16 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 [data-theme="light"] .gpa-row-name      { color:var(--text); }
 [data-theme="light"] .gpa-row-pct       { color:var(--text); }
 [data-theme="light"] .gpa-credits-label { color:var(--mid); }
+/* missed in the original light pass — these were white-on-cream (illegible) */
+[data-theme="light"] .gpa-toggle-label   { color:var(--text); }
+[data-theme="light"] .gpa-toggle-arrow   { color:var(--mid); }
+[data-theme="light"] .gpa-result-label   { color:var(--mid); }
+[data-theme="light"] .gpa-result-val     { color:var(--g1); }
+[data-theme="light"] .gpa-result-letter  { color:var(--text); }
+[data-theme="light"] .gpa-result-credits { color:var(--mid); }
+[data-theme="light"] .gpa-hint           { color:var(--mid); }
+[data-theme="light"] .gpa-row            { border-bottom-color:var(--border); }
+[data-theme="light"] .gpa-credits-input  { background:rgba(0,0,0,0.04); border-color:var(--border); color:var(--text); }
 [data-theme="light"] .gpa-credits-input { background:rgba(30,61,30,0.06); border-color:rgba(30,61,30,0.18); color:var(--text); }
 [data-theme="light"] .gpa-row           { border-bottom-color:rgba(30,61,30,0.08); }
 [data-theme="light"] .gpa-toggle-label  { color:var(--text); }
@@ -6997,11 +7012,11 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
         </div>
         <!-- AI Schedule CTA -->
         <div style="padding:4px 0 16px">
-          <button onclick="openSchedule()"
+          <button onclick="openSchedule()" class="sched-cta"
             style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
               background:linear-gradient(135deg,rgba(76,161,48,0.18),rgba(46,96,32,0.12));
               border:1px solid rgba(76,161,48,0.25);border-radius:14px;padding:14px 16px;
-              color:rgba(255,255,255,0.75);font-size:13px;font-weight:700;cursor:pointer;
+              font-size:13px;font-weight:700;cursor:pointer;
               font-family:'DM Sans',sans-serif;transition:all .18s"
             onmouseover="this.style.background='linear-gradient(135deg,rgba(76,161,48,0.28),rgba(46,96,32,0.2))'"
             onmouseout="this.style.background='linear-gradient(135deg,rgba(76,161,48,0.18),rgba(46,96,32,0.12))'">
@@ -7215,7 +7230,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
       <div class="tree-stat-chip" id="tsc-cap-chip" style="display:none">
         <div class="tsc-val" id="tsc-cap-val">0/400</div>
         <div class="tsc-lbl">Today's XP</div>
-        <div class="tsc-reset" id="tsc-cap-reset" style="font-size:9px;color:rgba(26,46,26,0.45);margin-top:1px"></div>
+        <div class="tsc-reset" id="tsc-cap-reset" style="font-size:9px;color:rgba(255,255,255,0.45);margin-top:1px"></div>
       </div>
     </div>
 
@@ -10456,8 +10471,13 @@ function calcGPA() {
   valEl.textContent    = gpa.toFixed(2);
   letterEl.textContent = _gpaToLetter(gpa);
   if (credTotEl) credTotEl.textContent = totalCredits + ' credit hrs';
-  // Color the GPA value
-  const color = gpa >= 3.5 ? '#7ED458' : gpa >= 2.5 ? '#7AB8E8' : gpa >= 1.5 ? '#F5C87A' : '#FF9878';
+  // Color the GPA value — pale shades for dark mode, deep shades for light
+  // (the pale set washes out on the cream card)
+  const _lightTheme = document.documentElement.getAttribute('data-theme') === 'light';
+  const color = gpa >= 3.5 ? (_lightTheme ? '#3E7A1E' : '#7ED458')
+              : gpa >= 2.5 ? (_lightTheme ? '#2C6FA8' : '#7AB8E8')
+              : gpa >= 1.5 ? (_lightTheme ? '#A8760A' : '#F5C87A')
+              :              (_lightTheme ? '#C24E2E' : '#FF9878');
   valEl.style.color    = color;
   letterEl.style.color = color;
 }
