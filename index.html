@@ -12532,11 +12532,9 @@ function updateHeroDecorations() {
             <rect x="2" y="21" width="10" height="2.5" rx="1" fill="#8B7355"/>
           </svg>
         </div>`;
-      const wire = `<svg style="position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;" preserveAspectRatio="none">
-        <path d="M 12% 46% Q 18% 56% 24% 32% Q 31% 12% 38% 38% Q 48% 55% 58% 36% Q 65% 22% 72% 28% Q 78% 38% 84% 44%"
-          fill="none" stroke="rgba(160,130,90,0.28)" stroke-width="0.9"/>
-      </svg>`;
-      overlay.innerHTML = wire + positions.map((p,i) => makeLantern(p, durs[i], dels[i])).join('');
+      // (No wire — the old %-coordinate path was invalid SVG and never
+      // rendered; the lanterns read as free-floating festival lights.)
+      overlay.innerHTML = positions.map((p,i) => makeLantern(p, durs[i], dels[i])).join('');
 
     } else if (id === 'butterflies') {
       const makeButterfly = (x, bot, sz, dur, del, col1, col2) => {
@@ -12600,31 +12598,44 @@ function updateHeroDecorations() {
 
     } else if (id === 'fairy_lights') {
       const strands = [
-        {a:'M 3% 48% Q 25% 66% 50% 52% Q 75% 38% 97% 50%', bBot:45, vary:12},
-        {a:'M 8% 36% Q 30% 54% 55% 40% Q 78% 28% 92% 38%', bBot:33, vary:10},
-        {a:'M 15% 58% Q 38% 75% 60% 62% Q 80% 50% 88% 58%', bBot:55, vary:8},
+        // Wire control points in 0-100 viewBox units, y from top.
+        // NB: percentages inside SVG path `d` are INVALID — the old
+        // 'M 3% 48% …' strings never parsed, so the wires never rendered
+        // and the bulbs floated unanchored.
+        { pts:[[3,48],[25,66],[50,52],[75,38],[97,50]] },
+        { pts:[[8,36],[30,54],[55,40],[78,28],[92,38]] },
+        { pts:[[15,58],[38,75],[60,62],[80,50],[88,58]] },
       ];
       const cols = ['#FF6B6B','#FFA94D','#FFE066','#74C0FC','#A29BFE','#FD79A8','#55EFC4','#FDCB6E','#FF85B3'];
+      // Quadratic bezier point — used to hang each bulb ON its wire.
+      const qPt = (p0,c,p1,s) => [
+        (1-s)*(1-s)*p0[0] + 2*(1-s)*s*c[0] + s*s*p1[0],
+        (1-s)*(1-s)*p0[1] + 2*(1-s)*s*c[1] + s*s*p1[1],
+      ];
       let wires = '', bulbs = '';
       strands.forEach(st => {
-        wires += `<path d="${st.a}" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="0.9"/>`;
+        const [p0,c1,p1,c2,p2] = st.pts;
+        wires += `<path d="M ${p0[0]} ${p0[1]} Q ${c1[0]} ${c1[1]} ${p1[0]} ${p1[1]} Q ${c2[0]} ${c2[1]} ${p2[0]} ${p2[1]}"
+          fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
       });
       for (let i = 0; i < 30; i++) {
-        const st  = strands[i % 3];
-        const t   = (i / 10);
-        const x   = 3 + t * 89 + ((i % 3) * 2.5);
-        const sag = Math.sin(t * Math.PI) * 16;
-        const bot = st.bBot + sag + (Math.random()-0.5) * st.vary;
+        const st = strands[i % 3];
+        const [p0,c1,p1,c2,p2] = st.pts;
+        const u  = (Math.floor(i / 3) + 0.5) / 10;  // 10 bulbs per strand, spread along the wire
+        const pt = u < 0.5 ? qPt(p0,c1,p1,u*2) : qPt(p1,c2,p2,(u-0.5)*2);
         const col = cols[i % cols.length];
         const dur = 1.5 + Math.random() * 1.4;
         const del = (i * 0.11) % 2.4;
-        bulbs += `<div style="position:absolute;left:${x.toFixed(1)}%;bottom:${bot.toFixed(1)}%;
-          width:6px;height:8px;border-radius:2px 2px 4px 4px;background:${col};
+        // glowPulse (opacity twinkle), NOT fireflyPulse — fireflyPulse
+        // hard-codes a yellow box-shadow that clobbers each bulb's colour.
+        bulbs += `<div style="position:absolute;left:${pt[0].toFixed(1)}%;top:${pt[1].toFixed(1)}%;
+          width:6px;height:8px;margin-top:1px;transform:translateX(-50%);
+          border-radius:2px 2px 4px 4px;background:${col};
           box-shadow:0 0 8px 4px ${col}bb,0 0 16px 7px ${col}44;
-          animation:fireflyPulse ${dur}s ${del}s ease-in-out infinite;"></div>`;
+          animation:glowPulse ${dur}s ${del}s ease-in-out infinite;"></div>`;
       }
       overlay.innerHTML = `<svg style="position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;"
-        preserveAspectRatio="none">${wires}</svg>${bulbs}`;
+        viewBox="0 0 100 100" preserveAspectRatio="none">${wires}</svg>${bulbs}`;
 
     } else if (id === 'campfire') {
       let smoke = '';
@@ -12660,7 +12671,7 @@ function updateHeroDecorations() {
           <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);
             width:86px;height:22px;border-radius:50%;
             background:radial-gradient(ellipse,rgba(255,90,0,0.32),transparent 70%);
-            animation:fireflyPulse 1.1s ease-in-out infinite;"></div>
+            animation:glowPulse 1.1s ease-in-out infinite;"></div>
         </div>
         ${smoke}`;
 
@@ -12764,7 +12775,7 @@ function updateHeroDecorations() {
           background:linear-gradient(to top,rgba(200,230,255,0.1),transparent);pointer-events:none;"></div>
         <div style="position:absolute;inset:0;
           background:radial-gradient(ellipse 100% 40% at 50% 0%,rgba(180,160,255,0.06),transparent 70%);
-          animation:fireflyPulse 6s ease-in-out infinite;pointer-events:none;"></div>`;
+          animation:glowPulse 6s ease-in-out infinite;pointer-events:none;"></div>`;
 
     } else if (id === 'moonlight') {
       let stars = '';
@@ -12875,9 +12886,9 @@ function updateHeroDecorations() {
           filter:drop-shadow(0 0 16px rgba(255,200,50,0.65));"
           viewBox="-27 -27 54 54" xmlns="http://www.w3.org/2000/svg">
           <circle cx="0" cy="0" r="19" fill="none" stroke="rgba(255,200,60,0.10)" stroke-width="3.5"
-            style="animation:fireflyPulse 3.2s ease-in-out infinite;"/>
+            style="animation:glowPulse 3.2s ease-in-out infinite;"/>
           <circle cx="0" cy="0" r="14" fill="none" stroke="rgba(255,220,80,0.16)" stroke-width="2.5"
-            style="animation:fireflyPulse 3.2s 0.4s ease-in-out infinite;"/>
+            style="animation:glowPulse 3.2s 0.4s ease-in-out infinite;"/>
           ${ghRays}
           <circle cx="0" cy="0" r="11" fill="#FFD700"/>
           <circle cx="0" cy="0" r="9"  fill="#FFE566"/>
@@ -13070,9 +13081,9 @@ function updateHeroDecorations() {
           filter:drop-shadow(0 0 18px rgba(255,210,40,0.68));"
           viewBox="-29 -29 58 58" xmlns="http://www.w3.org/2000/svg">
           <circle cx="0" cy="0" r="23" fill="none" stroke="rgba(255,200,60,0.08)" stroke-width="4"
-            style="animation:fireflyPulse 3.5s ease-in-out infinite;"/>
+            style="animation:glowPulse 3.5s ease-in-out infinite;"/>
           <circle cx="0" cy="0" r="17" fill="none" stroke="rgba(255,215,70,0.13)" stroke-width="3"
-            style="animation:fireflyPulse 3.5s 0.5s ease-in-out infinite;"/>
+            style="animation:glowPulse 3.5s 0.5s ease-in-out infinite;"/>
           ${suRays}
           <circle cx="0" cy="0" r="11" fill="#FFD700"/>
           <circle cx="0" cy="0" r="9"  fill="#FFE566"/>
