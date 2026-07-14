@@ -7827,21 +7827,10 @@ const PHASE_LABEL = {
 track('app_opened', { referrer: document.referrer || 'direct', semester_phase: SEMESTER_PHASE });
 
 // ── GLOBAL ERROR TRACKING ─────────────────────────────────
-// Catch uncaught JS errors and report to PostHog so we can see
-// what breaks during launch without needing users to report it.
-window.addEventListener('error', function(e) {
-  track('js_error', {
-    message: e.message,
-    filename: e.filename?.replace(location.origin, ''),
-    lineno: e.lineno,
-    colno: e.colno,
-  });
-});
-window.addEventListener('unhandledrejection', function(e) {
-  track('js_unhandled_rejection', {
-    reason: String(e.reason?.message || e.reason || 'unknown'),
-  });
-});
+// Handled by the head-level reporter (PostHog event `client_error`), which
+// rate-caps (8/session), dedups, and scrubs credential-like text. A second
+// uncapped listener here used to double-report every error and could flood
+// PostHog if an error fired in a loop — removed.
 
 // ── BACKEND WARMUP PING ───────────────────────────────────
 // Silently wake the Render dyno before the user needs it.
