@@ -5341,6 +5341,7 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
 [data-theme="dark"] .lu-modal {
   --card:    #132813;
   --card-2:  #0E1D10;
+  --bg:      #0E1D10;   /* .ad-chip & friends use var(--bg) — root value is cream */
   --border:  rgba(255,255,255,0.08);
   --g-pale:  rgba(255,255,255,0.07);
   --text:    #ffffff;
@@ -5351,6 +5352,11 @@ body.sc2-active #sc2-forest-bg { opacity:1; }
      and no dark-mode text here uses it, so flipping it to white would only break
      the CTAs (white-on-white). Body text uses --text/--mid, handled above. */
 }
+/* var(--g2) is a light-theme green (#2E6020) — illegible on the dark sheets */
+[data-theme="dark"] .sc-btn-secondary,
+[data-theme="dark"] .ad-weight-pill,
+[data-theme="dark"] .lu-xp-pill { color:#82D455; }
+[data-theme="dark"] .sc-btn-secondary:hover { background:rgba(255,255,255,0.12); } /* base hover is literal pale green */
 
 /* Notification panel — dark */
 [data-theme="dark"] .notif-panel {
