@@ -14040,7 +14040,8 @@ function _setSylCardState(courseId, type, label, statusText) {
 async function sylOnbUploadPDF() {
   // PDF upload for the first-time / no-Canvas syllabus screen — no course card to
   // update, and the endpoint requires auth, so send the Firebase token directly.
-  const name = (document.getElementById('syl-onb-course')?.value || '').trim() || 'My Course';
+  const typedName = (document.getElementById('syl-onb-course')?.value || '').trim();
+  const name = typedName || 'My Course';
   const input = document.createElement('input');
   input.type = 'file'; input.accept = '.pdf';
   input.onchange = async () => {
@@ -14058,8 +14059,16 @@ async function sylOnbUploadPDF() {
       });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'parse failed');
-      const tagged = (data.assignments || []).map(a => ({ ...a, course: name }));
-      _showReview(tagged, `Found ${tagged.length} assignment${tagged.length !== 1 ? 's' : ''} in ${name}`);
+      // Prefer the course name Groq read off the syllabus over the 'My Course'
+      // placeholder when the user left the field blank.
+      const detected = (data.course_name || '').trim();
+      const finalName = typedName || detected || 'My Course';
+      if (!typedName && detected) {
+        const f = document.getElementById('syl-onb-course');
+        if (f && !f.value.trim()) f.value = detected;
+      }
+      const tagged = (data.assignments || []).map(a => ({ ...a, course: finalName }));
+      _showReview(tagged, `Found ${tagged.length} assignment${tagged.length !== 1 ? 's' : ''} in ${finalName}`);
     } catch (e) {
       showToast("⚠️ Couldn't read that PDF — try pasting the text instead.");
     }
@@ -14113,12 +14122,13 @@ async function parsePastedSyllabus() {
   const otherInput = document.getElementById('syl-course-other-input');
   const onbInput   = document.getElementById('syl-onb-course');
   let courseName   = 'My Course';
+  let userNamed    = false;  // did the user actually provide a name?
   if (pickerSel && pickerSel.value && pickerSel.value !== '__other__') {
-    courseName = pickerSel.value;
+    courseName = pickerSel.value; userNamed = true;
   } else if (otherInput && otherInput.value.trim()) {
-    courseName = otherInput.value.trim();
+    courseName = otherInput.value.trim(); userNamed = true;
   } else if (onbInput && onbInput.value.trim()) {
-    courseName = onbInput.value.trim();
+    courseName = onbInput.value.trim(); userNamed = true;
   }
   try {
     const _pasteSylToken = currentUser ? await currentUser.getIdToken() : null;
@@ -14130,6 +14140,13 @@ async function parsePastedSyllabus() {
     const data = await res.json();
     if (!data.ok) throw new Error(data.error);
     const count = data.assignments.length;
+    // If the user didn't name the course, use the name Groq read off the
+    // syllabus itself — otherwise every import gets labelled "My Course".
+    const detected = (data.course_name || '').trim();
+    if (!userNamed && detected) {
+      courseName = detected;
+      if (onbInput && !onbInput.value.trim()) onbInput.value = detected;
+    }
     // Tag each assignment with the selected course name
     const tagged = data.assignments.map(a => ({ ...a, course: courseName }));
     _showReview(tagged, `Found ${count} assignments in ${courseName}`);
