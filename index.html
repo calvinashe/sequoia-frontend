@@ -9993,6 +9993,23 @@ function _applyAssignments(raw) {
   const manual = JSON.parse(localStorage.getItem('sq_manual') || '[]');
   manual.forEach(m => { if (!allAssignments.find(a => a.id === m.id)) allAssignments.unshift(m); });
   _loadWeightOverrides(); // re-apply any user-set weight overrides
+  // Canvas already knows what's turned in. Synced work that was submitted AND
+  // is well past due is history, not a to-do — auto-complete it silently
+  // (no XP: bulk-imported history isn't gameplay). Recently submitted work
+  // (≤14 days) stays visible so the user keeps the tap-to-complete XP beat.
+  let _autoDone = 0;
+  allAssignments.forEach(a => {
+    if (a.submitted && a.days_until !== null && a.days_until < -14 && !completedIds.has(String(a.id))) {
+      completedIds.add(String(a.id));
+      _autoDone++;
+    }
+  });
+  if (_autoDone > 0) {
+    totalCompleted = completedIds.size;
+    localStorage.setItem('sq_done', JSON.stringify([...completedIds]));
+    saveUserData({ done_ids: [...completedIds].map(String) });
+    console.log(`[Sequoia] Auto-completed ${_autoDone} Canvas-submitted past assignments.`);
+  }
   renderAssignments(allAssignments);
   scheduleNotifications(allAssignments);
   buildQPick();
@@ -10997,7 +11014,9 @@ function renderAssignments(list, _skipCal) {
       <div class="a-right" onclick="openAssignDetail('${esc(a.id)}')" style="cursor:pointer">
         <span class="a-weight-pill editable${pillHigh}" onclick="event.stopPropagation();editAssignmentWeight('${esc(a.id)}',this)" title="Click to edit weight">${w > 0 ? Math.round(w*10)/10+'%' : a.source === 'extension' ? (a.submitted ? '✓' : '🔌') : a.source === 'ical' ? '🗓' : a.manual ? '＋' : '—'}</span>
         <div class="a-due">${dueStr}</div>
-        ${urgStr ? `<span class="a-tag ${urgCls}">${urgStr}</span>` : ''}
+        ${(!done && a.submitted)
+          ? `<span class="a-tag tag-low" title="Submitted on Canvas — tap the circle to complete it and claim XP">✓ Turned in</span>`
+          : (urgStr ? `<span class="a-tag ${urgCls}">${urgStr}</span>` : '')}
       </div>
     </div>`;
   }
@@ -16756,7 +16775,8 @@ function scheduleNotifications(assignments) {
   const notified = new Set(JSON.parse(localStorage.getItem(lsKey) || '[]'));
   const now = Date.now();
   assignments.forEach(a => {
-    if (completedIds.has(String(a.id)) || notified.has(a.id) || !a.due_at) return;
+    // a.submitted: Canvas says it's turned in — don't nag (backend push already skips these)
+    if (completedIds.has(String(a.id)) || a.submitted || notified.has(a.id) || !a.due_at) return;
     const msUntil = new Date(a.due_at) - now;
     if (msUntil > 0 && msUntil < 25 * 60 * 60 * 1000) { // due within 25h
       notified.add(a.id);
