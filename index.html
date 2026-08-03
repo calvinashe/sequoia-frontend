@@ -7857,6 +7857,23 @@ track('app_opened', { referrer: document.referrer || 'direct', semester_phase: S
     .catch(() => { /* dyno was cold — ping sent, it's warming now */ });
 })();
 
+// ── RETRY BACKOFF ─────────────────────────────────────────
+// Every retry path used to wait a flat 1500ms. That means every client that
+// failed at the same instant retries at the same instant — a synchronized
+// wave arriving exactly when the server is least able to take it. The
+// backend serves a small number of requests concurrently, so during a
+// traffic spike (or a cold dyno) Render's edge 502s a batch of clients at
+// once and a flat delay marches them all back in lockstep.
+//
+// Exponential growth backs off a struggling server; the jitter is the part
+// that actually breaks up the wave. Returns 50-100% of the backoff so two
+// clients almost never land together.
+// attempt is 0-based: 0 → 0.6-1.2s, 1 → 1.2-2.4s, 2 → 2.4-4.8s, then capped.
+function _retryDelay(attempt, base = 1200, cap = 8000) {
+  const exp = Math.min(base * Math.pow(2, attempt), cap);
+  return Math.round(exp * (0.5 + Math.random() * 0.5));
+}
+
 // ── FIREBASE ─────────────────────────────────────────────
 firebase.initializeApp({
   apiKey:            "AIzaSyCKZa2AEso1J33om4LoxkJSb6WMm1vMyR0",
@@ -10151,8 +10168,8 @@ async function loadAssignments(token, url) {
       const isRetryable = e.name === 'AbortError' || e instanceof TypeError;
       attempt++;
       if (isRetryable && attempt < MAX_ATTEMPTS) {
-        // Cold start — wait briefly then retry automatically
-        await new Promise(r => setTimeout(r, 1500));
+        // Cold start or saturated backend — back off (jittered) then retry
+        await new Promise(r => setTimeout(r, _retryDelay(attempt - 1)));
         continue;
       }
       // Final attempt or non-retryable error
@@ -13998,7 +14015,7 @@ async function _parseSyllabusFetch(url, options) {
         // Render's edge sometimes 502/503s while the dyno is still waking — retry those
         if ((res.status === 502 || res.status === 503) && attempt < MAX_ATTEMPTS) {
           _sylWakeUpdate(`🌱 Waking up the server — retrying (${attempt}/${MAX_ATTEMPTS})…`);
-          await new Promise(r => setTimeout(r, 1500));
+          await new Promise(r => setTimeout(r, _retryDelay(attempt - 1)));
           continue;
         }
         return res; // real response — let the caller handle ok/error
@@ -14007,7 +14024,7 @@ async function _parseSyllabusFetch(url, options) {
         const retryable = e.name === 'AbortError' || e instanceof TypeError;
         if (retryable && attempt < MAX_ATTEMPTS) {
           _sylWakeUpdate(`🌱 Waking up the server — retrying (${attempt}/${MAX_ATTEMPTS})…`);
-          await new Promise(r => setTimeout(r, 1500));
+          await new Promise(r => setTimeout(r, _retryDelay(attempt - 1)));
           continue;
         }
         throw e; // out of retries / non-retryable
