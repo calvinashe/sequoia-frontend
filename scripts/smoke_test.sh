@@ -39,9 +39,14 @@ if 'id="assign-list"' not in dom:
     failures.append("dashboard never rendered (#assign-list missing)")
 
 # 2. Priority sort: first rendered assignment must be the 35% midterm.
-# Strip <style> blocks first — the stylesheet text contains ".a-name-text"
-# selectors that would otherwise match before any real row.
+# Strip <style> AND <script> blocks first. The stylesheet contains
+# ".a-name-text" selectors, and the app's inline JS contains the row
+# template literal itself — so if the app fails to boot, the regex would
+# match `${esc(a.title)}` out of the source and report a confusing
+# "priority sort broken" instead of the truth, which is that no rows
+# rendered at all. Strip both so a boot failure reports as a boot failure.
 body = re.sub(r'<style.*?</style>', '', dom, flags=re.S)
+body = re.sub(r'<script.*?</script>', '', body, flags=re.S)
 titles = re.findall(r'class="a-name-text"[^>]*>([^<]+)<', body)
 if not titles:
     failures.append("no assignment rows rendered in demo")

@@ -142,10 +142,14 @@
 <!-- Load fonts async so they never block first paint; text shows in system font first then swaps -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap"></noscript>
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<!-- Firebase loads just above the app script at the bottom of <body>, NOT here.
+     These three files are 147KB brotli (firestore alone is 98KB) and a
+     synchronous script in <head> blocks first paint until all of it has
+     downloaded and executed. The landing page — the only thing a first-time
+     visitor sees — uses none of it; `firebase` is first touched inside the
+     app script itself. Moving them down keeps that execution order intact
+     while letting the page paint first. The preconnect above still lets the
+     preload scanner start fetching them early. -->
 <style>
 /* ── TOKENS ──────────────────────────────────────────────── */
 :root {
@@ -7781,6 +7785,13 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
 
   </div>
 </div>
+
+<!-- Firebase — moved out of <head> so 147KB of third-party JS stops blocking
+     first paint. Must stay immediately above the app script below, which
+     calls firebase.initializeApp() synchronously. -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <!-- ════════════════════════════════════════════════════════
      JAVASCRIPT
