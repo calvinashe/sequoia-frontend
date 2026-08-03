@@ -381,6 +381,14 @@ a.ld-trust-item, a.ld-trust-item:visited { color:rgba(255,255,255,0.45); }
   cursor:pointer; white-space:nowrap; flex-shrink:0;
 }
 .ld-email-btn:hover { background:linear-gradient(135deg,#5AB33A,#4CA130); }
+/* Chrome-store link on the extension feature card. Lives in CSS rather than
+   inline styles so the mobile touch-target rule below can actually reach it. */
+.ld-ext-link {
+  display:inline-flex; align-items:center; margin-top:12px;
+  font-size:12px; font-weight:700; color:var(--g4); text-decoration:none;
+  border:1px solid rgba(76,161,48,0.3); padding:5px 12px;
+  border-radius:8px; background:rgba(76,161,48,0.08);
+}
 @media (max-width:440px) {
   .ld-email-cap-row { flex-direction:column; }
 }
@@ -402,10 +410,16 @@ a.ld-trust-item, a.ld-trust-item:visited { color:rgba(255,255,255,0.45); }
   .ld-stage    { min-width:72px; padding:12px; }
   .ld-stage-tree { font-size:28px; }
   .ld-trust-bar { gap:8px 16px; }
+  /* Touch targets: 44px is the iOS/Android minimum. These CTAs sat at
+     28–41px — a real miss rate on the funnel every visitor lands in. */
+  .ld-nav-signin, .ld-email-btn, .al-demo-link, .ld-ext-link { min-height:44px; }
 }
 @media (max-width:440px) {
   .ld-features { grid-template-columns:1fr; }
   .ld-stage-arrow { display:none; }
+  /* With the arrows hidden, four cards wrap 3+1 and strand "Ancient Sequoia"
+     alone on a second row. Pin them to an even 2×2 instead. */
+  .ld-stage { flex:0 0 calc(50% - 3px); min-width:0; }
 }
 
 /* ── AUTH SCREEN ────────────────────────────────────────── */
@@ -5723,10 +5737,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
       <div class="ld-feat-title">Connect once, forget about it</div>
       <div class="ld-feat-body">The Chrome extension syncs your Canvas automatically in the background — grade weights, submission status, everything. No tokens, no setup steps.</div>
       <a href="https://chromewebstore.google.com/detail/sequoia-for-canvas/hllbhhlbfiodgpkpjkconkhdaiklfnai"
-        target="_blank" rel="noopener"
-        style="display:inline-block;margin-top:12px;font-size:12px;font-weight:700;
-        color:var(--g4);text-decoration:none;border:1px solid rgba(76,161,48,0.3);
-        padding:5px 12px;border-radius:8px;background:rgba(76,161,48,0.08)">
+        target="_blank" rel="noopener" class="ld-ext-link">
         Add to Chrome →
       </a>
     </div>
@@ -5785,7 +5796,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
           <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.7)"><span style="color:var(--g3);flex-shrink:0">✓</span>3 tree decorations</div>
           <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.7)"><span style="color:var(--g3);flex-shrink:0">✓</span>Canvas sync</div>
         </div>
-        <button onclick="showAuthFromLanding('signup')" style="margin-top:24px;width:100%;padding:11px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:rgba(255,255,255,0.6);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Get started free</button>
+        <button onclick="showAuthFromLanding('signup')" style="margin-top:24px;width:100%;min-height:44px;padding:13px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:rgba(255,255,255,0.6);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Get started free</button>
       </div>
 
       <!-- Premium tier -->
@@ -5805,7 +5816,7 @@ posthog.init('phc_nxh8yF3qCs4wnTUeToC4xPQESKP5os6iuTn66dRrtgkT', {
           <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--g3);flex-shrink:0">✓</span>Extended XP cap (550/day)</div>
           <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--g3);flex-shrink:0">✓</span>Streak Freeze</div>
         </div>
-        <button onclick="showAuthFromLanding('signup')" style="margin-top:24px;width:100%;padding:11px;border-radius:12px;border:none;background:linear-gradient(135deg,#2E6020,#4CA130);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(76,161,48,0.35)">Start free, upgrade later</button>
+        <button onclick="showAuthFromLanding('signup')" style="margin-top:24px;width:100%;min-height:44px;padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,#2E6020,#4CA130);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(76,161,48,0.35)">Start free, upgrade later</button>
       </div>
 
     </div>
